@@ -47,10 +47,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       console.log('Login response received:', response);
       
       // Handle both direct response and nested data
-      const authData = response.data || response;
-      const accessToken = authData.accessToken || authData.access_token;
-      const refreshToken = authData.refreshToken || authData.refresh_token;
-      const user = authData.user || authData;
+      const authData = response;
+      const accessToken = authData.accessToken;
+      const refreshToken = authData.refreshToken;
+      const user = authData.user;
       
       console.log('Parsed auth data:', { hasAccessToken: !!accessToken, hasRefreshToken: !!refreshToken, hasUser: !!user });
       

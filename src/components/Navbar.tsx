@@ -129,7 +129,7 @@ const Navbar: React.FC<NavbarProps> = ({ isSidebarOpen, toggleMobileMenu, isMobi
                   <p className="text-sm font-semibold text-gray-900">
                     {admin?.firstName} {admin?.lastName}
                   </p>
-                  <p className="text-xs font-medium text-gray-500">{admin?.role?.replace('_', ' ')}</p>
+                  <p className="text-xs font-medium text-gray-500">{admin?.userType?.replace('_', ' ')}</p>
                 </div>
                 <ChevronDown className={`w-4 h-4 text-gray-500 transition-transform duration-200 ${showUserMenu ? 'rotate-180' : ''}`} />
               </button>
@@ -220,7 +220,7 @@ const Navbar: React.FC<NavbarProps> = ({ isSidebarOpen, toggleMobileMenu, isMobi
                 <p className="text-sm font-semibold text-gray-900">
                   {admin?.firstName} {admin?.lastName}
                 </p>
-                <p className="text-xs font-medium text-gray-500">{admin?.role?.replace('_', ' ')}</p>
+                <p className="text-xs font-medium text-gray-500">{admin?.userType?.replace('_', ' ')}</p>
               </div>
             </div>
           </div>
