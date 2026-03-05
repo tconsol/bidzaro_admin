@@ -14,7 +14,7 @@ interface DataTableProps<T> {
   emptyMessage?: string;
 }
 
-function DataTable<T extends { id: string }>({
+function DataTable<T extends Record<string, any>>({
   data,
   columns,
   onRowClick,
@@ -53,7 +53,7 @@ function DataTable<T extends { id: string }>({
           <tbody className="divide-y divide-gray-100">
             {data.map((item, index) => (
               <tr
-                key={item.id}
+                key={item.id ?? item.userId ?? item.vendorId ?? item.orderId ?? item.bidRequestId ?? item.ticketId ?? item.logId ?? item.announcementId ?? item.promoCodeId ?? item.masterItemId ?? item.categoryId ?? index}
                 onClick={() => onRowClick?.(item)}
                 className={`${
                   onRowClick ? 'cursor-pointer hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50' : ''

@@ -8,7 +8,7 @@ interface StatCardProps {
   icon: LucideIcon;
   color: string;
   change?: string;
-  changeType?: 'increase' | 'decrease';
+  changeType?: 'increase' | 'decrease' | 'neutral';
 }
 
 const StatCard: React.FC<StatCardProps> = ({ title, value, icon: Icon, color, change, changeType }) => {
@@ -26,13 +26,15 @@ const StatCard: React.FC<StatCardProps> = ({ title, value, icon: Icon, color, ch
             <div className={`flex items-center space-x-1 px-3 py-1.5 rounded-lg font-medium text-sm ${
               changeType === 'increase' 
                 ? 'bg-green-50 text-green-700' 
-                : 'bg-red-50 text-red-700'
+                : changeType === 'decrease'
+                ? 'bg-red-50 text-red-700'
+                : 'bg-gray-50 text-gray-700'
             }`}>
               {changeType === 'increase' ? (
                 <TrendingUp className="w-4 h-4" />
-              ) : (
+              ) : changeType === 'decrease' ? (
                 <TrendingDown className="w-4 h-4" />
-              )}
+              ) : null}
               <span>{change}</span>
             </div>
           )}

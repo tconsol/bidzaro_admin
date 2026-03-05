@@ -1,15 +1,27 @@
-// Admin Types
+// ==================== Auth Types ====================
+
 export interface Admin {
-  id: string;
+  userId: string;
+  vendorId: string | null;
   email: string;
+  phone: string;
+  userType: 'ADMIN' | 'SUPER_ADMIN' | 'SUPPORT_AGENT';
   firstName: string;
   lastName: string;
-  phone?: string;
-  userType: 'SUPER_ADMIN' | 'ADMIN' | 'MODERATOR';
-  country: 'USA' | 'India';
+  fullName: string;
+  profilePictureUrl: string | null;
+  dateOfBirth: string | null;
+  gender: string | null;
+  emailVerified: boolean;
+  phoneVerified: boolean;
+  twoFactorEnabled: boolean;
+  preferredLanguage: string | null;
+  preferredCurrency: string;
+  country: string;
+  status: string;
+  notificationPreferences: NotificationPreferences | null;
+  lastLoginAt: string | null;
   createdAt: string;
-  lastLoginAt: string;
-  isActive: boolean;
 }
 
 export interface AuthResponse {
@@ -19,7 +31,7 @@ export interface AuthResponse {
 }
 
 export interface AdminLoginDto {
-  identifier: string; // email or phone
+  identifier: string;
   password: string;
 }
 
@@ -29,8 +41,8 @@ export interface AdminRegistrationDto {
   password: string;
   firstName: string;
   lastName: string;
-  userType: 'ADMIN' | 'MODERATOR' | 'SUPER_ADMIN';
-  country: 'USA' | 'India';
+  userType: 'ADMIN' | 'SUPPORT_AGENT';
+  country: string;
 }
 
 export interface ForgotPasswordDto {
@@ -44,21 +56,99 @@ export interface ResetPasswordDto {
   confirmPassword: string;
 }
 
-// Dashboard Stats
-export interface DashboardStats {
-  totalUsers: number;
-  totalVendors: number;
-  totalOrders: number;
-  totalBids: number;
-  totalMenuItems: number;
-  totalPayments: number;
-  totalRevenue: number;
-  pendingOrders: number;
-  completedOrders: number;
-  activeVendors: number;
+// ==================== Notification Preferences ====================
+
+export interface NotificationPreferences {
+  emailNotifications: {
+    orderUpdates: boolean;
+    bidUpdates: boolean;
+    promotional: boolean;
+    newsletter: boolean;
+    paymentReminders: boolean;
+    securityAlerts: boolean;
+  };
+  smsNotifications: {
+    orderUpdates: boolean;
+    bidUpdates: boolean;
+    paymentReminders: boolean;
+    securityAlerts: boolean;
+  };
+  pushNotifications: {
+    orderUpdates: boolean;
+    bidUpdates: boolean;
+    promotional: boolean;
+    paymentReminders: boolean;
+  };
+  whatsappNotifications: {
+    orderUpdates: boolean;
+    bidUpdates: boolean;
+  };
 }
 
-// Pagination
+// ==================== Dashboard Stats ====================
+
+export interface DashboardStats {
+  userStats: {
+    totalUsers: number;
+    activeUsers: number;
+    newUsersToday: number;
+    newUsersThisWeek: number;
+    newUsersThisMonth: number;
+  };
+  vendorStats: {
+    totalVendors: number;
+    activeVendors: number;
+    pendingApproval: number;
+    verifiedVendors: number;
+    newVendorsThisMonth: number;
+  };
+  orderStats: {
+    totalOrders: number;
+    pendingOrders: number;
+    completedOrders: number;
+    cancelledOrders: number;
+    ordersToday: number;
+    ordersThisWeek: number;
+    ordersThisMonth: number;
+  };
+  revenueStats: {
+    totalRevenue: number;
+    revenueToday: number;
+    revenueThisWeek: number;
+    revenueThisMonth: number;
+    platformFees: number;
+    pendingPayouts: number;
+  };
+  bidStats: {
+    totalBidRequests: number;
+    activeBidRequests: number;
+    acceptedBids: number;
+    expiredBids: number;
+  };
+}
+
+// ==================== Pagination ====================
+
+export interface PageInfo {
+  pageNumber: number;
+  pageSize: number;
+  totalElements: number;
+  totalPages: number;
+}
+
+export interface PaginatedResponse<T> {
+  success: boolean;
+  data: T[];
+  pageInfo: PageInfo;
+  message?: string;
+}
+
+export interface ApiResponse<T> {
+  success: boolean;
+  data: T;
+  message?: string;
+}
+
 export interface PaginationParams {
   page?: number;
   size?: number;
@@ -66,37 +156,30 @@ export interface PaginationParams {
   sortDir?: 'asc' | 'desc';
 }
 
-export interface ApiResponse<T> {
-  data: T;
-  message?: string;
-  status?: string;
-}
-
-// User Types
-export interface Address {
-  street: string;
-  city: string;
-  state: string;
-  zipCode: string;
-  country: string;
-}
+// ==================== User Types ====================
 
 export interface User {
-  id: string;
+  userId: string;
+  vendorId: string | null;
+  email: string;
+  phone: string;
+  userType: string;
   firstName: string;
   lastName: string;
-  email: string;
-  mobile: string;
-  addresses: Address[];
-  profileUrl?: string;
-  latitude?: number;
-  longitude?: number;
-  lastLocationUpdatedAt?: string;
-  stripeCustomerId?: string;
-  status?: 'ACTIVE' | 'SUSPENDED' | 'PENDING';
-  userType?: string;
-  createdAt?: string;
-  updatedAt?: string;
+  fullName: string;
+  profilePictureUrl: string | null;
+  dateOfBirth: string | null;
+  gender: string | null;
+  emailVerified: boolean;
+  phoneVerified: boolean;
+  twoFactorEnabled: boolean;
+  preferredLanguage: string | null;
+  preferredCurrency: string;
+  country: string;
+  status: string;
+  notificationPreferences: NotificationPreferences | null;
+  lastLoginAt: string | null;
+  createdAt: string;
 }
 
 export interface UpdateUserStatusDto {
@@ -104,237 +187,549 @@ export interface UpdateUserStatusDto {
   reason?: string;
 }
 
-// Vendor Types
-export interface LicenseDocument {
+// ==================== Vendor Types ====================
+
+export interface VendorAddress {
+  streetAddress: string;
+  city: string;
+  state: string;
+  postalCode: string;
+  country: string;
+}
+
+export interface VendorOwnerInfo {
+  firstName: string;
+  lastName: string;
+  phone: string;
+  email: string;
+  idProofType: string;
+  idProofNumber: string;
+}
+
+export interface VendorServiceArea {
+  city: string;
+  state: string;
+  radiusKm: number;
+}
+
+export interface VendorCapacity {
+  minGuests: number;
+  maxGuests: number;
+  concurrentEvents: number;
+}
+
+export interface VendorPricing {
+  currency: string;
+  startingPricePerPlate: number;
+  averagePricePerPlate: number;
+}
+
+export interface VendorRatings {
+  averageRating: number | null;
+  totalReviews: number;
+}
+
+export interface VendorStats {
+  totalOrders: number;
+  completedOrders: number;
+  ordersCount: number;
+}
+
+export interface VendorDocument {
+  documentId: string;
   documentType: string;
+  documentName: string;
   documentUrl: string;
+  documentNumber: string;
+  issueDate: string;
+  expiryDate: string | null;
+  verificationStatus: string;
   uploadedAt: string;
-  verifiedAt?: string;
 }
 
 export interface Vendor {
-  vendorId?: string;
-  id: string;
-  vendorOrganizationId: string;
+  vendorId: string;
+  userId: string;
+  registeredEmail: string;
+  registeredPhone: string;
+  registeredEmailVerified: boolean;
+  registeredPhoneVerified: boolean;
   businessName: string;
-  contactName: string;
-  email: string;
-  mobile: string;
-  addresses: Address[];
-  licenseDocuments: LicenseDocument[];
-  isOnline?: boolean;
-  lastSeenAt?: string;
-  website?: string;
-  yearsInBusiness?: number;
-  aboutBusiness?: string;
-  latitude?: number;
-  longitude?: number;
-  lastLocationUpdatedAt?: string;
-  approvalStatus?: 'PENDING' | 'APPROVED' | 'REJECTED';
-  status?: 'ACTIVE' | 'PENDING' | 'REJECTED' | 'SUSPENDED';
-  rejectionReason?: string;
-  createdAt?: string;
-  updatedAt?: string;
-  // Extended details (optional)
-  cuisinesOffered?: string[];
-  specialties?: string[];
-  capacity?: {
-    minGuests?: number;
-    maxGuests?: number;
-    concurrentEvents?: number;
-  };
-  pricing?: {
-    currency?: string;
-    startingPricePerPlate?: number;
-    averagePricePerPlate?: number;
-  };
-  ratings?: {
-    averageRating?: number;
-    totalReviews?: number;
-  };
-  stats?: {
-    totalOrders?: number;
-    completedOrders?: number;
-  };
-  ownerInfo?: {
-    firstName?: string;
-    lastName?: string;
-    phone?: string;
-    email?: string;
-    idProofType?: string;
-    idProofNumber?: string;
-  };
-  serviceAreas?: Array<{ city?: string; state?: string; radiusKm?: number }>;
-  documents?: Array<{
-    documentId?: string;
-    documentType?: string;
-    documentName?: string;
-    documentUrl?: string;
-    documentNumber?: string;
-    issueDate?: string;
-    expiryDate?: string | null;
-    verificationStatus?: string;
-    uploadedAt?: string;
-  }>;
-  country?: string;
-  verified?: boolean;
-  featured?: boolean;
+  businessEmail: string;
+  businessPhone: string;
+  businessEmailVerified: boolean;
+  businessPhoneVerified: boolean;
+  businessType: string;
+  businessRegistrationNumber: string;
+  taxId: string;
+  logoUrl: string | null;
+  bannerUrl: string | null;
+  description: string;
+  establishedYear: number;
+  cuisinesOffered: string[];
+  specialties: string[];
+  businessAddress: VendorAddress;
+  ownerInfo: VendorOwnerInfo;
+  serviceAreas: VendorServiceArea[];
+  capacity: VendorCapacity;
+  pricing: VendorPricing;
+  ratings: VendorRatings | null;
+  stats: VendorStats | null;
+  status: string;
+  approvalStatus: string;
+  verified: boolean;
+  featured: boolean;
+  createdAt: string;
+  documents: VendorDocument[];
+  country: string;
 }
 
-export interface ApproveVendorDto {
-  vendorId: string;
+// ==================== Order Types ====================
+
+export interface OrderEventDetails {
+  eventType: string;
+  eventName: string;
+  eventDate: string;
+  eventTime: string;
+  numberOfGuests: number;
+  venueAddress: VendorAddress;
 }
 
-export interface RejectVendorDto {
-  vendorId: string;
-  reason: string;
-}
-
-// Order Types
-export interface OrderMenuItem {
-  menuItemId: string;
-  name: string;
+export interface VendorOrderItem {
+  vendorItemId: string;
+  itemName: string;
   quantity: number;
-  pricePerUnit: number;
-  specialInstructions?: string;
+  pricePerPlate: number;
+  totalPrice: number;
+}
+
+export interface VendorOrder {
+  vendorOrderId: string;
+  vendorId: string;
+  vendorUserId: string | null;
+  vendorName: string;
+  items: VendorOrderItem[] | null;
+  subtotal: number;
+  serviceCharge: number;
+  taxAmount: number;
+  totalAmount: number;
+  vendorStatus: string;
+  deliveryStatus: string;
+}
+
+export interface OrderPricing {
+  currency: string;
+  subtotal: number;
+  serviceCharges: number;
+  taxAmount: number;
+  platformFee: number;
+  discountAmount: number;
+  totalAmount: number;
+}
+
+export interface PaymentDetails {
+  tokenAmount: number;
+  tokenPaid: boolean;
+  tokenPaidAt: string | null;
+  totalPaid: number;
+  balanceDue: number;
+  paymentStatus: string;
+}
+
+export interface OrderContactInfo {
+  primaryContactName: string;
+  primaryContactPhone: string;
+  primaryContactEmail: string;
 }
 
 export interface Order {
-  id: string;
-  customerId: string;
-  vendorOrganizationId: string;
+  orderId: string;
+  userId: string;
+  bidRequestId: string;
+  eventDetails: OrderEventDetails;
+  vendorOrders: VendorOrder[];
+  pricing: OrderPricing;
+  paymentDetails: PaymentDetails;
+  contactInfo: OrderContactInfo;
+  specialInstructions: string | null;
+  status: string;
+  cancellation: any | null;
+  createdAt: string;
+  confirmedAt: string | null;
+  deliveredAt: string | null;
+  completedAt: string | null;
+}
+
+// ==================== Bid Types ====================
+
+export interface BidEventDetails {
+  eventType: string;
   eventName: string;
   eventDate: string;
-  eventLocation: string;
-  guestCount: number;
-  menuItems: OrderMenuItem[];
+  eventStartTime: string;
+  eventEndTime: string;
+  numberOfGuests: number;
+  venueAddress: VendorAddress;
+}
+
+export interface BidMenuItem {
+  vendorItemId: string | null;
+  masterItemId: string;
+  itemName: string;
+  quantity: number;
+}
+
+export interface BidAdditionalRequirements {
+  serviceStaffNeeded: boolean;
+  numberOfStaff: number;
+  decorationNeeded: boolean;
+  liveCounters: string[];
+  specialInstructions: string;
+}
+
+export interface BidBudget {
+  currency: string;
+  estimatedBudget: number;
+  budgetRange: string;
+}
+
+export interface BidCompetitivePeriod {
+  startTime: string;
+  endTime: string;
   status: string;
-  totalPrice: number;
+}
+
+export interface BidRequest {
+  bidRequestId: string;
+  userId: string;
+  eventDetails: BidEventDetails;
+  menuItems: BidMenuItem[];
+  additionalRequirements: BidAdditionalRequirements;
+  budget: BidBudget;
+  targetedVendors: string[];
+  competitivePeriod: BidCompetitivePeriod;
+  acceptedBid: any | null;
+  status: string;
+  totalBidsReceived: number;
+  lowestBidAmount: number | null;
   createdAt: string;
-  updatedAt: string;
-  customerName?: string;
-  vendorName?: string;
+  expiresAt: string;
 }
 
-// Bid Types
-export interface Bid {
-  id: string;
-  orderId: string;
-  vendorOrganizationId: string;
-  proposedMessage: string;
-  proposedTotalPrice: number;
-  status: string;
-  submittedAt: string;
-  updatedAt: string;
-  customerName?: string;
-  vendorBusinessName?: string;
-  eventName?: string;
-}
+// ==================== Menu Types ====================
 
-// Menu Item Types
-export interface MenuItem {
-  id: string;
-  vendorOrganizationId: string;
-  name: string;
+export interface Category {
+  categoryId: string;
+  categoryName: string;
+  categoryNameHindi: string;
   description: string;
-  images: string[];
-  category: string;
-  subCategory: string;
-  ingredients: string[];
-  spiceLevels: string[];
-  available: boolean;
-  vendorName?: string;
-}
-
-// Payment Types
-export interface Payment {
-  id: string;
-  orderId: string;
-  customerId: string;
-  vendorOrganizationId: string;
-  stripePaymentIntentId: string;
-  stripeCustomerId: string;
-  stripeChargeId: string;
-  amountInCents: number;
-  currency: string;
+  displayOrder: number;
+  iconUrl: string;
   status: string;
-  paidAt: string;
-  createdAt: string;
-  customerName?: string;
-  vendorName?: string;
 }
 
-// Platform Configuration Types
-export interface PlatformConfig {
-  id: string;
-  country: string;
-  currency: string;
-  platformFeePercentage: number;
-  taxRate: number;
-  minOrderAmount: number;
-  maxOrderAmount: number;
-  supportEmail: string;
-  supportPhone: string;
-  maintenanceMode: boolean;
+export interface CreateCategoryRequest {
+  categoryName: string;
+  categoryNameHindi?: string;
+  description?: string;
+  displayOrder?: number;
+  iconUrl?: string;
+}
+
+export interface UpdateCategoryRequest {
+  categoryName?: string;
+  categoryNameHindi?: string;
+  description?: string;
+  displayOrder?: number;
+  iconUrl?: string;
+}
+
+export interface NutritionalInfo {
+  calories: number;
+  proteinGrams: number;
+  carbsGrams: number;
+  fatGrams: number;
+  servingSizeGrams: number;
+}
+
+export interface MenuItem {
+  masterItemId: string;
+  itemName: string;
+  itemNameHindi: string;
+  description: string;
+  categoryId: string;
+  categoryName: string | null;
+  cuisineType: string;
+  foodType: string;
+  spiceLevel: string;
+  dietaryTags: string[];
+  allergens: string[];
+  nutritionalInfo: NutritionalInfo;
+  imageUrls: string[];
+  isPopular: boolean;
+  status: string;
   createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateMenuItemRequest {
+  itemName: string;
+  itemNameHindi?: string;
+  description: string;
+  categoryId: string;
+  cuisineType: string;
+  foodType: string;
+  spiceLevel: string;
+  dietaryTags?: string[];
+  allergens?: string[];
+  nutritionalInfo?: NutritionalInfo;
+  imageUrls?: string[];
+  isPopular?: boolean;
+}
+
+export interface UpdateMenuItemRequest {
+  itemName?: string;
+  itemNameHindi?: string;
+  description?: string;
+  categoryId?: string;
+  cuisineType?: string;
+  foodType?: string;
+  spiceLevel?: string;
+  dietaryTags?: string[];
+  allergens?: string[];
+  nutritionalInfo?: NutritionalInfo;
+  imageUrls?: string[];
+  isPopular?: boolean;
+}
+
+// ==================== Promo Code Types ====================
+
+export interface PromoCode {
+  promoCodeId: string;
+  code: string;
+  title: string;
+  description: string;
+  type: 'FIXED_AMOUNT' | 'PERCENTAGE';
+  value: number;
+  maxDiscountAmount: number | null;
+  minOrderAmount: number | null;
+  validFrom: string;
+  validTo: string;
+  usageLimitGlobal: number | null;
+  usageLimitPerUser: number | null;
+  usedCount: number;
+  applicableTo: 'ALL' | 'SPECIFIC_VENDORS' | 'SPECIFIC_CUISINES';
+  applicableVendorIds: string[] | null;
+  applicableCuisines: string[] | null;
+  firstOrderOnly: boolean;
+  status: string;
+  createdAt: string;
+}
+
+export interface CreatePromoRequest {
+  code: string;
+  title: string;
+  description: string;
+  type: 'FIXED_AMOUNT' | 'PERCENTAGE';
+  value: number;
+  maxDiscountAmount?: number;
+  minOrderAmount?: number;
+  validFrom: string;
+  validTo: string;
+  usageLimitGlobal?: number;
+  usageLimitPerUser?: number;
+  applicableTo: 'ALL' | 'SPECIFIC_VENDORS' | 'SPECIFIC_CUISINES';
+  applicableVendorIds?: string[];
+  applicableCuisines?: string[];
+  firstOrderOnly?: boolean;
+}
+
+// ==================== Support Ticket Types ====================
+
+export interface TicketSLA {
+  firstResponseDue: string;
+  resolutionDue: string;
+  firstResponseAt: string | null;
+  resolvedAt: string | null;
+  slaBreached: boolean;
+}
+
+export interface TicketRelatedEntities {
+  orderId: string | null;
+  vendorId: string | null;
+  paymentId: string | null;
+}
+
+export interface SupportTicket {
+  ticketId: string;
+  ticketNumber: string;
+  createdBy: string;
+  createdByName: string;
+  category: string;
+  subcategory: string;
+  priority: string;
+  subject: string;
+  description: string;
+  relatedEntities: TicketRelatedEntities;
+  assignedTo: string | null;
+  assignedAt: string | null;
+  conversationId: string | null;
+  status: string;
+  sla: TicketSLA;
+  resolution: string | null;
+  customerSatisfaction: number | null;
+  createdAt: string;
+  closedAt: string | null;
+}
+
+// ==================== Platform Config Types ====================
+
+export interface BiddingConfig {
+  competitivePeriodHours: number;
+  coolingPeriodHours: number;
+  paymentCoolingPeriodHours: number;
+  bidExpiryHours: number;
+  minVendorsForCompetitive: number;
+  maxBidRevisions: number;
+}
+
+export interface PaymentConfig {
+  tokenPercentage: number;
+  enabledGateways: string[];
+  defaultGateway: string;
+  paymentTimeoutHours: number;
+  autoRefundEnabled: boolean;
+}
+
+export interface RefundTier {
+  daysBeforeEvent: number;
+  refundPercentage: number;
+}
+
+export interface CancellationPolicy {
+  cancellationWindowDays: number;
+  refundTiers: RefundTier[];
+}
+
+export interface CommissionConfig {
+  platformFeePercentage: number;
+  vendorCommissionPercentage: number;
+  paymentGatewayFeePercentage: number;
+}
+
+export interface PlatformConfig {
+  configId: string;
+  country: string;
+  biddingConfig: BiddingConfig;
+  paymentConfig: PaymentConfig;
+  cancellationPolicy: CancellationPolicy;
+  commissionConfig: CommissionConfig;
+  updatedBy: string;
   updatedAt: string;
 }
 
 export interface UpdatePlatformConfigRequest {
-  currency?: string;
-  platformFeePercentage?: number;
-  taxRate?: number;
-  minOrderAmount?: number;
-  maxOrderAmount?: number;
-  supportEmail?: string;
-  supportPhone?: string;
-  maintenanceMode?: boolean;
+  biddingConfig?: BiddingConfig;
+  paymentConfig?: PaymentConfig;
+  cancellationPolicy?: CancellationPolicy;
+  commissionConfig?: CommissionConfig;
 }
 
-// Audit Log Types
+// ==================== Audit Log Types ====================
+
 export interface AuditLog {
   id: string;
+  logId: string;
   entityType: string;
   entityId: string;
   action: string;
   performedBy: string;
-  performedByName?: string;
-  details: string;
-  ipAddress?: string;
+  performedByType: string;
+  changes: Record<string, any> | null;
+  metadata: any | null;
   timestamp: string;
-  createdAt: string;
 }
 
 export interface AuditLogFilters {
-  entityType?: string;
   action?: string;
-  performedBy?: string;
+  targetType?: string;
   startDate?: string;
   endDate?: string;
 }
 
-// Announcement Types
+// ==================== Announcement Types ====================
+
 export interface Announcement {
-  id: string;
+  announcementId: string;
   title: string;
-  content: string;
-  type: 'INFO' | 'WARNING' | 'URGENT' | 'MAINTENANCE';
+  message: string;
+  priority: 'LOW' | 'NORMAL' | 'HIGH' | 'URGENT';
   targetAudience: 'ALL' | 'USERS' | 'VENDORS' | 'ADMINS';
-  isActive: boolean;
-  startDate: string;
-  endDate?: string;
+  startDate?: string | null;
+  endDate?: string | null;
   createdBy: string;
-  createdByName?: string;
   createdAt: string;
-  updatedAt: string;
 }
 
 export interface CreateAnnouncementRequest {
   title: string;
-  content: string;
-  type: 'INFO' | 'WARNING' | 'URGENT' | 'MAINTENANCE';
-  targetAudience: 'ALL' | 'USERS' | 'VENDORS' | 'ADMINS';
-  startDate: string;
+  message: string;
+  priority?: 'LOW' | 'NORMAL' | 'HIGH' | 'URGENT';
+  targetAudience?: 'ALL' | 'USERS' | 'VENDORS' | 'ADMINS';
+  startDate?: string;
   endDate?: string;
-  isActive: boolean;
+}
+
+export interface UpdateAnnouncementRequest {
+  title?: string;
+  message?: string;
+  priority?: 'LOW' | 'NORMAL' | 'HIGH' | 'URGENT';
+  targetAudience?: 'ALL' | 'USERS' | 'VENDORS' | 'ADMINS';
+  startDate?: string;
+  endDate?: string;
+  isActive?: boolean;
+}
+
+// ==================== Refund Types ====================
+
+export interface RefundResponse {
+  transactionId: string;
+  refundId: string;
+  orderId: string;
+  refundAmount: number;
+  currency: string;
+  status: string;
+  estimatedArrival: string;
+  initiatedAt: string;
+}
+
+// ==================== Analytics Types ====================
+
+export interface CityAnalytics {
+  city: string;
+  orderCount: number;
+  revenue: number;
+}
+
+export interface CuisineAnalytics {
+  cuisine: string;
+  orderCount: number;
+}
+
+export interface EventTypeAnalytics {
+  eventType: string;
+  count: number;
+}
+
+export interface AnalyticsOverview {
+  period: string;
+  totalRevenue: number;
+  totalOrders: number;
+  totalBidRequests: number;
+  totalNewUsers: number;
+  totalNewVendors: number;
+  averageOrderValue: number;
+  topCities: CityAnalytics[];
+  topCuisines: CuisineAnalytics[];
+  topEventTypes: EventTypeAnalytics[];
 }

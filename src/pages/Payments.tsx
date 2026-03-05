@@ -1,260 +1,117 @@
-import React, { useEffect, useState } from 'react';
-import type { Payment } from '../types';
-import DataTable from '../components/DataTable';
+import React, { useState } from 'react';
+import { paymentApi } from '../services/api';
 import Modal from '../components/Modal';
-import { Eye, Search } from 'lucide-react';
+import { CreditCard, RefreshCw } from 'lucide-react';
+
+const formatCurrency = (amount: number, currency = 'INR') =>
+  new Intl.NumberFormat('en-IN', { style: 'currency', currency }).format(amount);
 
 const Payments: React.FC = () => {
-  const [payments, setPayments] = useState<Payment[]>([]);
-  const [filteredPayments, setFilteredPayments] = useState<Payment[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
-  const [showDetailModal, setShowDetailModal] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState('ALL');
+  const [showRefundModal, setShowRefundModal] = useState(false);
+  const [transactionId, setTransactionId] = useState('');
+  const [refundAmount, setRefundAmount] = useState<number>(0);
+  const [refundReason, setRefundReason] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [refundResult, setRefundResult] = useState<any>(null);
+  const [showResultModal, setShowResultModal] = useState(false);
 
-  useEffect(() => {
-    loadPayments();
-  }, []);
-
-  useEffect(() => {
-    let filtered = payments;
-
-    if (searchQuery) {
-      filtered = filtered.filter(
-        (payment) =>
-          payment.customerName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          payment.vendorName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          payment.stripePaymentIntentId?.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-    }
-
-    if (statusFilter !== 'ALL') {
-      filtered = filtered.filter((payment) => payment.status === statusFilter);
-    }
-
-    setFilteredPayments(filtered);
-  }, [searchQuery, statusFilter, payments]);
-
-  const loadPayments = async () => {
+  const handleInitiateRefund = async () => {
+    if (!transactionId || !refundAmount || !refundReason) return;
+    setSubmitting(true);
     try {
-      // Mock data
-      const data: Payment[] = [
-        {
-          id: '1',
-          orderId: 'order-1',
-          customerId: 'customer-1',
-          vendorOrganizationId: 'vendor-1',
-          stripePaymentIntentId: 'pi_1234567890',
-          stripeCustomerId: 'cus_1234567890',
-          stripeChargeId: 'ch_1234567890',
-          amountInCents: 250000,
-          currency: 'USD',
-          status: 'COMPLETED',
-          paidAt: '2026-01-25T10:00:00Z',
-          customerName: 'John Doe',
-          vendorName: 'Tasty Kitchen',
-          createdAt: '2026-01-25T10:00:00Z'
-        },
-        {
-          id: '2',
-          orderId: 'order-2',
-          customerId: 'customer-2',
-          vendorOrganizationId: 'vendor-2',
-          stripePaymentIntentId: 'pi_0987654321',
-          stripeCustomerId: 'cus_0987654321',
-          stripeChargeId: 'ch_0987654321',
-          amountInCents: 180000,
-          currency: 'USD',
-          status: 'PENDING',
-          paidAt: '2026-01-26T14:30:00Z',
-          customerName: 'Jane Smith',
-          vendorName: 'Pizza Palace',
-          createdAt: '2026-01-26T14:30:00Z'
-        }
-      ];
-      setPayments(data);
-      setFilteredPayments(data);
-    } catch (error) {
+      const result = await paymentApi.initiateRefund(transactionId, refundAmount, refundReason);
+      setRefundResult(result);
+      setShowRefundModal(false);
+      setShowResultModal(true);
+      setTransactionId('');
+      setRefundAmount(0);
+      setRefundReason('');
+    } catch (error: any) {
+      alert(error.response?.data?.message || 'Failed to initiate refund');
     } finally {
-      setLoading(false);
+      setSubmitting(false);
     }
   };
-
-  const handleViewDetails = (payment: Payment) => {
-    setSelectedPayment(payment);
-    setShowDetailModal(true);
-  };
-
-  const getStatusColor = (status: string) => {
-    const colors: { [key: string]: string } = {
-      SUCCEEDED: 'bg-green-100 text-green-800',
-      PENDING: 'bg-yellow-100 text-yellow-800',
-      FAILED: 'bg-red-100 text-red-800',
-      REFUNDED: 'bg-purple-100 text-purple-800',
-    };
-    return colors[status] || 'bg-gray-100 text-gray-800';
-  };
-
-  const columns = [
-    { key: 'customerName', header: 'Customer' },
-    { key: 'vendorName', header: 'Vendor' },
-    {
-      key: 'amountInCents',
-      header: 'Amount',
-      render: (payment: Payment) => `$${(payment.amountInCents / 100).toFixed(2)}`,
-    },
-    { key: 'currency', header: 'Currency' },
-    {
-      key: 'status',
-      header: 'Status',
-      render: (payment: Payment) => (
-        <span className={`px-2 py-1 rounded-full text-xs font-semibold ${getStatusColor(payment.status)}`}>
-          {payment.status}
-        </span>
-      ),
-    },
-    {
-      key: 'paidAt',
-      header: 'Paid At',
-      render: (payment: Payment) =>
-        payment.paidAt ? new Date(payment.paidAt).toLocaleDateString() : 'N/A',
-    },
-    {
-      key: 'actions',
-      header: 'Actions',
-      render: (payment: Payment) => (
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            handleViewDetails(payment);
-          }}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-200 flex items-center gap-2"
-          title="View Details"
-        >
-          <Eye className="w-4 h-4" />
-          <span className="hidden sm:inline">View</span>
-        </button>
-      ),
-    },
-  ];
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-      </div>
-    );
-  }
-
-  const totalRevenue = payments
-    .filter((p) => p.status === 'SUCCEEDED')
-    .reduce((sum, p) => sum + p.amountInCents, 0) / 100;
 
   return (
     <div className="space-y-6 animate-fadeIn">
-      {/* Header */}
-      <div className="bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-2xl shadow-lg p-6 text-white">
-        <div className="flex items-center justify-between">
+      <div className="bg-gradient-to-r from-pink-500 to-rose-600 rounded-2xl shadow-lg p-6 text-white">
+        <h1 className="text-3xl font-bold flex items-center gap-3"><CreditCard className="w-8 h-8" />Payments & Refunds</h1>
+        <p className="text-pink-100 mt-1">Manage payment refunds for transactions</p>
+      </div>
+
+      {/* Refund Action Card */}
+      <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-8">
+        <div className="max-w-2xl mx-auto text-center">
+          <div className="w-16 h-16 bg-gradient-to-br from-pink-500 to-rose-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <RefreshCw className="w-8 h-8 text-white" />
+          </div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Initiate Refund</h2>
+          <p className="text-gray-500 mb-6">Process a refund for a specific payment transaction. Enter the transaction ID, refund amount, and reason to proceed.</p>
+          <button onClick={() => setShowRefundModal(true)}
+            className="bg-gradient-to-r from-pink-600 to-rose-600 text-white px-8 py-3 rounded-xl font-semibold hover:shadow-lg transition-all">
+            Start Refund Process
+          </button>
+        </div>
+      </div>
+
+      {/* Info Box */}
+      <div className="bg-blue-50 border border-blue-200 rounded-2xl p-6">
+        <h3 className="text-lg font-bold text-blue-900 mb-2">Payment Information</h3>
+        <div className="text-sm text-blue-800 space-y-1">
+          <p>• Payment details are available in each Order's detail view (Order Management page).</p>
+          <p>• To initiate a refund, you need the <strong>Transaction ID</strong> from the payment system.</p>
+          <p>• Refund amounts cannot exceed the original transaction amount.</p>
+          <p>• Once a refund is initiated, it may take 5-7 business days to process.</p>
+        </div>
+      </div>
+
+      {/* Refund Modal */}
+      <Modal isOpen={showRefundModal} onClose={() => setShowRefundModal(false)} title="Initiate Refund">
+        <div className="space-y-4">
           <div>
-            <h1 className="text-3xl font-bold">Payments Management</h1>
-            <p className="text-emerald-100 mt-1">Track all payment transactions</p>
+            <label className="block text-sm font-semibold text-gray-700 mb-1">Transaction ID *</label>
+            <input type="text" value={transactionId} onChange={(e) => setTransactionId(e.target.value)}
+              className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-pink-500"
+              placeholder="Enter transaction ID" />
           </div>
-          <div className="bg-white/20 backdrop-blur-sm px-6 py-3 rounded-xl border border-white/30">
-            <p className="text-sm text-emerald-100 font-medium">Total Revenue</p>
-            <p className="text-3xl font-bold">${totalRevenue.toLocaleString()}</p>
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-1">Refund Amount (INR) *</label>
+            <input type="number" value={refundAmount || ''} onChange={(e) => setRefundAmount(Number(e.target.value))}
+              className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-pink-500"
+              placeholder="0.00" min={0} step="0.01" />
+          </div>
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-1">Reason *</label>
+            <textarea value={refundReason} onChange={(e) => setRefundReason(e.target.value)}
+              className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-pink-500" rows={3}
+              placeholder="Reason for refund..." />
+          </div>
+          <div className="flex gap-3">
+            <button onClick={handleInitiateRefund}
+              disabled={submitting || !transactionId || !refundAmount || !refundReason}
+              className="flex-1 bg-gradient-to-r from-pink-600 to-rose-600 text-white px-4 py-2 rounded-xl disabled:opacity-50">
+              {submitting ? 'Processing...' : 'Initiate Refund'}
+            </button>
+            <button onClick={() => setShowRefundModal(false)} className="flex-1 bg-gray-200 text-gray-700 px-4 py-2 rounded-xl">Cancel</button>
           </div>
         </div>
-      </div>
+      </Modal>
 
-      {/* Search and Filters */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
-        <div className="flex gap-4">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-            <input
-              type="text"
-              placeholder="Search payments by customer, vendor, or payment ID..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white transition-all duration-200"
-            />
-          </div>
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 font-medium text-gray-700 transition-all duration-200"
-          >
-            <option value="ALL">All Status</option>
-            <option value="SUCCEEDED">Succeeded</option>
-            <option value="PENDING">Pending</option>
-            <option value="FAILED">Failed</option>
-            <option value="REFUNDED">Refunded</option>
-          </select>
-        </div>
-      </div>
-
-      <DataTable data={filteredPayments} columns={columns} emptyMessage="No payments found" />
-
-      <Modal
-        isOpen={showDetailModal}
-        onClose={() => setShowDetailModal(false)}
-        title="Payment Details"
-        size="lg"
-      >
-        {selectedPayment && (
+      {/* Refund Result Modal */}
+      <Modal isOpen={showResultModal} onClose={() => setShowResultModal(false)} title="Refund Initiated">
+        {refundResult && (
           <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="text-sm font-medium text-gray-600">Customer</label>
-                <p className="text-gray-900 font-semibold">{selectedPayment.customerName}</p>
-              </div>
-              <div>
-                <label className="text-sm font-medium text-gray-600">Vendor</label>
-                <p className="text-gray-900">{selectedPayment.vendorName}</p>
-              </div>
-              <div>
-                <label className="text-sm font-medium text-gray-600">Amount</label>
-                <p className="text-gray-900 font-semibold text-lg">
-                  ${(selectedPayment.amountInCents / 100).toFixed(2)} {selectedPayment.currency.toUpperCase()}
-                </p>
-              </div>
-              <div>
-                <label className="text-sm font-medium text-gray-600">Status</label>
-                <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(selectedPayment.status)}`}>
-                  {selectedPayment.status}
-                </span>
-              </div>
-              <div>
-                <label className="text-sm font-medium text-gray-600">Paid At</label>
-                <p className="text-gray-900">
-                  {selectedPayment.paidAt ? new Date(selectedPayment.paidAt).toLocaleString() : 'N/A'}
-                </p>
-              </div>
-              <div>
-                <label className="text-sm font-medium text-gray-600">Created At</label>
-                <p className="text-gray-900">{new Date(selectedPayment.createdAt).toLocaleString()}</p>
-              </div>
+            <div className="bg-green-50 border border-green-200 rounded-xl p-4 text-center">
+              <p className="text-green-700 font-semibold text-lg mb-1">Refund Successfully Initiated!</p>
             </div>
-
-            <div className="border-t pt-4">
-              <h4 className="text-sm font-medium text-gray-600 mb-3">Stripe Information</h4>
-              <div className="space-y-2">
-                <div className="bg-gray-50 p-3 rounded-lg">
-                  <label className="text-xs font-medium text-gray-600">Payment Intent ID</label>
-                  <p className="text-sm text-gray-900 font-mono">{selectedPayment.stripePaymentIntentId}</p>
-                </div>
-                <div className="bg-gray-50 p-3 rounded-lg">
-                  <label className="text-xs font-medium text-gray-600">Customer ID</label>
-                  <p className="text-sm text-gray-900 font-mono">{selectedPayment.stripeCustomerId}</p>
-                </div>
-                {selectedPayment.stripeChargeId && (
-                  <div className="bg-gray-50 p-3 rounded-lg">
-                    <label className="text-xs font-medium text-gray-600">Charge ID</label>
-                    <p className="text-sm text-gray-900 font-mono">{selectedPayment.stripeChargeId}</p>
-                  </div>
-                )}
-              </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div><label className="text-sm font-semibold text-gray-700">Refund ID</label><p className="mt-1 font-mono text-sm">{refundResult.refundId}</p></div>
+              <div><label className="text-sm font-semibold text-gray-700">Transaction ID</label><p className="mt-1 font-mono text-sm">{refundResult.transactionId}</p></div>
+              <div><label className="text-sm font-semibold text-gray-700">Order ID</label><p className="mt-1 font-mono text-sm">{refundResult.orderId}</p></div>
+              <div><label className="text-sm font-semibold text-gray-700">Refund Amount</label><p className="mt-1 font-semibold">{formatCurrency(refundResult.refundAmount, refundResult.currency)}</p></div>
+              <div><label className="text-sm font-semibold text-gray-700">Status</label><p className="mt-1">{refundResult.status}</p></div>
+              <div><label className="text-sm font-semibold text-gray-700">Estimated Arrival</label><p className="mt-1">{new Date(refundResult.estimatedArrival).toLocaleDateString()}</p></div>
             </div>
           </div>
         )}

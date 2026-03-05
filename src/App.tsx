@@ -9,6 +9,7 @@ import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import AccountRecovery from './pages/AccountRecovery';
 import Users from './pages/Users';
+import SupportAgents from './pages/SupportAgents';
 import Orders from './pages/Orders';
 import Bids from './pages/Bids';
 import Payments from './pages/Payments';
@@ -50,6 +51,7 @@ const App: React.FC = () => {
             <Route index element={<Navigate to="/dashboard" replace />} />
             <Route path="dashboard" element={<Dashboard />} />
             <Route path="users" element={<Users />} />
+            <Route path="support-agents" element={<SupportAgents />} />
             <Route path="vendors" element={<Vendors />} />
             <Route path="orders" element={<Orders />} />
             <Route path="bids" element={<Bids />} />

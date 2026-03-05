@@ -22,6 +22,7 @@ const Navbar: React.FC<NavbarProps> = ({ isSidebarOpen, toggleMobileMenu, isMobi
     { icon: Home, label: 'Dashboard', path: '/dashboard' },
     { icon: ShoppingCart, label: 'Orders', path: '/orders' },
     { icon: Users, label: 'Users', path: '/users' },
+    { icon: Users, label: 'Support Agents', path: '/support-agents' },
     { icon: Store, label: 'Vendors', path: '/vendors' },
     { icon: Package, label: 'Menu Items', path: '/menu-items' },
     { icon: CreditCard, label: 'Payments', path: '/payments' },

@@ -30,7 +30,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check for existing session
     const storedAdmin = localStorage.getItem('adminUser');
     const accessToken = localStorage.getItem('accessToken');
     
@@ -42,39 +41,24 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const login = async (credentials: AdminLoginDto) => {
     try {
-      console.log('Attempting login with:', { identifier: credentials.identifier });
       const response = await adminApi.login(credentials);
-      console.log('Login response received:', response);
-      
-      // Handle both direct response and nested data
       const authData = response;
       const accessToken = authData.accessToken;
       const refreshToken = authData.refreshToken;
       const user = authData.user;
       
-      console.log('Parsed auth data:', { hasAccessToken: !!accessToken, hasRefreshToken: !!refreshToken, hasUser: !!user });
-      
       if (!accessToken) {
-        console.error('No access token in response:', response);
         throw new Error('No access token received from server');
       }
 
-      // Store tokens and user data
       localStorage.setItem('accessToken', accessToken);
       if (refreshToken) {
         localStorage.setItem('refreshToken', refreshToken);
       }
       localStorage.setItem('adminUser', JSON.stringify(user));
-      
-      console.log('Tokens stored, setting admin state');
       setAdmin(user);
-      console.log('Login successful, admin state updated');
     } catch (error: any) {
-      console.error('Login error details:', {
-        message: error?.message,
-        response: error?.response?.data,
-        status: error?.response?.status
-      });
+      console.error('Login error:', error?.response?.data || error?.message);
       throw error;
     }
   };

@@ -1,709 +1,686 @@
 import React, { useEffect, useState } from 'react';
 import { menuApi } from '../services/api';
+import type { Category, MenuItem, CreateCategoryRequest, CreateMenuItemRequest, UpdateMenuItemRequest, UpdateCategoryRequest } from '../types';
 import Modal from '../components/Modal';
-import { UtensilsCrossed, Plus, X } from 'lucide-react';
+import CustomSelect from '../components/CustomSelect';
+import { Plus, UtensilsCrossed, Tag, Search, Edit2, Trash2, CheckCircle, XCircle } from 'lucide-react';
 
-interface Category {
-  categoryId?: string;
-  id?: string;
-  categoryName: string;
-  categoryNameHindi?: string;
-  description?: string;
-  displayOrder?: number;
-  iconUrl?: string;
-}
-
-interface NutritionalInfo {
-  calories: number;
-  proteinGrams: number;
-  carbsGrams: number;
-  fatGrams: number;
-  servingSizeGrams: number;
-}
-
-interface MasterMenuItem {
-  id?: string;
-  itemName: string;
-  itemNameHindi?: string;
-  description: string;
-  categoryId: string;
-  cuisineType: string;
-  foodType: string;
-  spiceLevel: string;
-  dietaryTags?: string[];
-  allergens?: string[];
-  nutritionalInfo?: NutritionalInfo;
-  imageUrls?: string[];
-  isPopular?: boolean;
-  status?: string;
-}
-
-export const MenuItems: React.FC = () => {
+const MenuItems: React.FC = () => {
   const [categories, setCategories] = useState<Category[]>([]);
-  const [menuItems, setMenuItems] = useState<MasterMenuItem[]>([]);
-  const [loading, setLoading] = useState(false);
-  
-  // Modals
+  const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<'categories' | 'items'>('categories');
   const [showCategoryModal, setShowCategoryModal] = useState(false);
-  const [showMenuItemModal, setShowMenuItemModal] = useState(false);
+  const [showItemModal, setShowItemModal] = useState(false);
+  const [showDetailModal, setShowDetailModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
+  const [editForm, setEditForm] = useState<UpdateMenuItemRequest>({});
+  // Category CRUD state
+  const [showEditCatModal, setShowEditCatModal] = useState(false);
+  const [showDeleteCatModal, setShowDeleteCatModal] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
+  const [editCatForm, setEditCatForm] = useState<UpdateCategoryRequest>({});
+  const [catStatusFilter, setCatStatusFilter] = useState('');
 
-  // Category Form
-  const [categoryForm, setCategoryForm] = useState<Category>({
-    categoryName: '',
-    categoryNameHindi: '',
-    description: '',
-    displayOrder: 1,
-    iconUrl: '',
+  const [categoryForm, setCategoryForm] = useState<CreateCategoryRequest>({
+    categoryName: '', categoryNameHindi: '', description: '', displayOrder: 0, iconUrl: '',
   });
-
-  // Menu Item Form
-  const [menuItemForm, setMenuItemForm] = useState<MasterMenuItem>({
-    itemName: '',
-    itemNameHindi: '',
-    description: '',
-    categoryId: '',
-    cuisineType: 'INDIAN',
-    foodType: 'VEG',
-    spiceLevel: 'MILD',
-    dietaryTags: [],
-    allergens: [],
-    nutritionalInfo: {
-      calories: 0,
-      proteinGrams: 0,
-      carbsGrams: 0,
-      fatGrams: 0,
-      servingSizeGrams: 0,
-    },
-    imageUrls: [],
-    isPopular: false,
-    status: 'ACTIVE',
+  const [itemForm, setItemForm] = useState<CreateMenuItemRequest>({
+    itemName: '', itemNameHindi: '', description: '', categoryId: '', cuisineType: '',
+    foodType: 'VEG', spiceLevel: '', dietaryTags: [], allergens: [], isPopular: false,
   });
+  const [submitting, setSubmitting] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
-  const [newImageUrl, setNewImageUrl] = useState('');
-  const [newDietaryTag, setNewDietaryTag] = useState('');
-  const [newAllergen, setNewAllergen] = useState('');
+  useEffect(() => { loadData(); }, [catStatusFilter]);
 
-  useEffect(() => {
-    loadCategories();
-    loadMenuItems();
-  }, []);
-
-  const loadCategories = async () => {
+  const loadData = async () => {
     try {
-      const data = await menuApi.getAllCategories();
-      const list = Array.isArray(data) ? data : [];
-      // normalize backend categoryId -> id for internal usage
-      const normalized = list.map((c: any) => ({
-        ...c,
-        categoryId: c.categoryId || c.id,
-        id: c.id || c.categoryId || c.categoryId,
-      }));
-      setCategories(normalized);
-    } catch (error) {
-      console.error('Failed to load categories:', error);
-    }
+      setLoading(true);
+      const [cats, items] = await Promise.all([
+        menuApi.getAllCategories(catStatusFilter || undefined),
+        menuApi.getAllMenuItems(),
+      ]);
+      setCategories(cats);
+      setMenuItems(items);
+    } catch (error) { console.error('Failed to load menu data:', error); }
+    finally { setLoading(false); }
   };
 
-  const loadMenuItems = async () => {
-    try {
-      const data = await menuApi.getAllMenuItems();
-      setMenuItems(Array.isArray(data) ? data : []);
-    } catch (error) {
-      console.error('Failed to load menu items:', error);
-    }
+  const openCreateCategoryModal = () => {
+    const maxOrder = categories.length > 0 ? Math.max(...categories.map(c => c.displayOrder)) : 0;
+    setCategoryForm({ categoryName: '', categoryNameHindi: '', description: '', displayOrder: maxOrder + 1, iconUrl: '' });
+    setShowCategoryModal(true);
   };
 
-  const handleCreateCategory = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
+  const handleCreateCategory = async () => {
+    setSubmitting(true);
     try {
       await menuApi.createCategory(categoryForm);
-      alert('Category created successfully!');
       setShowCategoryModal(false);
-      setCategoryForm({
-        categoryName: '',
-        categoryNameHindi: '',
-        description: '',
-        displayOrder: 1,
-        iconUrl: '',
-      });
-      loadCategories();
-    } catch (error: any) {
-      console.error('Failed to create category:', error);
-      alert(error.response?.data?.message || 'Failed to create category');
-    } finally {
-      setLoading(false);
-    }
+      setCategoryForm({ categoryName: '', categoryNameHindi: '', description: '', displayOrder: 0, iconUrl: '' });
+      loadData();
+    } catch (error: any) { alert(error.response?.data?.message || 'Failed to create category'); }
+    finally { setSubmitting(false); }
   };
 
-  const handleCreateMenuItem = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!menuItemForm.categoryId) {
-      alert('Please select a category');
-      return;
-    }
-    setLoading(true);
+  const openEditCatModal = (cat: Category) => {
+    setSelectedCategory(cat);
+    setEditCatForm({
+      categoryName: cat.categoryName,
+      categoryNameHindi: cat.categoryNameHindi || '',
+      description: cat.description || '',
+      displayOrder: cat.displayOrder,
+      iconUrl: cat.iconUrl || '',
+    });
+    setShowEditCatModal(true);
+  };
+
+  const handleUpdateCategory = async () => {
+    if (!selectedCategory) return;
+    setSubmitting(true);
     try {
-      await menuApi.createMenuItem(menuItemForm);
-      alert('Menu item created successfully!');
-      setShowMenuItemModal(false);
-      resetMenuItemForm();
-      loadMenuItems();
+      await menuApi.updateCategory(selectedCategory.categoryId, editCatForm);
+      setShowEditCatModal(false);
+      loadData();
     } catch (error: any) {
-      console.error('Failed to create menu item:', error);
+      alert(error.response?.data?.message || 'Failed to update category');
+    } finally { setSubmitting(false); }
+  };
+
+  const handleToggleCatStatus = async (cat: Category) => {
+    try {
+      if (cat.status === 'ACTIVE') await menuApi.inactivateCategory(cat.categoryId);
+      else await menuApi.activateCategory(cat.categoryId);
+      loadData();
+    } catch (error: any) {
+      alert(error.response?.data?.message || 'Failed to update category status');
+    }
+  };
+
+  const openDeleteCatModal = (cat: Category) => {
+    setSelectedCategory(cat);
+    setShowDeleteCatModal(true);
+  };
+
+  const handleDeleteCategory = async () => {
+    if (!selectedCategory) return;
+    setSubmitting(true);
+    try {
+      await menuApi.deleteCategory(selectedCategory.categoryId);
+      setShowDeleteCatModal(false);
+      setSelectedCategory(null);
+      loadData();
+    } catch (error: any) {
+      alert(error.response?.data?.message || 'Failed to delete category (may have items attached)');
+    } finally { setSubmitting(false); }
+  };
+
+  const handleCreateItem = async () => {
+    setSubmitting(true);
+    try {
+      console.log('📤 Sending menu item payload:', itemForm);
+      await menuApi.createMenuItem(itemForm);
+      console.log('✅ Menu item created successfully');
+      setShowItemModal(false);
+      setItemForm({ itemName: '', itemNameHindi: '', description: '', categoryId: '', cuisineType: '', foodType: 'VEG', spiceLevel: '', dietaryTags: [], allergens: [], isPopular: false });
+      loadData();
+    } catch (error: any) { 
+      console.error('❌ Failed to create menu item:', error.response?.data);
       alert(error.response?.data?.message || 'Failed to create menu item');
-    } finally {
-      setLoading(false);
+    }
+    finally { setSubmitting(false); }
+  };
+
+  const openEditModal = (item: MenuItem, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setSelectedItem(item);
+    setEditForm({
+      itemName: item.itemName,
+      itemNameHindi: item.itemNameHindi || '',
+      description: item.description,
+      categoryId: item.categoryId,
+      cuisineType: item.cuisineType,
+      foodType: item.foodType,
+      spiceLevel: item.spiceLevel,
+      dietaryTags: item.dietaryTags || [],
+      allergens: item.allergens || [],
+      isPopular: item.isPopular,
+    });
+    setShowEditModal(true);
+  };
+
+  const handleUpdateItem = async () => {
+    if (!selectedItem) return;
+    setSubmitting(true);
+    try {
+      console.log('📤 Sending update payload:', editForm);
+      await menuApi.updateMenuItem(selectedItem.masterItemId, editForm);
+      console.log('✅ Menu item updated successfully');
+      setShowEditModal(false);
+      loadData();
+    } catch (error: any) {
+      console.error('❌ Failed to update menu item:', error.response?.data);
+      alert(error.response?.data?.message || 'Failed to update menu item');
+    } finally { setSubmitting(false); }
+  };
+
+  const handleToggleStatus = async (item: MenuItem, e: React.MouseEvent) => {
+    e.stopPropagation();
+    try {
+      if (item.status === 'ACTIVE') {
+        await menuApi.inactivateMenuItem(item.masterItemId);
+      } else {
+        await menuApi.activateMenuItem(item.masterItemId);
+      }
+      loadData();
+    } catch (error: any) {
+      alert(error.response?.data?.message || 'Failed to update status');
     }
   };
 
-  const resetMenuItemForm = () => {
-    setMenuItemForm({
-      itemName: '',
-      itemNameHindi: '',
-      description: '',
-      categoryId: '',
-      cuisineType: 'INDIAN',
-      foodType: 'VEG',
-      spiceLevel: 'MILD',
-      dietaryTags: [],
-      allergens: [],
-      nutritionalInfo: {
-        calories: 0,
-        proteinGrams: 0,
-        carbsGrams: 0,
-        fatGrams: 0,
-        servingSizeGrams: 0,
-      },
-      imageUrls: [],
-      isPopular: false,
-      status: 'ACTIVE',
-    });
-    setNewImageUrl('');
-    setNewDietaryTag('');
-    setNewAllergen('');
+  const openDeleteModal = (item: MenuItem, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setSelectedItem(item);
+    setShowDeleteModal(true);
   };
 
-  const addImageUrl = () => {
-    if (newImageUrl.trim()) {
-      setMenuItemForm({
-        ...menuItemForm,
-        imageUrls: [...(menuItemForm.imageUrls || []), newImageUrl.trim()],
-      });
-      setNewImageUrl('');
-    }
+  const handleDeleteItem = async () => {
+    if (!selectedItem) return;
+    setSubmitting(true);
+    try {
+      await menuApi.deleteMenuItem(selectedItem.masterItemId);
+      setShowDeleteModal(false);
+      setSelectedItem(null);
+      loadData();
+    } catch (error: any) {
+      alert(error.response?.data?.message || 'Failed to delete menu item');
+    } finally { setSubmitting(false); }
   };
 
-  const removeImageUrl = (index: number) => {
-    setMenuItemForm({
-      ...menuItemForm,
-      imageUrls: menuItemForm.imageUrls?.filter((_, i) => i !== index),
-    });
-  };
+  const filteredItems = menuItems.filter(item =>
+    !searchQuery || item.itemName.toLowerCase().includes(searchQuery.toLowerCase()) || item.categoryName?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
-  const addDietaryTag = () => {
-    if (newDietaryTag.trim()) {
-      setMenuItemForm({
-        ...menuItemForm,
-        dietaryTags: [...(menuItemForm.dietaryTags || []), newDietaryTag.trim().toUpperCase()],
-      });
-      setNewDietaryTag('');
-    }
-  };
-
-  const removeDietaryTag = (index: number) => {
-    setMenuItemForm({
-      ...menuItemForm,
-      dietaryTags: menuItemForm.dietaryTags?.filter((_, i) => i !== index),
-    });
-  };
-
-  const addAllergen = () => {
-    if (newAllergen.trim()) {
-      setMenuItemForm({
-        ...menuItemForm,
-        allergens: [...(menuItemForm.allergens || []), newAllergen.trim().toUpperCase()],
-      });
-      setNewAllergen('');
-    }
-  };
-
-  const removeAllergen = (index: number) => {
-    setMenuItemForm({
-      ...menuItemForm,
-      allergens: menuItemForm.allergens?.filter((_, i) => i !== index),
-    });
-  };
+  if (loading) {
+    return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600" /></div>;
+  }
 
   return (
     <div className="space-y-6 animate-fadeIn">
-      {/* Header */}
-      <div className="bg-gradient-to-r from-orange-500 to-red-600 rounded-2xl shadow-lg p-6 text-white">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold">Menu Management</h1>
-            <p className="text-orange-100 mt-1">Manage categories and master menu items</p>
+      <div className="bg-gradient-to-r from-teal-500 to-cyan-600 rounded-2xl shadow-lg p-6 text-white">
+        <h1 className="text-3xl font-bold flex items-center gap-3"><UtensilsCrossed className="w-8 h-8" />Menu Management</h1>
+        <p className="text-teal-100 mt-1">{categories.length} categories • {menuItems.length} items</p>
+      </div>
+
+      {/* Tabs */}
+      <div className="flex gap-2">
+        <button onClick={() => setActiveTab('categories')} className={`px-6 py-3 rounded-xl font-semibold transition-all ${activeTab === 'categories' ? 'bg-teal-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50 border'}`}>
+          <Tag className="w-4 h-4 inline mr-2" />Categories ({categories.length})
+        </button>
+        <button onClick={() => setActiveTab('items')} className={`px-6 py-3 rounded-xl font-semibold transition-all ${activeTab === 'items' ? 'bg-teal-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50 border'}`}>
+          <UtensilsCrossed className="w-4 h-4 inline mr-2" />Menu Items ({menuItems.length})
+        </button>
+      </div>
+
+      {/* Categories Tab */}
+      {activeTab === 'categories' && (
+        <div>
+          <div className="flex items-center justify-between mb-4">
+            <div className="w-56">
+              <CustomSelect
+                value={catStatusFilter}
+                onChange={(val) => setCatStatusFilter(val)}
+                options={[
+                  { value: '', label: 'All Statuses' },
+                  { value: 'ACTIVE', label: 'Active' },
+                  { value: 'INACTIVE', label: 'Inactive' },
+                ]}
+                placeholder="Filter by status"
+              />
+            </div>
+            <button onClick={openCreateCategoryModal} className="flex items-center gap-2 bg-teal-600 text-white px-4 py-2 rounded-xl hover:bg-teal-700 hover:scale-105 transition-all duration-200">
+              <Plus className="w-5 h-5" />Add Category
+            </button>
           </div>
-          <UtensilsCrossed className="w-12 h-12 opacity-50" />
-        </div>
-      </div>
-
-      {/* Action Buttons */}
-      <div className="flex gap-4">
-        <button
-          onClick={() => setShowCategoryModal(true)}
-          className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-3 rounded-xl hover:from-blue-700 hover:to-indigo-700 shadow-lg"
-        >
-          <Plus className="w-5 h-5" />
-          Create Category
-        </button>
-        <button
-          onClick={() => setShowMenuItemModal(true)}
-          className="flex items-center gap-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white px-6 py-3 rounded-xl hover:from-green-700 hover:to-emerald-700 shadow-lg"
-        >
-          <Plus className="w-5 h-5" />
-          Create Menu Item
-        </button>
-      </div>
-
-      {/* Categories List */}
-      <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
-        <h2 className="text-xl font-bold text-gray-900 mb-4">Categories ({categories.length})</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {categories.map((category) => (
-            <div key={category.id} className="border border-gray-200 rounded-xl p-4 hover:shadow-md transition-shadow">
-              <h3 className="font-semibold text-gray-900">{category.categoryName}</h3>
-              {category.categoryNameHindi && (
-                <p className="text-sm text-gray-500">{category.categoryNameHindi}</p>
-              )}
-              {category.description && (
-                <p className="text-sm text-gray-600 mt-2">{category.description}</p>
-              )}
-            </div>
-          ))}
-          {categories.length === 0 && (
-            <p className="text-gray-500 col-span-full text-center py-8">No categories created yet</p>
-          )}
-        </div>
-      </div>
-
-      {/* Menu Items List */}
-      <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
-        <h2 className="text-xl font-bold text-gray-900 mb-4">Menu Items ({menuItems.length})</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {menuItems.map((item) => (
-            <div key={item.id} className="border border-gray-200 rounded-xl p-4 hover:shadow-md transition-shadow">
-              <h3 className="font-semibold text-gray-900">{item.itemName}</h3>
-              {item.itemNameHindi && (
-                <p className="text-sm text-gray-500">{item.itemNameHindi}</p>
-              )}
-              <p className="text-sm text-gray-600 mt-2">{item.description}</p>
-              <div className="flex gap-2 mt-3">
-                <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">{item.foodType}</span>
-                <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">{item.spiceLevel}</span>
-                {item.isPopular && (
-                  <span className="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs rounded-full">Popular</span>
-                )}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {categories.map(cat => (
+              <div key={cat.categoryId} className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-all relative">
+                <div className="flex items-start justify-between mb-3">
+                  <h3 className="text-lg font-bold text-gray-900 pr-2">{cat.categoryName}</h3>
+                  <span className={`px-3 py-1 rounded-full text-xs font-semibold flex-shrink-0 ${cat.status === 'ACTIVE' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>{cat.status}</span>
+                </div>
+                {cat.categoryNameHindi && <p className="text-sm text-gray-500 mb-1">{cat.categoryNameHindi}</p>}
+                <p className="text-gray-600 text-sm">{cat.description || 'No description'}</p>
+                <div className="mt-2 mb-4 text-xs text-gray-400">Display order: {cat.displayOrder}</div>
+                {/* Category Action Buttons */}
+                <div className="flex items-center gap-2 pt-3 border-t border-gray-100">
+                  <button onClick={() => openEditCatModal(cat)}
+                    className="flex-1 flex items-center justify-center gap-1 py-1.5 bg-gradient-to-br from-blue-400 to-blue-600 text-white rounded-lg text-xs font-semibold hover:shadow-md hover:scale-105 transition-all duration-200">
+                    <Edit2 className="w-3 h-3" />Edit
+                  </button>
+                  <button onClick={() => handleToggleCatStatus(cat)}
+                    className={`flex-1 flex items-center justify-center gap-1 py-1.5 rounded-lg text-xs font-semibold hover:shadow-md hover:scale-105 transition-all duration-200 ${
+                      cat.status === 'ACTIVE'
+                        ? 'bg-gradient-to-br from-orange-400 to-orange-600 text-white'
+                        : 'bg-gradient-to-br from-green-400 to-green-600 text-white'
+                    }`}>
+                    {cat.status === 'ACTIVE' ? <><XCircle className="w-3 h-3" />Inactivate</> : <><CheckCircle className="w-3 h-3" />Activate</>}
+                  </button>
+                  <button onClick={() => openDeleteCatModal(cat)}
+                    className="p-1.5 bg-gradient-to-br from-red-400 to-red-600 text-white rounded-lg hover:shadow-md hover:scale-105 transition-all duration-200">
+                    <Trash2 className="w-3 h-3" />
+                  </button>
+                </div>
               </div>
-            </div>
-          ))}
-          {menuItems.length === 0 && (
-            <p className="text-gray-500 col-span-full text-center py-8">No menu items created yet</p>
-          )}
+            ))}
+          </div>
         </div>
-      </div>
+      )}
+
+      {/* Menu Items Tab */}
+      {activeTab === 'items' && (
+        <div>
+          <div className="flex items-center justify-between mb-4">
+            <div className="relative w-64">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <input type="text" placeholder="Search items..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-500" />
+            </div>
+            <button onClick={() => setShowItemModal(true)} className="flex items-center gap-2 bg-teal-600 text-white px-4 py-2 rounded-xl hover:bg-teal-700">
+              <Plus className="w-5 h-5" />Add Item
+            </button>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {filteredItems.map(item => (
+              <div key={item.masterItemId} onClick={() => { setSelectedItem(item); setShowDetailModal(true); }}
+                className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-all cursor-pointer relative">
+                {/* Status badge */}
+                <div className="absolute top-4 right-4">
+                  <span className={`px-2 py-1 rounded-full text-xs font-semibold ${item.status === 'ACTIVE' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'}`}>{item.status}</span>
+                </div>
+                <div className="flex items-start justify-between mb-2 pr-20">
+                  <h3 className="text-lg font-bold text-gray-900">{item.itemName}</h3>
+                  <span className={`ml-2 px-2 py-1 rounded-full text-xs font-semibold flex-shrink-0 ${
+                    item.foodType === 'VEG' ? 'bg-green-100 text-green-800' :
+                    item.foodType === 'NON_VEG' ? 'bg-red-100 text-red-800' :
+                    item.foodType === 'VEGAN' ? 'bg-emerald-100 text-emerald-800' :
+                    item.foodType === 'EGG' ? 'bg-amber-100 text-amber-800' :
+                    item.foodType === 'BEVERAGES' ? 'bg-blue-100 text-blue-800' :
+                    item.foodType === 'DESSERTS' ? 'bg-pink-100 text-pink-800' :
+                    item.foodType === 'SNACKS' ? 'bg-orange-100 text-orange-800' :
+                    item.foodType === 'SWEETS' ? 'bg-purple-100 text-purple-800' :
+                    item.foodType === 'OTHER' ? 'bg-gray-100 text-gray-800' :
+                    'bg-yellow-100 text-yellow-800'
+                  }`}>{item.foodType}</span>
+                </div>
+                {item.itemNameHindi && <p className="text-sm text-gray-500 mb-1">{item.itemNameHindi}</p>}
+                <p className="text-gray-600 text-sm line-clamp-2 mb-2">{item.description}</p>
+                <div className="flex flex-wrap gap-1 mb-2">
+                  <span className="px-2 py-0.5 bg-blue-50 text-blue-700 rounded text-xs">{item.cuisineType}</span>
+                  <span className="px-2 py-0.5 bg-orange-50 text-orange-700 rounded text-xs">{item.spiceLevel}</span>
+                  {item.isPopular && <span className="px-2 py-0.5 bg-yellow-50 text-yellow-700 rounded text-xs">⭐ Popular</span>}
+                </div>
+                <div className="text-xs text-gray-400 mb-3">{item.categoryName || 'Uncategorized'}</div>
+                {/* Action Buttons */}
+                <div className="flex items-center gap-2 pt-3 border-t border-gray-100" onClick={(e) => e.stopPropagation()}>
+                  <button onClick={(e) => openEditModal(item, e)}
+                    className="flex-1 flex items-center justify-center gap-1 py-1.5 bg-gradient-to-br from-blue-400 to-blue-600 text-white rounded-lg text-xs font-semibold hover:shadow-md hover:scale-105 transition-all duration-200">
+                    <Edit2 className="w-3 h-3" />Edit
+                  </button>
+                  <button onClick={(e) => handleToggleStatus(item, e)}
+                    className={`flex-1 flex items-center justify-center gap-1 py-1.5 rounded-lg text-xs font-semibold hover:shadow-md hover:scale-105 transition-all duration-200 ${
+                      item.status === 'ACTIVE'
+                        ? 'bg-gradient-to-br from-orange-400 to-orange-600 text-white'
+                        : 'bg-gradient-to-br from-green-400 to-green-600 text-white'
+                    }`}>
+                    {item.status === 'ACTIVE' ? <><XCircle className="w-3 h-3" />Inactivate</> : <><CheckCircle className="w-3 h-3" />Activate</>}
+                  </button>
+                  <button onClick={(e) => openDeleteModal(item, e)}
+                    className="p-1.5 bg-gradient-to-br from-red-400 to-red-600 text-white rounded-lg hover:shadow-md hover:scale-105 transition-all duration-200">
+                    <Trash2 className="w-3 h-3" />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Create Category Modal */}
-      <Modal
-        isOpen={showCategoryModal}
-        onClose={() => setShowCategoryModal(false)}
-        title="Create Category"
-      >
-        <form onSubmit={handleCreateCategory} className="space-y-4">
+      <Modal isOpen={showCategoryModal} onClose={() => setShowCategoryModal(false)} title="Create Category">
+        <div className="space-y-4">
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Category Name <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              required
-              value={categoryForm.categoryName}
-              onChange={(e) => setCategoryForm({ ...categoryForm, categoryName: e.target.value })}
-              className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500"
-              placeholder="Main Course"
-            />
+            <label className="block text-sm font-semibold text-gray-700 mb-1">Category Name *</label>
+            <input type="text" value={categoryForm.categoryName} onChange={(e) => setCategoryForm({ ...categoryForm, categoryName: e.target.value })}
+              className="w-full px-4 py-2 border border-gray-300 rounded-xl" placeholder="e.g., Main Course" />
           </div>
-
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">Category Name (Hindi)</label>
-            <input
-              type="text"
-              value={categoryForm.categoryNameHindi}
-              onChange={(e) => setCategoryForm({ ...categoryForm, categoryNameHindi: e.target.value })}
-              className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500"
-              placeholder="Main Course (Hindi)"
-            />
+            <label className="block text-sm font-semibold text-gray-700 mb-1">Hindi Name</label>
+            <input type="text" value={categoryForm.categoryNameHindi} onChange={(e) => setCategoryForm({ ...categoryForm, categoryNameHindi: e.target.value })}
+              className="w-full px-4 py-2 border border-gray-300 rounded-xl" placeholder="e.g., मुख्य व्यंजन" />
           </div>
-
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">Description</label>
-            <textarea
-              value={categoryForm.description}
-              onChange={(e) => setCategoryForm({ ...categoryForm, description: e.target.value })}
-              className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500"
-              rows={3}
-              placeholder="Primary dishes for lunch and dinner"
-            />
+            <label className="block text-sm font-semibold text-gray-700 mb-1">Description</label>
+            <textarea value={categoryForm.description} onChange={(e) => setCategoryForm({ ...categoryForm, description: e.target.value })}
+              className="w-full px-4 py-2 border border-gray-300 rounded-xl" rows={2} />
           </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">Display Order</label>
+              <input type="number" value={categoryForm.displayOrder} onChange={(e) => setCategoryForm({ ...categoryForm, displayOrder: Number(e.target.value) })}
+                className="w-full px-4 py-2 border border-gray-300 rounded-xl" />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">Icon URL</label>
+              <input type="text" value={categoryForm.iconUrl} onChange={(e) => setCategoryForm({ ...categoryForm, iconUrl: e.target.value })}
+                className="w-full px-4 py-2 border border-gray-300 rounded-xl" />
+            </div>
+          </div>
+          <div className="flex gap-3">
+            <button onClick={handleCreateCategory} disabled={submitting || !categoryForm.categoryName}
+              className="flex-1 bg-teal-600 text-white px-4 py-2 rounded-xl disabled:opacity-50">{submitting ? 'Creating...' : 'Create Category'}</button>
+            <button onClick={() => setShowCategoryModal(false)} className="flex-1 bg-gray-200 text-gray-700 px-4 py-2 rounded-xl">Cancel</button>
+          </div>
+        </div>
+      </Modal>
 
+      {/* Edit Category Modal */}
+      <Modal isOpen={showEditCatModal} onClose={() => setShowEditCatModal(false)} title={`Edit: ${selectedCategory?.categoryName || ''}`}>
+        <div className="space-y-4">
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">Display Order</label>
-            <input
-              type="number"
-              value={categoryForm.displayOrder}
-              onChange={(e) => setCategoryForm({ ...categoryForm, displayOrder: Number(e.target.value) })}
-              className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500"
-              min="1"
-            />
+            <label className="block text-sm font-semibold text-gray-700 mb-1">Category Name</label>
+            <input type="text" value={editCatForm.categoryName || ''} onChange={(e) => setEditCatForm({ ...editCatForm, categoryName: e.target.value })}
+              className="w-full px-4 py-2 border border-gray-300 rounded-xl" />
           </div>
-
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">Icon URL</label>
-            <input
-              type="url"
-              value={categoryForm.iconUrl}
-              onChange={(e) => setCategoryForm({ ...categoryForm, iconUrl: e.target.value })}
-              className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500"
-              placeholder="http://example.com/icon.png"
-            />
+            <label className="block text-sm font-semibold text-gray-700 mb-1">Hindi Name</label>
+            <input type="text" value={editCatForm.categoryNameHindi || ''} onChange={(e) => setEditCatForm({ ...editCatForm, categoryNameHindi: e.target.value })}
+              className="w-full px-4 py-2 border border-gray-300 rounded-xl" placeholder="e.g., मुख्य व्यंजन" />
           </div>
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-1">Description</label>
+            <textarea value={editCatForm.description || ''} onChange={(e) => setEditCatForm({ ...editCatForm, description: e.target.value })}
+              className="w-full px-4 py-2 border border-gray-300 rounded-xl" rows={2} />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">Display Order</label>
+              <input type="number" value={editCatForm.displayOrder ?? 0} onChange={(e) => setEditCatForm({ ...editCatForm, displayOrder: Number(e.target.value) })}
+                className="w-full px-4 py-2 border border-gray-300 rounded-xl" />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">Icon URL</label>
+              <input type="text" value={editCatForm.iconUrl || ''} onChange={(e) => setEditCatForm({ ...editCatForm, iconUrl: e.target.value })}
+                className="w-full px-4 py-2 border border-gray-300 rounded-xl" />
+            </div>
+          </div>
+          <div className="flex gap-3">
+            <button onClick={handleUpdateCategory} disabled={submitting}
+              className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-xl disabled:opacity-50 hover:bg-blue-700">{submitting ? 'Saving...' : 'Save Changes'}</button>
+            <button onClick={() => setShowEditCatModal(false)} className="flex-1 bg-gray-200 text-gray-700 px-4 py-2 rounded-xl">Cancel</button>
+          </div>
+        </div>
+      </Modal>
 
-          <div className="flex gap-3 pt-4">
-            <button
-              type="submit"
-              disabled={loading}
-              className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-4 py-2 rounded-xl hover:from-blue-700 hover:to-indigo-700 disabled:opacity-50"
-            >
-              {loading ? 'Creating...' : 'Create Category'}
-            </button>
-            <button
-              type="button"
-              onClick={() => setShowCategoryModal(false)}
-              className="flex-1 bg-gray-200 text-gray-700 px-4 py-2 rounded-xl hover:bg-gray-300"
-            >
-              Cancel
-            </button>
+      {/* Delete Category Modal */}
+      <Modal isOpen={showDeleteCatModal} onClose={() => setShowDeleteCatModal(false)} title="Delete Category">
+        <div className="space-y-4">
+          <div className="flex items-center gap-3 p-4 bg-red-50 rounded-xl">
+            <Trash2 className="w-8 h-8 text-red-500 flex-shrink-0" />
+            <div>
+              <p className="font-semibold text-gray-900">Are you sure you want to delete?</p>
+              <p className="text-sm text-gray-600 mt-1"><strong>{selectedCategory?.categoryName}</strong> will be permanently removed.</p>
+              <p className="text-xs text-red-500 mt-1">This will fail if the category has menu items attached.</p>
+            </div>
           </div>
-        </form>
+          <div className="flex gap-3">
+            <button onClick={handleDeleteCategory} disabled={submitting}
+              className="flex-1 bg-red-600 text-white px-4 py-2 rounded-xl disabled:opacity-50 hover:bg-red-700">{submitting ? 'Deleting...' : 'Yes, Delete'}</button>
+            <button onClick={() => setShowDeleteCatModal(false)} className="flex-1 bg-gray-200 text-gray-700 px-4 py-2 rounded-xl">Cancel</button>
+          </div>
+        </div>
       </Modal>
 
       {/* Create Menu Item Modal */}
-      <Modal
-        isOpen={showMenuItemModal}
-        onClose={() => setShowMenuItemModal(false)}
-        title="Create Menu Item"
-      >
-        <form onSubmit={handleCreateMenuItem} className="space-y-4 max-h-[70vh] overflow-y-auto">
+      <Modal isOpen={showItemModal} onClose={() => setShowItemModal(false)} title="Create Menu Item" size="lg">
+        <div className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Item Name <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                required
-                value={menuItemForm.itemName}
-                onChange={(e) => setMenuItemForm({ ...menuItemForm, itemName: e.target.value })}
-                className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500"
-                placeholder="Paneer Tikka"
-              />
+              <label className="block text-sm font-semibold text-gray-700 mb-1">Item Name *</label>
+              <input type="text" value={itemForm.itemName} onChange={(e) => setItemForm({ ...itemForm, itemName: e.target.value })}
+                className="w-full px-4 py-2 border border-gray-300 rounded-xl" placeholder="e.g., Paneer Butter Masala" />
             </div>
-
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">Item Name (Hindi)</label>
-              <input
-                type="text"
-                value={menuItemForm.itemNameHindi}
-                onChange={(e) => setMenuItemForm({ ...menuItemForm, itemNameHindi: e.target.value })}
-                className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500"
-                placeholder="पनीर टिक्का"
-              />
+              <label className="block text-sm font-semibold text-gray-700 mb-1">Hindi Name</label>
+              <input type="text" value={itemForm.itemNameHindi || ''} onChange={(e) => setItemForm({ ...itemForm, itemNameHindi: e.target.value })}
+                className="w-full px-4 py-2 border border-gray-300 rounded-xl" />
             </div>
           </div>
-
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Description <span className="text-red-500">*</span>
-            </label>
-            <textarea
-              required
-              value={menuItemForm.description}
-              onChange={(e) => setMenuItemForm({ ...menuItemForm, description: e.target.value })}
-              className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500"
-              rows={3}
-              placeholder="Grilled cottage cheese cubes"
-            />
+            <label className="block text-sm font-semibold text-gray-700 mb-1">Description *</label>
+            <textarea value={itemForm.description} onChange={(e) => setItemForm({ ...itemForm, description: e.target.value })}
+              className="w-full px-4 py-2 border border-gray-300 rounded-xl" rows={2} />
           </div>
-
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Category <span className="text-red-500">*</span>
-            </label>
-            <select
-              required
-              value={menuItemForm.categoryId}
-              onChange={(e) => setMenuItemForm({ ...menuItemForm, categoryId: e.target.value })}
-              className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500"
-            >
-              <option value="">Select Category</option>
-              {categories.map((cat) => (
-                <option key={cat.id || cat.categoryId} value={cat.categoryId || cat.id}>
-                  {cat.categoryName}
-                </option>
-              ))}
-            </select>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">Category *</label>
+              <CustomSelect
+                value={itemForm.categoryId}
+                onChange={(val) => setItemForm({ ...itemForm, categoryId: val })}
+                options={[
+                  { value: '', label: 'Select category' },
+                  ...categories.map(c => ({ value: c.categoryId, label: c.categoryName })),
+                ]}
+                placeholder="Select category"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">Cuisine Type *</label>
+              <input type="text" value={itemForm.cuisineType} onChange={(e) => setItemForm({ ...itemForm, cuisineType: e.target.value })}
+                className="w-full px-4 py-2 border border-gray-300 rounded-xl" placeholder="e.g., NORTH_INDIAN" />
+            </div>
           </div>
-
           <div className="grid grid-cols-3 gap-4">
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Cuisine Type <span className="text-red-500">*</span>
-              </label>
-              <select
-                required
-                value={menuItemForm.cuisineType}
-                onChange={(e) => setMenuItemForm({ ...menuItemForm, cuisineType: e.target.value })}
-                className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500"
-              >
-                <option value="">Select</option>
-                <option value="NORTH_INDIAN">North Indian</option>
-                <option value="SOUTH_INDIAN">South Indian</option>
-                <option value="CHINESE">Chinese</option>
-                <option value="CONTINENTAL">Continental</option>
-                <option value="ITALIAN">Italian</option>
-                <option value="MEXICAN">Mexican</option>
-              </select>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">Food Type *</label>
+              <CustomSelect
+                value={itemForm.foodType}
+                onChange={(val) => setItemForm({ ...itemForm, foodType: val })}
+                options={[
+                  { value: 'VEG', label: 'Veg' },
+                  { value: 'NON_VEG', label: 'Non-Veg' },
+                  { value: 'VEGAN', label: 'Vegan' },
+                  { value: 'EGG', label: 'Egg' },
+                  { value: 'BEVERAGES', label: 'Beverages' },
+                  { value: 'DESSERTS', label: 'Desserts' },
+                  { value: 'SNACKS', label: 'Snacks' },
+                  { value: 'SWEETS', label: 'Sweets' },
+                  { value: 'OTHER', label: 'Other' },
+                ]}
+                placeholder="Select type"
+              />
             </div>
-
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Food Type <span className="text-red-500">*</span>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">Spice Level</label>
+              <CustomSelect
+                value={itemForm.spiceLevel}
+                onChange={(val) => setItemForm({ ...itemForm, spiceLevel: val })}
+                options={[
+                  { value: '', label: 'None' },
+                  { value: 'MILD', label: 'Mild' },
+                  { value: 'MEDIUM', label: 'Medium' },
+                  { value: 'SPICY', label: 'Spicy' },
+                  { value: 'EXTRA_SPICY', label: 'Extra Spicy' },
+                  { value: 'HOT', label: 'Hot' },
+                  { value: 'EXTRA_HOT', label: 'Extra Hot' },
+                  { value: 'COLD', label: 'Cold' },
+                ]}
+                placeholder="Select level"
+              />
+            </div>
+            <div className="flex items-end pb-1">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" checked={itemForm.isPopular} onChange={(e) => setItemForm({ ...itemForm, isPopular: e.target.checked })}
+                  className="w-5 h-5 rounded border-gray-300 text-teal-600 focus:ring-teal-500" />
+                <span className="text-sm font-semibold text-gray-700">Popular</span>
               </label>
-              <select
-                required
-                value={menuItemForm.foodType}
-                onChange={(e) => setMenuItemForm({ ...menuItemForm, foodType: e.target.value })}
-                className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500"
-              >
-                <option value="">Select</option>
-                <option value="VEG">Veg</option>
-                <option value="NON_VEG">Non-Veg</option>
-                <option value="VEGAN">Vegan</option>
-                <option value="EGGETARIAN">Eggetarian</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Spice Level <span className="text-red-500">*</span>
-              </label>
-              <select
-                required
-                value={menuItemForm.spiceLevel}
-                onChange={(e) => setMenuItemForm({ ...menuItemForm, spiceLevel: e.target.value })}
-                className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500"
-              >
-                <option value="">Select</option>
-                <option value="MILD">Mild</option>
-                <option value="MEDIUM">Medium</option>
-                <option value="HOT">Hot</option>
-                <option value="EXTRA_HOT">Extra Hot</option>
-              </select>
             </div>
           </div>
+          <div className="flex gap-3">
+            <button onClick={handleCreateItem} disabled={submitting || !itemForm.itemName || !itemForm.description || !itemForm.categoryId || !itemForm.cuisineType}
+              className="flex-1 bg-teal-600 text-white px-4 py-2 rounded-xl disabled:opacity-50">{submitting ? 'Creating...' : 'Create Item'}</button>
+            <button onClick={() => setShowItemModal(false)} className="flex-1 bg-gray-200 text-gray-700 px-4 py-2 rounded-xl">Cancel</button>
+          </div>
+        </div>
+      </Modal>
 
-          {/* Dietary Tags */}
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">Dietary Tags</label>
-            <div className="space-y-2">
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={newDietaryTag}
-                  onChange={(e) => setNewDietaryTag(e.target.value)}
-                  className="flex-1 px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500"
-                  placeholder="e.g., GLUTEN_FREE"
-                />
-                <button
-                  type="button"
-                  onClick={addDietaryTag}
-                  className="px-4 py-2 bg-green-600 text-white rounded-xl hover:bg-green-700"
-                >
-                  <Plus className="w-5 h-5" />
-                </button>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {menuItemForm.dietaryTags?.map((tag, index) => (
-                  <span key={index} className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm flex items-center gap-2">
-                    {tag}
-                    <X className="w-4 h-4 cursor-pointer" onClick={() => removeDietaryTag(index)} />
-                  </span>
-                ))}
-              </div>
+      {/* Item Detail Modal */}
+      <Modal isOpen={showDetailModal} onClose={() => setShowDetailModal(false)} title="Menu Item Details">
+        {selectedItem && (
+          <>
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div><label className="text-sm font-semibold text-gray-700">Name</label><p className="mt-1">{selectedItem.itemName}</p></div>
+              <div><label className="text-sm font-semibold text-gray-700">Hindi Name</label><p className="mt-1">{selectedItem.itemNameHindi || 'N/A'}</p></div>
+              <div><label className="text-sm font-semibold text-gray-700">Category</label><p className="mt-1">{selectedItem.categoryName}</p></div>
+              <div><label className="text-sm font-semibold text-gray-700">Cuisine</label><p className="mt-1">{selectedItem.cuisineType}</p></div>
+              <div><label className="text-sm font-semibold text-gray-700">Food Type</label><p className="mt-1">{selectedItem.foodType}</p></div>
+              <div><label className="text-sm font-semibold text-gray-700">Spice Level</label><p className="mt-1">{selectedItem.spiceLevel}</p></div>
+              <div><label className="text-sm font-semibold text-gray-700">Status</label><p className="mt-1">{selectedItem.status}</p></div>
+              <div><label className="text-sm font-semibold text-gray-700">Popular</label><p className="mt-1">{selectedItem.isPopular ? 'Yes' : 'No'}</p></div>
             </div>
-          </div>
-
-          {/* Allergens */}
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">Allergens</label>
-            <div className="space-y-2">
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={newAllergen}
-                  onChange={(e) => setNewAllergen(e.target.value)}
-                  className="flex-1 px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500"
-                  placeholder="e.g., NUTS"
-                />
-                <button
-                  type="button"
-                  onClick={addAllergen}
-                  className="px-4 py-2 bg-red-600 text-white rounded-xl hover:bg-red-700"
-                >
-                  <Plus className="w-5 h-5" />
-                </button>
+            <div><label className="text-sm font-semibold text-gray-700">Description</label><p className="mt-1 text-gray-700">{selectedItem.description}</p></div>
+            {(selectedItem.dietaryTags?.length ?? 0) > 0 && (
+              <div>
+                <label className="text-sm font-semibold text-gray-700">Dietary Tags</label>
+                <div className="flex flex-wrap gap-2 mt-1">{selectedItem.dietaryTags.map(t => <span key={t} className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">{t}</span>)}</div>
               </div>
-              <div className="flex flex-wrap gap-2">
-                {menuItemForm.allergens?.map((allergen, index) => (
-                  <span key={index} className="bg-red-100 text-red-800 px-3 py-1 rounded-full text-sm flex items-center gap-2">
-                    {allergen}
-                    <X className="w-4 h-4 cursor-pointer" onClick={() => removeAllergen(index)} />
-                  </span>
-                ))}
+            )}
+            {(selectedItem.allergens?.length ?? 0) > 0 && (
+              <div>
+                <label className="text-sm font-semibold text-gray-700">Allergens</label>
+                <div className="flex flex-wrap gap-2 mt-1">{selectedItem.allergens.map(a => <span key={a} className="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs">{a}</span>)}</div>
               </div>
-            </div>
-          </div>
-
-          {/* Nutritional Info */}
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">Nutritional Information</label>
-            <div className="grid grid-cols-3 gap-4">
-              <input
-                type="number"
-                value={menuItemForm.nutritionalInfo?.calories || ''}
-                onChange={(e) => setMenuItemForm({
-                  ...menuItemForm,
-                  nutritionalInfo: { ...menuItemForm.nutritionalInfo!, calories: Number(e.target.value) }
-                })}
-                className="px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500"
-                placeholder="Calories"
-              />
-              <input
-                type="number"
-                value={menuItemForm.nutritionalInfo?.proteinGrams || ''}
-                onChange={(e) => setMenuItemForm({
-                  ...menuItemForm,
-                  nutritionalInfo: { ...menuItemForm.nutritionalInfo!, proteinGrams: Number(e.target.value) }
-                })}
-                className="px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500"
-                placeholder="Protein (g)"
-              />
-              <input
-                type="number"
-                value={menuItemForm.nutritionalInfo?.carbsGrams || ''}
-                onChange={(e) => setMenuItemForm({
-                  ...menuItemForm,
-                  nutritionalInfo: { ...menuItemForm.nutritionalInfo!, carbsGrams: Number(e.target.value) }
-                })}
-                className="px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500"
-                placeholder="Carbs (g)"
-              />
-              <input
-                type="number"
-                value={menuItemForm.nutritionalInfo?.fatGrams || ''}
-                onChange={(e) => setMenuItemForm({
-                  ...menuItemForm,
-                  nutritionalInfo: { ...menuItemForm.nutritionalInfo!, fatGrams: Number(e.target.value) }
-                })}
-                className="px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500"
-                placeholder="Fat (g)"
-              />
-              <input
-                type="number"
-                value={menuItemForm.nutritionalInfo?.servingSizeGrams || ''}
-                onChange={(e) => setMenuItemForm({
-                  ...menuItemForm,
-                  nutritionalInfo: { ...menuItemForm.nutritionalInfo!, servingSizeGrams: Number(e.target.value) }
-                })}
-                className="px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500"
-                placeholder="Serving Size (g)"
-              />
-            </div>
-          </div>
-
-          {/* Image URLs */}
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">Image URLs</label>
-            <div className="space-y-2">
-              <div className="flex gap-2">
-                <input
-                  type="url"
-                  value={newImageUrl}
-                  onChange={(e) => setNewImageUrl(e.target.value)}
-                  className="flex-1 px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500"
-                  placeholder="http://example.com/image.jpg"
-                />
-                <button
-                  type="button"
-                  onClick={addImageUrl}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700"
-                >
-                  <Plus className="w-5 h-5" />
-                </button>
+            )}
+            {selectedItem.nutritionalInfo && (
+              <div>
+                <label className="text-sm font-semibold text-gray-700">Nutritional Info</label>
+                <div className="grid grid-cols-5 gap-2 mt-2">
+                  <div className="bg-gray-50 rounded-lg p-2 text-center"><p className="text-lg font-bold">{selectedItem.nutritionalInfo.calories}</p><p className="text-xs text-gray-500">Calories</p></div>
+                  <div className="bg-gray-50 rounded-lg p-2 text-center"><p className="text-lg font-bold">{selectedItem.nutritionalInfo.proteinGrams}g</p><p className="text-xs text-gray-500">Protein</p></div>
+                  <div className="bg-gray-50 rounded-lg p-2 text-center"><p className="text-lg font-bold">{selectedItem.nutritionalInfo.carbsGrams}g</p><p className="text-xs text-gray-500">Carbs</p></div>
+                  <div className="bg-gray-50 rounded-lg p-2 text-center"><p className="text-lg font-bold">{selectedItem.nutritionalInfo.fatGrams}g</p><p className="text-xs text-gray-500">Fat</p></div>
+                  <div className="bg-gray-50 rounded-lg p-2 text-center"><p className="text-lg font-bold">{selectedItem.nutritionalInfo.servingSizeGrams}g</p><p className="text-xs text-gray-500">Serving</p></div>
+                </div>
               </div>
-              <div className="flex flex-wrap gap-2">
-                {menuItemForm.imageUrls?.map((url, index) => (
-                  <span key={index} className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm flex items-center gap-2">
-                    <img src={url} alt={`Image ${index + 1}`} className="w-6 h-6 rounded object-cover" />
-                    Image {index + 1}
-                    <X className="w-4 h-4 cursor-pointer" onClick={() => removeImageUrl(index)} />
-                  </span>
-                ))}
-              </div>
-            </div>
+            )}
           </div>
-
-          {/* Is Popular Checkbox */}
-          <div className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              id="isPopular"
-              checked={menuItemForm.isPopular || false}
-              onChange={(e) => setMenuItemForm({ ...menuItemForm, isPopular: e.target.checked })}
-              className="w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500"
-            />
-            <label htmlFor="isPopular" className="text-sm font-semibold text-gray-700">
-              Mark as Popular
-            </label>
-          </div>
-
-          <div className="flex gap-3 pt-4">
-            <button
-              type="submit"
-              disabled={loading}
-              className="flex-1 bg-gradient-to-r from-green-600 to-emerald-600 text-white px-4 py-2 rounded-xl hover:from-green-700 hover:to-emerald-700 disabled:opacity-50"
-            >
-              {loading ? 'Creating...' : 'Create Menu Item'}
+          {/* Detail modal action buttons */}
+          <div className="flex gap-3 pt-2 border-t">
+            <button onClick={(e) => { setShowDetailModal(false); openEditModal(selectedItem, e); }}
+              className="flex-1 flex items-center justify-center gap-2 bg-blue-600 text-white py-2 rounded-xl hover:bg-blue-700">
+              <Edit2 className="w-4 h-4" />Edit
             </button>
-            <button
-              type="button"
-              onClick={() => setShowMenuItemModal(false)}
-              className="flex-1 bg-gray-200 text-gray-700 px-4 py-2 rounded-xl hover:bg-gray-300"
-            >
-              Cancel
+            <button onClick={(e) => { setShowDetailModal(false); handleToggleStatus(selectedItem, e); }}
+              className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-xl ${selectedItem.status === 'ACTIVE' ? 'bg-orange-600 text-white hover:bg-orange-700' : 'bg-green-600 text-white hover:bg-green-700'}`}>
+              {selectedItem.status === 'ACTIVE' ? <><XCircle className="w-4 h-4" />Inactivate</> : <><CheckCircle className="w-4 h-4" />Activate</>}
+            </button>
+            <button onClick={(e) => { setShowDetailModal(false); openDeleteModal(selectedItem, e); }}
+              className="flex-1 flex items-center justify-center gap-2 bg-red-600 text-white py-2 rounded-xl hover:bg-red-700">
+              <Trash2 className="w-4 h-4" />Delete
             </button>
           </div>
-        </form>
+          </>
+        )}
+      </Modal>
+
+      {/* Edit Menu Item Modal */}
+      <Modal isOpen={showEditModal} onClose={() => setShowEditModal(false)} title={`Edit: ${selectedItem?.itemName || ''}`} size="lg">
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">Item Name</label>
+              <input type="text" value={editForm.itemName || ''} onChange={(e) => setEditForm({ ...editForm, itemName: e.target.value })}
+                className="w-full px-4 py-2 border border-gray-300 rounded-xl" />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">Hindi Name</label>
+              <input type="text" value={editForm.itemNameHindi || ''} onChange={(e) => setEditForm({ ...editForm, itemNameHindi: e.target.value })}
+                className="w-full px-4 py-2 border border-gray-300 rounded-xl" />
+            </div>
+          </div>
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-1">Description</label>
+            <textarea value={editForm.description || ''} onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
+              className="w-full px-4 py-2 border border-gray-300 rounded-xl" rows={2} />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">Category</label>
+              <CustomSelect
+                value={editForm.categoryId || ''}
+                onChange={(val) => setEditForm({ ...editForm, categoryId: val })}
+                options={[
+                  { value: '', label: 'Select category' },
+                  ...categories.map(c => ({ value: c.categoryId, label: c.categoryName })),
+                ]}
+                placeholder="Select category"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">Cuisine Type</label>
+              <input type="text" value={editForm.cuisineType || ''} onChange={(e) => setEditForm({ ...editForm, cuisineType: e.target.value })}
+                className="w-full px-4 py-2 border border-gray-300 rounded-xl" />
+            </div>
+          </div>
+          <div className="grid grid-cols-3 gap-4">
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">Food Type</label>
+              <CustomSelect value={editForm.foodType || 'VEG'} onChange={(val) => setEditForm({ ...editForm, foodType: val })}
+                options={[{ value: 'VEG', label: 'Veg' }, { value: 'NON_VEG', label: 'Non-Veg' }, { value: 'VEGAN', label: 'Vegan' }, { value: 'EGG', label: 'Egg' }, { value: 'BEVERAGES', label: 'Beverages' }, { value: 'DESSERTS', label: 'Desserts' }, { value: 'SNACKS', label: 'Snacks' }, { value: 'SWEETS', label: 'Sweets' }, { value: 'OTHER', label: 'Other' }]}
+                placeholder="Select type" />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">Spice Level</label>
+              <CustomSelect value={editForm.spiceLevel || ''} onChange={(val) => setEditForm({ ...editForm, spiceLevel: val })}
+                options={[{ value: '', label: 'None' }, { value: 'MILD', label: 'Mild' }, { value: 'MEDIUM', label: 'Medium' }, { value: 'SPICY', label: 'Spicy' }, { value: 'EXTRA_SPICY', label: 'Extra Spicy' }, { value: 'HOT', label: 'Hot' }, { value: 'EXTRA_HOT', label: 'Extra Hot' }, { value: 'COLD', label: 'Cold' }]}
+                placeholder="Select level" />
+            </div>
+            <div className="flex items-end pb-1">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" checked={editForm.isPopular || false} onChange={(e) => setEditForm({ ...editForm, isPopular: e.target.checked })}
+                  className="w-5 h-5 rounded border-gray-300 text-teal-600 focus:ring-teal-500" />
+                <span className="text-sm font-semibold text-gray-700">Popular</span>
+              </label>
+            </div>
+          </div>
+          <div className="flex gap-3">
+            <button onClick={handleUpdateItem} disabled={submitting}
+              className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-xl disabled:opacity-50 hover:bg-blue-700">{submitting ? 'Saving...' : 'Save Changes'}</button>
+            <button onClick={() => setShowEditModal(false)} className="flex-1 bg-gray-200 text-gray-700 px-4 py-2 rounded-xl">Cancel</button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Delete Confirmation Modal */}
+      <Modal isOpen={showDeleteModal} onClose={() => setShowDeleteModal(false)} title="Delete Menu Item">
+        <div className="space-y-4">
+          <div className="flex items-center gap-3 p-4 bg-red-50 rounded-xl">
+            <Trash2 className="w-8 h-8 text-red-500 flex-shrink-0" />
+            <div>
+              <p className="font-semibold text-gray-900">Are you sure you want to delete?</p>
+              <p className="text-sm text-gray-600 mt-1"><strong>{selectedItem?.itemName}</strong> will be permanently removed.</p>
+            </div>
+          </div>
+          <div className="flex gap-3">
+            <button onClick={handleDeleteItem} disabled={submitting}
+              className="flex-1 bg-red-600 text-white px-4 py-2 rounded-xl disabled:opacity-50 hover:bg-red-700">{submitting ? 'Deleting...' : 'Yes, Delete'}</button>
+            <button onClick={() => setShowDeleteModal(false)} className="flex-1 bg-gray-200 text-gray-700 px-4 py-2 rounded-xl">Cancel</button>
+          </div>
+        </div>
       </Modal>
     </div>
   );

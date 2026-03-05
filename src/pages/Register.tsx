@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { adminApi } from '../services/api';
+import type { AdminRegistrationDto } from '../types';
 import { UserPlus, Shield, Sparkles, CheckCircle } from 'lucide-react';
 
 const Register: React.FC = () => {
@@ -34,7 +35,15 @@ const Register: React.FC = () => {
 
     try {
       // Ensure registrations from this admin UI are created with ADMIN role.
-      const payload: FormData = { ...formData, userType: 'ADMIN' };
+      const payload: AdminRegistrationDto = {
+        email: formData.email,
+        phone: formData.phone,
+        password: formData.password,
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        userType: 'ADMIN',
+        country: 'India',
+      };
       await adminApi.register(payload);
       navigate('/login');
     } catch (err: any) {

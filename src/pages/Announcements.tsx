@@ -1,334 +1,444 @@
 import React, { useEffect, useState } from 'react';
-import type { Announcement, CreateAnnouncementRequest } from '../types';
+import { announcementApi } from '../services/api';
+import type { Announcement, CreateAnnouncementRequest, UpdateAnnouncementRequest, PageInfo } from '../types';
 import DataTable from '../components/DataTable';
 import Modal from '../components/Modal';
-import { Plus, Trash2 } from 'lucide-react';
+import CustomSelect from '../components/CustomSelect';
+import { Megaphone, Plus, ChevronLeft, ChevronRight, Edit2, Trash2, Eye } from 'lucide-react';
 
 const Announcements: React.FC = () => {
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [formData, setFormData] = useState<CreateAnnouncementRequest>({
+  const [showViewModal, setShowViewModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [selectedAnnouncement, setSelectedAnnouncement] = useState<Announcement | null>(null);
+  const [currentPage, setCurrentPage] = useState(0);
+  const [pageSize] = useState(20);
+  const [pageInfo, setPageInfo] = useState<PageInfo>({ pageNumber: 0, pageSize: 20, totalElements: 0, totalPages: 0 });
+  const [submitting, setSubmitting] = useState(false);
+  const [form, setForm] = useState<CreateAnnouncementRequest>({
     title: '',
-    content: '',
-    type: 'INFO',
+    message: '',
+    priority: 'NORMAL',
     targetAudience: 'ALL',
-    startDate: new Date().toISOString().split('T')[0],
-    isActive: true,
+    startDate: '',
+    endDate: '',
+  });
+  const [editForm, setEditForm] = useState<UpdateAnnouncementRequest>({
+    title: '',
+    message: '',
+    priority: 'NORMAL',
+    targetAudience: 'ALL',
+    startDate: '',
+    endDate: '',
   });
 
-  useEffect(() => {
-    loadAnnouncements();
-  }, []);
+  useEffect(() => { loadAnnouncements(); }, [currentPage]);
 
   const loadAnnouncements = async () => {
     try {
-      // Mock data
-      const data: Announcement[] = [
-        {
-          id: '1',
-          title: 'Platform Maintenance',
-          content: 'Scheduled maintenance on Sunday 2AM-4AM',
-          type: 'INFO',
-          targetAudience: 'ALL',
-          startDate: '2026-01-30',
-          isActive: true,
-          createdBy: 'admin-1',
-          createdByName: 'Admin User',
-          createdAt: '2026-01-25T10:00:00Z',
-          updatedAt: '2026-01-25T10:00:00Z'
-        },
-        {
-          id: '2',
-          title: 'New Features Released',
-          content: 'Check out our new menu management features!',
-          type: 'INFO',
-          targetAudience: 'VENDORS',
-          startDate: '2026-01-27',
-          isActive: true,
-          createdBy: 'admin-1',
-          createdByName: 'Admin User',
-          createdAt: '2026-01-27T08:00:00Z',
-          updatedAt: '2026-01-27T08:00:00Z'
-        }
-      ];
-      setAnnouncements(data);
-    } catch (error) {
-      console.error('Failed to load announcements:', error);
-    } finally {
-      setLoading(false);
-    }
+      setLoading(true);
+      const response = await announcementApi.getAll({ page: currentPage, size: pageSize });
+      setAnnouncements(response.data);
+      setPageInfo(response.pageInfo);
+    } catch (error) { console.error('Failed to load announcements:', error); }
+    finally { setLoading(false); }
+  };
+
+  // Convert datetime-local format (YYYY-MM-DDTHH:mm) to ISO-8601 UTC (YYYY-MM-DDTHH:mm:ssZ)
+  const formatDateToUTC = (dateString: string): string => {
+    if (!dateString) return '';
+    // datetime-local input gives "2026-03-20T14:37", we need "2026-03-20T14:37:00Z"
+    return `${dateString}:00Z`;
   };
 
   const handleCreate = async () => {
+    setSubmitting(true);
     try {
-      // Mock create - add to local state
-      const newAnnouncement: Announcement = {
-        id: Date.now().toString(),
-        ...formData,
-        createdBy: 'admin-1',
-        createdByName: 'Admin User',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
+      const data = {
+        ...form,
+        startDate: form.startDate ? formatDateToUTC(form.startDate) : undefined,
+        endDate: form.endDate ? formatDateToUTC(form.endDate) : undefined,
       };
-      setAnnouncements([newAnnouncement, ...announcements]);
+      await announcementApi.create(data as CreateAnnouncementRequest);
       setShowCreateModal(false);
-      resetForm();
-    } catch (error) {
-      console.error('Failed to create announcement:', error);
-      alert('Failed to create announcement');
-    }
+      setForm({
+        title: '',
+        message: '',
+        priority: 'NORMAL',
+        targetAudience: 'ALL',
+        startDate: '',
+        endDate: '',
+      });
+      loadAnnouncements();
+    } catch (error: any) { alert(error.response?.data?.message || 'Failed to create announcement'); }
+    finally { setSubmitting(false); }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this announcement?')) return;
-
+  const handleOpenView = async (announcement: Announcement) => {
     try {
-      // Mock delete - remove from local state
-      setAnnouncements(announcements.filter(a => a.id !== id));
-    } catch (error) {
-      console.error('Failed to delete announcement:', error);
-      alert('Failed to delete announcement');
-    }
+      const fullAnnouncement = await announcementApi.getById(announcement.announcementId);
+      setSelectedAnnouncement(fullAnnouncement);
+      setShowViewModal(true);
+    } catch (error) { alert('Failed to load announcement details'); }
   };
 
-  const resetForm = () => {
-    setFormData({
-      title: '',
-      content: '',
-      type: 'INFO',
-      targetAudience: 'ALL',
-      startDate: new Date().toISOString().split('T')[0],
-      isActive: true,
-    });
+  const handleOpenEdit = async (announcement: Announcement) => {
+    try {
+      const fullAnnouncement = await announcementApi.getById(announcement.announcementId);
+      setSelectedAnnouncement(fullAnnouncement);
+      // Convert ISO date to datetime-local format (remove Z and :00)
+      const startDate = fullAnnouncement.startDate ? fullAnnouncement.startDate.slice(0, 16) : '';
+      const endDate = fullAnnouncement.endDate ? fullAnnouncement.endDate.slice(0, 16) : '';
+      setEditForm({
+        title: fullAnnouncement.title,
+        message: fullAnnouncement.message,
+        priority: fullAnnouncement.priority,
+        targetAudience: fullAnnouncement.targetAudience,
+        startDate,
+        endDate,
+      });
+      setShowEditModal(true);
+    } catch (error) { alert('Failed to load announcement details'); }
+  };
+
+  const handleUpdate = async () => {
+    if (!selectedAnnouncement) return;
+    setSubmitting(true);
+    try {
+      const data = {
+        ...editForm,
+        startDate: editForm.startDate ? formatDateToUTC(editForm.startDate) : undefined,
+        endDate: editForm.endDate ? formatDateToUTC(editForm.endDate) : undefined,
+      };
+      await announcementApi.update(selectedAnnouncement.announcementId, data);
+      setShowEditModal(false);
+      setSelectedAnnouncement(null);
+      loadAnnouncements();
+    } catch (error: any) { alert(error.response?.data?.message || 'Failed to update announcement'); }
+    finally { setSubmitting(false); }
+  };
+
+  const handleDelete = async () => {
+    if (!selectedAnnouncement) return;
+    setSubmitting(true);
+    try {
+      await announcementApi.delete(selectedAnnouncement.announcementId);
+      console.log('✅ Announcement deleted successfully');
+      setShowDeleteConfirm(false);
+      setSelectedAnnouncement(null);
+      loadAnnouncements();
+    } catch (error: any) {
+      console.error('❌ Delete error:', error);
+      alert(error.response?.data?.message || 'Failed to delete announcement');
+    }
+    finally { setSubmitting(false); }
+  };
+
+  const priorityColors: Record<string, string> = {
+    LOW: 'bg-blue-100 text-blue-800',
+    NORMAL: 'bg-green-100 text-green-800',
+    HIGH: 'bg-yellow-100 text-yellow-800',
+    URGENT: 'bg-red-100 text-red-800',
   };
 
   const columns = [
     {
-      key: 'title',
-      header: 'Title',
-      render: (ann: Announcement) => (
+      key: 'title', header: 'Title',
+      render: (a: Announcement) => (
         <div>
-          <p className="font-semibold text-gray-900">{ann.title}</p>
-          <p className="text-sm text-gray-500">{ann.content.substring(0, 50)}...</p>
+          <p className="font-semibold text-gray-900">{a.title}</p>
+          <p className="text-sm text-gray-500 line-clamp-1">{a.message}</p>
         </div>
       ),
     },
     {
-      key: 'type',
-      header: 'Type',
-      render: (ann: Announcement) => (
-        <span
-          className={`px-3 py-1 rounded-full text-xs font-semibold ${
-            ann.type === 'URGENT'
-              ? 'bg-red-100 text-red-800'
-              : ann.type === 'WARNING'
-              ? 'bg-yellow-100 text-yellow-800'
-              : ann.type === 'MAINTENANCE'
-              ? 'bg-purple-100 text-purple-800'
-              : 'bg-blue-100 text-blue-800'
-          }`}
-        >
-          {ann.type}
-        </span>
-      ),
+      key: 'priority', header: 'Priority',
+      render: (a: Announcement) => <span className={`px-3 py-1 rounded-full text-xs font-semibold ${priorityColors[a.priority] || 'bg-gray-100 text-gray-800'}`}>{a.priority}</span>,
     },
     {
-      key: 'targetAudience',
-      header: 'Audience',
-      render: (ann: Announcement) => (
-        <span className="text-sm text-gray-600">{ann.targetAudience}</span>
-      ),
+      key: 'audience', header: 'Audience',
+      render: (a: Announcement) => <span className="px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-xs font-semibold">{a.targetAudience}</span>,
     },
     {
-      key: 'isActive',
-      header: 'Status',
-      render: (ann: Announcement) => (
-        <span
-          className={`px-3 py-1 rounded-full text-xs font-semibold ${
-            ann.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-          }`}
-        >
-          {ann.isActive ? 'Active' : 'Inactive'}
-        </span>
-      ),
+      key: 'startDate', header: 'Date Range',
+      render: (a: Announcement) => {
+        const start = a.startDate ? new Date(a.startDate).toLocaleDateString() : '—';
+        const end = a.endDate ? new Date(a.endDate).toLocaleDateString() : '—';
+        return <span className="text-sm text-gray-600">{start} to {end}</span>;
+      },
     },
     {
-      key: 'startDate',
-      header: 'Start Date',
-      render: (ann: Announcement) => (
-        <span className="text-sm text-gray-600">
-          {new Date(ann.startDate).toLocaleDateString()}
-        </span>
-      ),
+      key: 'createdAt', header: 'Created',
+      render: (a: Announcement) => new Date(a.createdAt).toLocaleDateString(),
     },
     {
-      key: 'actions',
-      header: 'Actions',
-      render: (ann: Announcement) => (
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            handleDelete(ann.id);
-          }}
-          className="p-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200"
-        >
-          <Trash2 className="w-4 h-4" />
-        </button>
+      key: 'actions', header: 'Actions',
+      render: (a: Announcement) => (
+        <div className="flex gap-2">
+          <button onClick={() => handleOpenView(a)} className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition" title="View details">
+            <Eye className="w-4 h-4" />
+          </button>
+          <button onClick={() => handleOpenEdit(a)} className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition" title="Edit">
+            <Edit2 className="w-4 h-4" />
+          </button>
+          <button onClick={() => { setSelectedAnnouncement(a); setShowDeleteConfirm(true); }} className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition" title="Delete">
+            <Trash2 className="w-4 h-4" />
+          </button>
+        </div>
       ),
     },
   ];
 
+  if (loading && announcements.length === 0) {
+    return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600" /></div>;
+  }
+
   return (
     <div className="space-y-6 animate-fadeIn">
-      <div className="bg-gradient-to-r from-pink-500 to-rose-600 rounded-2xl shadow-lg p-6 text-white">
+      <div className="bg-gradient-to-r from-indigo-500 to-violet-600 rounded-2xl shadow-lg p-6 text-white">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold">Announcements</h1>
-            <p className="text-pink-100 mt-1">Manage platform announcements</p>
+            <h1 className="text-3xl font-bold flex items-center gap-3"><Megaphone className="w-8 h-8" />Announcements</h1>
+            <p className="text-indigo-100 mt-1">Total: {pageInfo.totalElements} announcements</p>
           </div>
-          <button
-            onClick={() => setShowCreateModal(true)}
-            className="flex items-center gap-2 bg-white text-pink-600 px-4 py-2 rounded-xl hover:bg-pink-50"
-          >
-            <Plus className="w-5 h-5" />
-            New Announcement
+          <button onClick={() => setShowCreateModal(true)}
+            className="flex items-center gap-2 bg-white/20 backdrop-blur-sm px-4 py-2 rounded-xl border border-white/30 hover:bg-white/30">
+            <Plus className="w-5 h-5" />New Announcement
           </button>
         </div>
       </div>
 
       <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
-        {loading ? (
-          <div className="flex items-center justify-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-600"></div>
+        <DataTable data={announcements} columns={columns} />
+        {pageInfo.totalPages > 1 && (
+          <div className="border-t border-gray-200 px-6 py-4 flex items-center justify-between">
+            <span className="text-sm text-gray-600">Page {pageInfo.pageNumber + 1} of {pageInfo.totalPages}</span>
+            <div className="flex items-center gap-2">
+              <button onClick={() => setCurrentPage(Math.max(0, currentPage - 1))} disabled={currentPage === 0}
+                className="p-2 rounded-lg border hover:bg-gray-50 disabled:opacity-50"><ChevronLeft className="w-5 h-5" /></button>
+              <button onClick={() => setCurrentPage(Math.min(pageInfo.totalPages - 1, currentPage + 1))} disabled={currentPage >= pageInfo.totalPages - 1}
+                className="p-2 rounded-lg border hover:bg-gray-50 disabled:opacity-50"><ChevronRight className="w-5 h-5" /></button>
+            </div>
           </div>
-        ) : (
-          <DataTable data={announcements} columns={columns} />
         )}
       </div>
 
-      <Modal
-        isOpen={showCreateModal}
-        onClose={() => {
-          setShowCreateModal(false);
-          resetForm();
-        }}
-        title="Create Announcement"
-      >
+      {/* Create Modal */}
+      <Modal isOpen={showCreateModal} onClose={() => setShowCreateModal(false)} title="Create Announcement">
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">Title</label>
-            <input
-              type="text"
-              value={formData.title}
-              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-              className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-pink-500"
-              required
-            />
+            <label className="block text-sm font-semibold text-gray-700 mb-1">Title * ({form.title.length}/200)</label>
+            <input type="text" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value.slice(0, 200) })}
+              className={`w-full px-4 py-2 border ${form.title.length < 5 ? 'border-red-300' : 'border-gray-300'} rounded-xl`}
+              placeholder="5-200 characters" maxLength={200} />
+            {form.title.length < 5 && form.title.length > 0 && <p className="text-xs text-red-600 mt-1">Minimum 5 characters required</p>}
           </div>
-
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">Content</label>
-            <textarea
-              value={formData.content}
-              onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-              className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-pink-500"
-              rows={4}
-              required
-            />
+            <label className="block text-sm font-semibold text-gray-700 mb-1">Message * ({form.message.length}/2000)</label>
+            <textarea value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value.slice(0, 2000) })}
+              className={`w-full px-4 py-2 border ${form.message.length < 10 ? 'border-red-300' : 'border-gray-300'} rounded-xl`}
+              rows={4} placeholder="10-2000 characters" maxLength={2000} />
+            {form.message.length < 10 && form.message.length > 0 && <p className="text-xs text-red-600 mt-1">Minimum 10 characters required</p>}
           </div>
-
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">Type</label>
-              <select
-                value={formData.type}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    type: e.target.value as 'INFO' | 'WARNING' | 'URGENT' | 'MAINTENANCE',
-                  })
-                }
-                className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-pink-500"
-              >
-                <option value="INFO">Info</option>
-                <option value="WARNING">Warning</option>
-                <option value="URGENT">Urgent</option>
-                <option value="MAINTENANCE">Maintenance</option>
-              </select>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">Priority</label>
+              <CustomSelect
+                value={form.priority || 'NORMAL'}
+                onChange={(val) => setForm({ ...form, priority: val as any })}
+                options={[
+                  { value: 'LOW', label: 'Low' },
+                  { value: 'NORMAL', label: 'Normal' },
+                  { value: 'HIGH', label: 'High' },
+                  { value: 'URGENT', label: 'Urgent' },
+                ]}
+                placeholder="Select priority"
+              />
             </div>
-
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">Audience</label>
-              <select
-                value={formData.targetAudience}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    targetAudience: e.target.value as 'ALL' | 'USERS' | 'VENDORS' | 'ADMINS',
-                  })
-                }
-                className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-pink-500"
-              >
-                <option value="ALL">All</option>
-                <option value="USERS">Users</option>
-                <option value="VENDORS">Vendors</option>
-                <option value="ADMINS">Admins</option>
-              </select>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">Target Audience</label>
+              <CustomSelect
+                value={form.targetAudience || 'ALL'}
+                onChange={(val) => setForm({ ...form, targetAudience: val as any })}
+                options={[
+                  { value: 'ALL', label: 'All' },
+                  { value: 'USERS', label: 'Users Only' },
+                  { value: 'VENDORS', label: 'Vendors Only' },
+                  { value: 'ADMINS', label: 'Admins Only' },
+                ]}
+                placeholder="Select audience"
+              />
             </div>
           </div>
-
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">Start Date</label>
-              <input
-                type="date"
-                value={formData.startDate}
-                onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
-                className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-pink-500"
-                required
-              />
+              <label className="block text-sm font-semibold text-gray-700 mb-1">Start Date (optional)</label>
+              <input type="datetime-local" value={form.startDate || ''}
+                onChange={(e) => setForm({ ...form, startDate: e.target.value })}
+                className="w-full px-4 py-2 border border-gray-300 rounded-xl" />
+              <p className="text-xs text-gray-500 mt-1">Sent as ISO-8601 UTC (YYYY-MM-DDTHH:mm:ssZ)</p>
             </div>
-
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">End Date</label>
-              <input
-                type="date"
-                value={formData.endDate || ''}
-                onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
-                className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-pink-500"
+              <label className="block text-sm font-semibold text-gray-700 mb-1">End Date (optional)</label>
+              <input type="datetime-local" value={form.endDate || ''}
+                onChange={(e) => setForm({ ...form, endDate: e.target.value })}
+                className="w-full px-4 py-2 border border-gray-300 rounded-xl" />
+              <p className="text-xs text-gray-500 mt-1">Sent as ISO-8601 UTC (YYYY-MM-DDTHH:mm:ssZ)</p>
+            </div>
+          </div>
+          <div className="flex gap-3">
+            <button onClick={handleCreate} disabled={submitting || form.title.length < 5 || form.message.length < 10}
+              className="flex-1 bg-indigo-600 text-white px-4 py-2 rounded-xl hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed">
+              {submitting ? 'Creating...' : 'Create Announcement'}
+            </button>
+            <button onClick={() => setShowCreateModal(false)} className="flex-1 bg-gray-200 text-gray-700 px-4 py-2 rounded-xl">Cancel</button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* View Modal */}
+      <Modal isOpen={showViewModal} onClose={() => setShowViewModal(false)} title="Announcement Details">
+        {selectedAnnouncement && (
+          <div className="space-y-4">
+            <div className="bg-gradient-to-r from-indigo-50 to-blue-50 rounded-lg p-4 border border-indigo-200">
+              <div className="flex items-start justify-between">
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900">{selectedAnnouncement.title}</h3>
+                  <p className="text-sm text-gray-600 mt-1">{selectedAnnouncement.message}</p>
+                </div>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-xs font-semibold text-gray-500 uppercase">Priority</p>
+                <span className={`inline-block mt-1 px-3 py-1 rounded-full text-xs font-semibold ${priorityColors[selectedAnnouncement.priority] || 'bg-gray-100 text-gray-800'}`}>
+                  {selectedAnnouncement.priority}
+                </span>
+              </div>
+              <div>
+                <p className="text-xs font-semibold text-gray-500 uppercase">Target Audience</p>
+                <span className="inline-block mt-1 px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-xs font-semibold">
+                  {selectedAnnouncement.targetAudience}
+                </span>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-xs font-semibold text-gray-500 uppercase">Start Date</p>
+                <p className="text-sm text-gray-700 mt-1">{selectedAnnouncement.startDate ? new Date(selectedAnnouncement.startDate).toLocaleString() : '—'}</p>
+              </div>
+              <div>
+                <p className="text-xs font-semibold text-gray-500 uppercase">End Date</p>
+                <p className="text-sm text-gray-700 mt-1">{selectedAnnouncement.endDate ? new Date(selectedAnnouncement.endDate).toLocaleString() : '—'}</p>
+              </div>
+            </div>
+            <div>
+              <p className="text-xs font-semibold text-gray-500 uppercase">Created By</p>
+              <p className="text-sm text-gray-700 mt-1">{selectedAnnouncement.createdBy} on {new Date(selectedAnnouncement.createdAt).toLocaleString()}</p>
+            </div>
+            <div className="flex gap-3">
+              <button onClick={() => { setShowViewModal(false); handleOpenEdit(selectedAnnouncement); }} 
+                className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-xl hover:bg-blue-700">
+                Edit
+              </button>
+              <button onClick={() => setShowViewModal(false)} className="flex-1 bg-gray-200 text-gray-700 px-4 py-2 rounded-xl">Close</button>
+            </div>
+          </div>
+        )}
+      </Modal>
+
+      {/* Edit Modal */}
+      <Modal isOpen={showEditModal} onClose={() => setShowEditModal(false)} title="Edit Announcement">
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-1">Title * ({editForm.title?.length || 0}/200)</label>
+            <input type="text" value={editForm.title || ''} onChange={(e) => setEditForm({ ...editForm, title: e.target.value.slice(0, 200) })}
+              className={`w-full px-4 py-2 border ${(editForm.title?.length || 0) < 5 ? 'border-red-300' : 'border-gray-300'} rounded-xl`}
+              placeholder="5-200 characters" maxLength={200} />
+            {(editForm.title?.length || 0) < 5 && (editForm.title?.length || 0) > 0 && <p className="text-xs text-red-600 mt-1">Minimum 5 characters required</p>}
+          </div>
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-1">Message * ({editForm.message?.length || 0}/2000)</label>
+            <textarea value={editForm.message || ''} onChange={(e) => setEditForm({ ...editForm, message: e.target.value.slice(0, 2000) })}
+              className={`w-full px-4 py-2 border ${(editForm.message?.length || 0) < 10 ? 'border-red-300' : 'border-gray-300'} rounded-xl`}
+              rows={4} placeholder="10-2000 characters" maxLength={2000} />
+            {(editForm.message?.length || 0) < 10 && (editForm.message?.length || 0) > 0 && <p className="text-xs text-red-600 mt-1">Minimum 10 characters required</p>}
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">Priority</label>
+              <CustomSelect
+                value={editForm.priority || 'NORMAL'}
+                onChange={(val) => setEditForm({ ...editForm, priority: val as any })}
+                options={[
+                  { value: 'LOW', label: 'Low' },
+                  { value: 'NORMAL', label: 'Normal' },
+                  { value: 'HIGH', label: 'High' },
+                  { value: 'URGENT', label: 'Urgent' },
+                ]}
+                placeholder="Select priority"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">Target Audience</label>
+              <CustomSelect
+                value={editForm.targetAudience || 'ALL'}
+                onChange={(val) => setEditForm({ ...editForm, targetAudience: val as any })}
+                options={[
+                  { value: 'ALL', label: 'All' },
+                  { value: 'USERS', label: 'Users Only' },
+                  { value: 'VENDORS', label: 'Vendors Only' },
+                  { value: 'ADMINS', label: 'Admins Only' },
+                ]}
+                placeholder="Select audience"
               />
             </div>
           </div>
-
-          <div>
-            <label className="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                checked={formData.isActive}
-                onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
-                className="w-4 h-4 text-pink-600 rounded focus:ring-pink-500"
-              />
-              <span className="text-sm font-semibold text-gray-700">Active</span>
-            </label>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">Start Date (optional)</label>
+              <input type="datetime-local" value={editForm.startDate || ''}
+                onChange={(e) => setEditForm({ ...editForm, startDate: e.target.value })}
+                className="w-full px-4 py-2 border border-gray-300 rounded-xl" />
+              <p className="text-xs text-gray-500 mt-1">Sent as ISO-8601 UTC (YYYY-MM-DDTHH:mm:ssZ)</p>
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">End Date (optional)</label>
+              <input type="datetime-local" value={editForm.endDate || ''}
+                onChange={(e) => setEditForm({ ...editForm, endDate: e.target.value })}
+                className="w-full px-4 py-2 border border-gray-300 rounded-xl" />
+              <p className="text-xs text-gray-500 mt-1">Sent as ISO-8601 UTC (YYYY-MM-DDTHH:mm:ssZ)</p>
+            </div>
           </div>
+          <div className="flex gap-3">
+            <button onClick={handleUpdate} disabled={submitting || (editForm.title?.length || 0) < 5 || (editForm.message?.length || 0) < 10}
+              className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-xl hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed">
+              {submitting ? 'Updating...' : 'Update Announcement'}
+            </button>
+            <button onClick={() => setShowEditModal(false)} className="flex-1 bg-gray-200 text-gray-700 px-4 py-2 rounded-xl">Cancel</button>
+          </div>
+        </div>
+      </Modal>
 
-          <div className="flex gap-3 pt-4">
-            <button
-              onClick={handleCreate}
-              className="flex-1 bg-gradient-to-r from-pink-600 to-rose-600 text-white px-4 py-2 rounded-xl hover:from-pink-700 hover:to-rose-700"
-            >
-              Create
+      {/* Delete Confirmation Dialog */}
+      <Modal isOpen={showDeleteConfirm} onClose={() => setShowDeleteConfirm(false)} title="Delete Announcement">
+        <div className="space-y-4">
+          <p className="text-gray-700">Are you sure you want to delete this announcement?</p>
+          {selectedAnnouncement && (
+            <div className="bg-gray-50 rounded-lg p-4">
+              <p className="font-semibold text-gray-900">{selectedAnnouncement.title}</p>
+              <p className="text-sm text-gray-600 mt-1 line-clamp-2">{selectedAnnouncement.message}</p>
+            </div>
+          )}
+          <div className="flex gap-3">
+            <button onClick={handleDelete} disabled={submitting}
+              className="flex-1 bg-red-600 text-white px-4 py-2 rounded-xl hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed">
+              {submitting ? 'Deleting...' : 'Delete'}
             </button>
-            <button
-              onClick={() => {
-                setShowCreateModal(false);
-                resetForm();
-              }}
-              className="flex-1 bg-gray-200 text-gray-700 px-4 py-2 rounded-xl hover:bg-gray-300"
-            >
-              Cancel
-            </button>
+            <button onClick={() => setShowDeleteConfirm(false)} className="flex-1 bg-gray-200 text-gray-700 px-4 py-2 rounded-xl">Cancel</button>
           </div>
         </div>
       </Modal>

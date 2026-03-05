@@ -1,218 +1,340 @@
 import React, { useEffect, useState } from 'react';
-import { adminApi } from '../services/api';
-import type { Admin } from '../types';
+import { userApi, agentApi } from '../services/api';
+import type { User, PageInfo, AdminRegistrationDto } from '../types';
 import DataTable from '../components/DataTable';
-import { Shield, Search, ToggleLeft, ToggleRight } from 'lucide-react';
+import Modal from '../components/Modal';
+import CustomSelect from '../components/CustomSelect';
+import { Shield, UserPlus, Eye, Ban, CheckCircle, ChevronLeft, ChevronRight, Search, X } from 'lucide-react';
 
 const Admins: React.FC = () => {
-  const [admins, setAdmins] = useState<Admin[]>([]);
-  const [filteredAdmins, setFilteredAdmins] = useState<Admin[]>([]);
+  const [admins, setAdmins] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedAdmin, setSelectedAdmin] = useState<User | null>(null);
+  const [showDetailModal, setShowDetailModal] = useState(false);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showStatusModal, setShowStatusModal] = useState(false);
+  const [typeFilter, setTypeFilter] = useState('');
+  const [currentPage, setCurrentPage] = useState(0);
+  const [pageSize, setPageSize] = useState(20);
+  const [pageInfo, setPageInfo] = useState<PageInfo>({ pageNumber: 0, pageSize: 20, totalElements: 0, totalPages: 0 });
+  const [statusAction, setStatusAction] = useState<'suspend' | 'activate'>('suspend');
+  const [statusReason, setStatusReason] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
-  const [updatingStatus, setUpdatingStatus] = useState<string | null>(null);
 
-  useEffect(() => {
-    loadAdmins();
-  }, []);
+  const [agentForm, setAgentForm] = useState<AdminRegistrationDto>({
+    email: '', phone: '', password: '', firstName: '', lastName: '', userType: 'SUPPORT_AGENT', country: 'INDIA',
+  });
+  const [submitting, setSubmitting] = useState(false);
 
-  useEffect(() => {
-    if (searchQuery) {
-      const filtered = admins.filter(
-        (admin) =>
-          admin.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          admin.firstName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          admin.lastName.toLowerCase().includes(searchQuery.toLowerCase())
+  useEffect(() => { loadAdmins(); }, [currentPage, pageSize, typeFilter]);
+
+  const getFilteredAdmins = () => {
+    let filtered = admins;
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(a =>
+        a.email?.toLowerCase().includes(query) ||
+        a.firstName?.toLowerCase().includes(query) ||
+        a.lastName?.toLowerCase().includes(query) ||
+        a.phone?.toLowerCase().includes(query)
       );
-      setFilteredAdmins(filtered);
-    } else {
-      setFilteredAdmins(admins);
     }
-  }, [searchQuery, admins]);
+    return filtered;
+  };
 
   const loadAdmins = async () => {
     try {
-      const data = await adminApi.getAllAdmins();
-      setAdmins(data);
-      setFilteredAdmins(data);
-    } catch (error) {
-    } finally {
-      setLoading(false);
-    }
+      setLoading(true);
+      const userType = typeFilter || undefined;
+      const response = await userApi.getAllUsers({ page: currentPage, size: pageSize, userType });
+      // Filter to only admin-type users (ADMIN, SUPER_ADMIN) - exclude SUPPORT_AGENT
+      const filtered = response.data.filter(u => ['ADMIN', 'SUPER_ADMIN'].includes(u.userType));
+      setAdmins(filtered);
+      setPageInfo(response.pageInfo);
+    } catch (error) { console.error('Failed to load admins:', error); }
+    finally { setLoading(false); }
   };
 
-  const toggleAdminStatus = async (adminId: string, currentStatus: boolean) => {
-    setUpdatingStatus(adminId);
+  const handleSearch = () => {
+    setCurrentPage(0);
+    loadAdmins();
+  };
+
+  const clearFilters = () => {
+    setTypeFilter('');
+    setSearchQuery('');
+    setCurrentPage(0);
+  };
+
+  const activeFilters = [
+    typeFilter && `Role: ${typeFilter}`,
+    searchQuery && `Search: ${searchQuery}`,
+  ].filter(Boolean);
+
+  const handleCreateAgent = async () => {
+    setSubmitting(true);
     try {
-      // Update locally first for immediate UI feedback
-      const updatedAdmins = admins.map(admin =>
-        admin.id === adminId ? { ...admin, isActive: !currentStatus } : admin
-      );
-      setAdmins(updatedAdmins);
-      setFilteredAdmins(updatedAdmins);
-      
-      // You would call your API here to update the backend
-      // await adminApi.updateAdminStatus(adminId, !currentStatus);
-      
-    } catch (error) {
-      // Revert on error
+      await agentApi.createAgent(agentForm);
+      alert('Support agent created successfully!');
+      setShowCreateModal(false);
+      setAgentForm({ email: '', phone: '', password: '', firstName: '', lastName: '', userType: 'SUPPORT_AGENT', country: 'INDIA' });
       loadAdmins();
-    } finally {
-      setUpdatingStatus(null);
-    }
+    } catch (error: any) { alert(error.response?.data?.message || 'Failed to create agent'); }
+    finally { setSubmitting(false); }
   };
 
-  const getRoleBadgeColor = (role: string) => {
-    const colors: { [key: string]: string } = {
-      SUPER_ADMIN: 'bg-red-100 text-red-800',
-      ADMIN: 'bg-blue-100 text-blue-800',
-      MODERATOR: 'bg-green-100 text-green-800',
-    };
-    return colors[role] || 'bg-gray-100 text-gray-800';
+  const handleStatusAction = async () => {
+    if (!selectedAdmin) return;
+    try {
+      // Use agentApi for SUPPORT_AGENT users, userApi for others (ADMIN, SUPER_ADMIN)
+      const isAgent = selectedAdmin.userType === 'SUPPORT_AGENT';
+      if (statusAction === 'suspend') {
+        isAgent ? await agentApi.suspendAgent(selectedAdmin.userId, statusReason) : await userApi.suspendUser(selectedAdmin.userId, statusReason);
+      } else {
+        isAgent ? await agentApi.activateAgent(selectedAdmin.userId) : await userApi.activateUser(selectedAdmin.userId);
+      }
+      setShowStatusModal(false);
+      setStatusReason('');
+      loadAdmins();
+    } catch (error: any) { alert(error.response?.data?.message || 'Failed to update status'); }
   };
 
   const columns = [
     {
-      key: 'username',
-      header: 'Username',
-      render: (admin: Admin) => (
-        <div className="flex items-center space-x-2">
-          <Shield className="w-4 h-4 text-gray-500" />
-          <span className="font-medium">{admin.email}</span>
+      key: 'name', header: 'Name',
+      render: (a: User) => (
+        <div className="space-y-1">
+          <p className="font-semibold text-gray-900">{a.fullName}</p>
+          <p className="text-sm text-gray-500">{a.email}</p>
+          <p className="text-sm text-gray-500">{a.phone || 'N/A'}</p>
         </div>
       ),
     },
     {
-      key: 'name',
-      header: 'Name',
-      render: (admin: Admin) => `${admin.firstName} ${admin.lastName}`,
-    },
-    { key: 'email', header: 'Email' },
-    {
-      key: 'userType',
-      header: 'Role',
-      render: (admin: Admin) => (
-        <span className={`px-2 py-1 rounded-full text-xs font-semibold ${getRoleBadgeColor(admin.userType)}`}>
-          {admin.userType}
-        </span>
+      key: 'userType', header: 'Role',
+      render: (a: User) => (
+        <span className={`px-3 py-1.5 rounded-full text-xs font-bold text-white ${
+          a.userType === 'SUPER_ADMIN' ? 'bg-gradient-to-r from-indigo-600 to-purple-700'
+          : 'bg-gradient-to-r from-blue-600 to-cyan-600'
+        }`}>{a.userType}</span>
       ),
     },
     {
-      key: 'isActive',
-      header: 'Status',
-      render: (admin: Admin) => (
-        <div className="flex items-center space-x-2">
-          <span
-            className={`px-3 py-1 rounded-full text-xs font-semibold ${
-              admin.isActive === true
-                ? 'bg-green-100 text-green-800'
-                : 'bg-red-100 text-red-800'
-            }`}
-          >
-            {admin.isActive === true ? 'Active' : 'Inactive'}
-          </span>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              toggleAdminStatus(admin.id, admin.isActive);
-            }}
-            disabled={updatingStatus === admin.id}
-            className={`p-1.5 rounded-lg transition-all duration-200 ${
-              updatingStatus === admin.id
-                ? 'opacity-50 cursor-not-allowed'
-                : 'hover:bg-gray-100 active:scale-95'
-            }`}
-            title={`Toggle to ${admin.isActive ? 'Inactive' : 'Active'}`}
-          >
-            {updatingStatus === admin.id ? (
-              <div className="animate-spin rounded-full h-4 w-4 border-2 border-gray-300 border-t-blue-600"></div>
-            ) : admin.isActive ? (
-              <ToggleRight className="w-5 h-5 text-green-600" />
-            ) : (
-              <ToggleLeft className="w-5 h-5 text-gray-400" />
-            )}
+      key: 'status', header: 'Status',
+      render: (a: User) => (
+        <span className={`px-3 py-1.5 rounded-full text-xs font-bold text-white ${
+          a.status === 'ACTIVE' ? 'bg-gradient-to-r from-green-500 to-emerald-600'
+          : 'bg-gradient-to-r from-red-500 to-rose-600'
+        }`}>{a.status}</span>
+      ),
+    },
+    {
+      key: 'lastLogin', header: 'Last Login',
+      render: (a: User) => a.lastLoginAt ? new Date(a.lastLoginAt).toLocaleString() : 'Never',
+    },
+    {
+      key: 'actions', header: 'Actions',
+      render: (a: User) => (
+        <div className="flex items-center gap-2">
+          <button onClick={(e) => { e.stopPropagation(); setSelectedAdmin(a); setShowDetailModal(true); }}
+            className="p-2 bg-gradient-to-br from-blue-400 to-blue-600 text-white rounded-lg hover:shadow-lg hover:scale-105 transition-all duration-200" title="View Details"><Eye className="w-4 h-4" /></button>
+          <button onClick={(e) => {
+            e.stopPropagation();
+            setSelectedAdmin(a);
+            setStatusAction(a.status === 'ACTIVE' ? 'suspend' : 'activate');
+            setShowStatusModal(true);
+          }} className={`p-2 rounded-lg transition-all duration-200 ${a.status === 'ACTIVE' ? 'bg-gradient-to-br from-orange-400 to-orange-600 text-white hover:shadow-lg hover:scale-105' : 'bg-gradient-to-br from-green-400 to-green-600 text-white hover:shadow-lg hover:scale-105'}`}>
+            {a.status === 'ACTIVE' ? <Ban className="w-4 h-4" /> : <CheckCircle className="w-4 h-4" />}
           </button>
         </div>
       ),
     },
-    {
-      key: 'lastLoginAt',
-      header: 'Last Login',
-      render: (admin: Admin) =>
-        admin.lastLoginAt ? new Date(admin.lastLoginAt).toLocaleDateString() : 'Never',
-    },
   ];
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-96">
-        <div className="text-center">
-          <div className="w-16 h-16 mx-auto bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center animate-pulse shadow-2xl">
-            <div className="animate-spin rounded-full h-8 w-8 border-4 border-white border-t-transparent"></div>
-          </div>
-          <p className="text-gray-600 mt-4 font-medium">Loading admins...</p>
-        </div>
-      </div>
-    );
+  if (loading && admins.length === 0) {
+    return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600" /></div>;
   }
 
   return (
     <div className="space-y-6 animate-fadeIn">
       {/* Header */}
-      <div className="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-2xl shadow-lg p-6 text-white">
-        <div className="flex items-center justify-between">
+      <div className="bg-gradient-to-r from-violet-500 to-purple-600 rounded-2xl shadow-lg p-6 text-white relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full -mr-20 -mt-20"></div>
+        <div className="flex items-center justify-between relative z-10">
           <div>
-            <h1 className="text-3xl font-bold">Admins Management</h1>
-            <p className="text-indigo-100 mt-1">Manage all administrator accounts and permissions</p>
+            <h1 className="text-4xl font-bold flex items-center gap-3"><Shield className="w-8 h-8" />Admin Management</h1>
+            <p className="text-violet-50 mt-2">Manage admins — Total: {pageInfo.totalElements.toLocaleString()}</p>
           </div>
-          <div className="bg-white/20 backdrop-blur-sm px-6 py-3 rounded-xl border border-white/30">
-            <p className="text-sm text-indigo-100 font-medium">Total Admins</p>
-            <p className="text-3xl font-bold">{admins.length}</p>
-          </div>
+          <button onClick={() => setShowCreateModal(true)}
+            className="flex items-center gap-2 bg-white text-violet-600 px-4 py-2 rounded-xl font-semibold hover:shadow-lg hover:scale-105 transition-all duration-200">
+            <UserPlus className="w-5 h-5" />Create Admin
+          </button>
         </div>
       </div>
 
-      {/* Search Bar */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">\n        <div className="relative">
-          <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-          <input
-            type="text"
-            placeholder="Search admins by username, name, or email..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-12 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:bg-white transition-all duration-200"
+      {/* Filters & Search */}
+      <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+          <div className="md:col-span-1">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <input
+                type="text"
+                placeholder="Search admins..."
+                value={searchQuery}
+                onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(0); }}
+                onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-violet-500 focus:border-violet-500"
+              />
+            </div>
+          </div>
+          <CustomSelect
+            value={typeFilter}
+            onChange={(val) => { setTypeFilter(val); setCurrentPage(0); }}
+            options={[
+              { value: '', label: 'All Roles' },
+              { value: 'ADMIN', label: 'Admin' },
+              { value: 'SUPER_ADMIN', label: 'Super Admin' },
+            ]}
+            placeholder="Filter by role"
+          />
+          <CustomSelect
+            value={String(pageSize)}
+            onChange={(val) => { setPageSize(Number(val)); setCurrentPage(0); }}
+            options={[
+              { value: '10', label: '10 per page' },
+              { value: '20', label: '20 per page' },
+              { value: '50', label: '50 per page' },
+            ]}
+            placeholder="Items per page"
           />
         </div>
+
+        {/* Active Filters Display */}
+        {activeFilters.length > 0 && (
+          <div className="flex flex-wrap gap-2 items-center">
+            <span className="text-sm font-semibold text-gray-700">Filters:</span>
+            {activeFilters.map((filter, idx) => (
+              <span key={idx} className="inline-flex items-center gap-2 bg-violet-100 text-violet-800 px-3 py-1 rounded-full text-sm">
+                {filter}
+              </span>
+            ))}
+            <button
+              onClick={clearFilters}
+              className="ml-2 flex items-center gap-1 text-red-600 hover:text-red-800 text-sm font-semibold transition-colors"
+            >
+              <X className="w-4 h-4" />
+              Clear All
+            </button>
+          </div>
+        )}
       </div>
 
-      <DataTable data={filteredAdmins} columns={columns} emptyMessage="No admins found" />
-
-      <div className="bg-gradient-to-br from-indigo-50 to-purple-50 border-2 border-indigo-100 rounded-2xl p-8 shadow-lg">
-        <div className="flex items-start space-x-4">
-          <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center flex-shrink-0">
-            <Shield className="w-6 h-6 text-white" />
+      <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+        <DataTable data={getFilteredAdmins()} columns={columns} />
+        {pageInfo.totalPages > 1 && (
+          <div className="border-t border-gray-200 px-6 py-4 flex items-center justify-between">
+            <span className="text-sm text-gray-600">Page {pageInfo.pageNumber + 1} of {pageInfo.totalPages}</span>
+            <div className="flex items-center gap-2">
+              <button onClick={() => setCurrentPage(Math.max(0, currentPage - 1))} disabled={currentPage === 0}
+                className="p-2 rounded-lg border hover:bg-gray-50 disabled:opacity-50"><ChevronLeft className="w-5 h-5" /></button>
+              <button onClick={() => setCurrentPage(Math.min(pageInfo.totalPages - 1, currentPage + 1))} disabled={currentPage >= pageInfo.totalPages - 1}
+                className="p-2 rounded-lg border hover:bg-gray-50 disabled:opacity-50"><ChevronRight className="w-5 h-5" /></button>
+            </div>
           </div>
-          <div className="flex-1">
-            <h3 className="text-xl font-bold text-indigo-900 mb-3">Admin Role Information</h3>
-            <div className="space-y-3 text-sm">
-              <div className="flex items-start space-x-3 bg-white/50 p-3 rounded-lg">
-                <span className="px-3 py-1 bg-red-100 text-red-800 font-bold text-xs rounded-full">SUPER_ADMIN</span>
-                <span className="text-gray-700">Full system access with all privileges and permissions</span>
-              </div>
-              <div className="flex items-start space-x-3 bg-white/50 p-3 rounded-lg">
-                <span className="px-3 py-1 bg-blue-100 text-blue-800 font-bold text-xs rounded-full">ADMIN</span>
-                <span className="text-gray-700">Can manage users, vendors, orders, and platform content</span>
-              </div>
-              <div className="flex items-start space-x-3 bg-white/50 p-3 rounded-lg">
-                <span className="px-3 py-1 bg-green-100 text-green-800 font-bold text-xs rounded-full">MODERATOR</span>
-                <span className="text-gray-700">Can view and moderate content with limited management access</span>
-              </div>
+        )}
+      </div>
+
+      {/* Detail Modal */}
+      <Modal isOpen={showDetailModal} onClose={() => setShowDetailModal(false)} title="Admin Details">
+        {selectedAdmin && (
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div><label className="text-sm font-semibold text-gray-700">Full Name</label><p className="mt-1">{selectedAdmin.fullName}</p></div>
+              <div><label className="text-sm font-semibold text-gray-700">Role</label><p className="mt-1">{selectedAdmin.userType}</p></div>
+              <div><label className="text-sm font-semibold text-gray-700">Email</label><p className="mt-1">{selectedAdmin.email} {selectedAdmin.emailVerified ? '✅' : '❌'}</p></div>
+              <div><label className="text-sm font-semibold text-gray-700">Phone</label><p className="mt-1">{selectedAdmin.phone} {selectedAdmin.phoneVerified ? '✅' : '❌'}</p></div>
+              <div><label className="text-sm font-semibold text-gray-700">Country</label><p className="mt-1">{selectedAdmin.country}</p></div>
+              <div><label className="text-sm font-semibold text-gray-700">Status</label><p className="mt-1">{selectedAdmin.status}</p></div>
+              <div><label className="text-sm font-semibold text-gray-700">2FA</label><p className="mt-1">{selectedAdmin.twoFactorEnabled ? 'Enabled' : 'Disabled'}</p></div>
+              <div><label className="text-sm font-semibold text-gray-700">Last Login</label><p className="mt-1">{selectedAdmin.lastLoginAt ? new Date(selectedAdmin.lastLoginAt).toLocaleString() : 'Never'}</p></div>
+              <div><label className="text-sm font-semibold text-gray-700">Created</label><p className="mt-1">{new Date(selectedAdmin.createdAt).toLocaleString()}</p></div>
             </div>
-            <div className="mt-4 pt-4 border-t border-indigo-200">
-              <p className="text-xs text-indigo-700 font-medium">💡 Tip: Use the toggle button to activate or deactivate admin accounts instantly</p>
+          </div>
+        )}
+      </Modal>
+
+      {/* Status Action Modal */}
+      <Modal isOpen={showStatusModal} onClose={() => { setShowStatusModal(false); setStatusReason(''); }}
+        title={statusAction === 'suspend' ? 'Suspend Admin' : 'Activate Admin'}>
+        {selectedAdmin && (
+          <div className="space-y-4">
+            <p className="text-gray-600">Are you sure you want to {statusAction} <strong>{selectedAdmin.fullName}</strong>?</p>
+            {statusAction === 'suspend' && (
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Reason</label>
+                <textarea value={statusReason} onChange={(e) => setStatusReason(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-xl" rows={3} placeholder="Reason for suspension..." />
+              </div>
+            )}
+            <div className="flex gap-3">
+              <button onClick={handleStatusAction} disabled={statusAction === 'suspend' && !statusReason.trim()}
+                className="flex-1 bg-purple-600 text-white px-4 py-2 rounded-xl disabled:opacity-50">Confirm</button>
+              <button onClick={() => setShowStatusModal(false)} className="flex-1 bg-gray-200 text-gray-700 px-4 py-2 rounded-xl">Cancel</button>
             </div>
+          </div>
+        )}
+      </Modal>
+
+      {/* Create Agent Modal */}
+      <Modal isOpen={showCreateModal} onClose={() => setShowCreateModal(false)} title="Create Support Agent">
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">First Name *</label>
+              <input type="text" value={agentForm.firstName} onChange={(e) => setAgentForm({ ...agentForm, firstName: e.target.value })}
+                className="w-full px-4 py-2 border border-gray-300 rounded-xl" />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">Last Name *</label>
+              <input type="text" value={agentForm.lastName} onChange={(e) => setAgentForm({ ...agentForm, lastName: e.target.value })}
+                className="w-full px-4 py-2 border border-gray-300 rounded-xl" />
+            </div>
+          </div>
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-1">Email *</label>
+            <input type="email" value={agentForm.email} onChange={(e) => setAgentForm({ ...agentForm, email: e.target.value })}
+              className="w-full px-4 py-2 border border-gray-300 rounded-xl" />
+          </div>
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-1">Phone *</label>
+            <input type="tel" value={agentForm.phone} onChange={(e) => setAgentForm({ ...agentForm, phone: e.target.value })}
+              className="w-full px-4 py-2 border border-gray-300 rounded-xl" placeholder="+917890111222" />
+          </div>
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-1">Password *</label>
+            <input type="password" value={agentForm.password} onChange={(e) => setAgentForm({ ...agentForm, password: e.target.value })}
+              className="w-full px-4 py-2 border border-gray-300 rounded-xl" />
+          </div>
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-1">Country</label>
+            <CustomSelect
+              value={agentForm.country}
+              onChange={(val) => setAgentForm({ ...agentForm, country: val })}
+              options={[
+                { value: 'INDIA', label: 'India' },
+                { value: 'USA', label: 'USA' },
+              ]}
+              placeholder="Select country"
+            />
+          </div>
+          <div className="flex gap-3 pt-2">
+            <button onClick={handleCreateAgent} disabled={submitting || !agentForm.email || !agentForm.password || !agentForm.firstName || !agentForm.lastName}
+              className="flex-1 bg-purple-600 text-white px-4 py-2 rounded-xl disabled:opacity-50">{submitting ? 'Creating...' : 'Create Agent'}</button>
+            <button onClick={() => setShowCreateModal(false)} className="flex-1 bg-gray-200 text-gray-700 px-4 py-2 rounded-xl">Cancel</button>
           </div>
         </div>
-      </div>
+      </Modal>
     </div>
   );
 };

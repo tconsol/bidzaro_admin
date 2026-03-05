@@ -1,293 +1,260 @@
 import React, { useEffect, useState } from 'react';
 import { vendorApi } from '../services/api';
-import type { Vendor } from '../types';
+import type { Vendor, PageInfo } from '../types';
 import DataTable from '../components/DataTable';
 import Modal from '../components/Modal';
-import { Store, Eye, CheckCircle, XCircle} from 'lucide-react';
+import CustomSelect from '../components/CustomSelect';
+import { Eye, Search, CheckCircle, XCircle, Ban, ChevronLeft, ChevronRight, Building2, FileText, X } from 'lucide-react';
 
 const Vendors: React.FC = () => {
   const [vendors, setVendors] = useState<Vendor[]>([]);
-  const [pendingVendors, setPendingVendors] = useState<Vendor[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [selectedVendor, setSelectedVendor] = useState<Vendor | null>(null);
-  const [detailLoading, setDetailLoading] = useState(false);
   const [showDetailModal, setShowDetailModal] = useState(false);
-  const [showRejectModal, setShowRejectModal] = useState(false);
-  const [rejectReason, setRejectReason] = useState('');
-  const [vendorToReject, setVendorToReject] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'all' | 'pending'>('all');
-  
-  // Pagination state removed — API returns full lists now
-  const [pageSize, setPageSize] = useState(25);
+  const [showActionModal, setShowActionModal] = useState(false);
+  const [actionType, setActionType] = useState<'approve' | 'reject' | 'suspend' | 'activate' | 'unlock'>('approve');
+  const [actionReason, setActionReason] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [approvalStatusFilter, setApprovalStatusFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
+  const [countryFilter, setCountryFilter] = useState('');
+  const [currentPage, setCurrentPage] = useState(0);
+  const [pageSize] = useState(20);
+  const [pageInfo, setPageInfo] = useState<PageInfo>({ pageNumber: 0, pageSize: 20, totalElements: 0, totalPages: 0 });
 
-  // Filter state (no UI available to change it)
-  const statusFilter = '';
+  useEffect(() => { loadVendors(); }, [currentPage, approvalStatusFilter, statusFilter, countryFilter]);
 
-  useEffect(() => {
-    if (activeTab === 'all') {
-      loadVendors();
-    } else {
-      loadPendingVendors();
+  // Client-side filtering function
+  const getFilteredVendors = () => {
+    let filtered = vendors;
+    
+    // Filter by search query (client-side only)
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(v => 
+        v.businessName?.toLowerCase().includes(query) || 
+        v.ownerInfo?.firstName?.toLowerCase().includes(query) || 
+        v.ownerInfo?.lastName?.toLowerCase().includes(query) || 
+        v.businessEmail?.toLowerCase().includes(query) ||
+        v.registeredEmail?.toLowerCase().includes(query) ||
+        v.businessPhone?.toLowerCase().includes(query) ||
+        v.registeredPhone?.toLowerCase().includes(query)
+      );
     }
-  }, [statusFilter, activeTab]);
+    
+    return filtered;
+  };
 
   const loadVendors = async () => {
     try {
       setLoading(true);
-      // call simplified API (no pagination)
-      const items: Vendor[] = await vendorApi.getAllVendors();
-
-      // Optionally filter by status client-side if statusFilter is set
-      const filtered = statusFilter ? items.filter(v => v.status === statusFilter) : items;
-
-      setVendors(filtered);
-    } catch (error) {
-      console.error('Failed to load vendors:', error);
+      setError(null);
+      
+      // Build API params - cleanParams removes undefined values
+      const apiParams = {
+        page: currentPage,
+        size: pageSize,
+        approvalStatus: approvalStatusFilter || undefined,
+        status: statusFilter || undefined,
+        country: countryFilter || undefined,
+      };
+      
+      console.log('📤 Sending API request with params:', apiParams);
+      const response = await vendorApi.getAllVendors(apiParams);
+      console.log('📥 Vendors response:', response);
+      
+      // Apply client-side filtering as fallback (in case backend doesn't implement them)
+      let filteredVendors = response.data || [];
+      
+      // Client-side approvalStatus filter (fallback)
+      if (approvalStatusFilter) {
+        filteredVendors = filteredVendors.filter(v => 
+          v.approvalStatus?.toUpperCase() === approvalStatusFilter.toUpperCase()
+        );
+        console.log(`✅ After approvalStatus filter (${approvalStatusFilter}): ${filteredVendors.length} vendors`);
+      }
+      
+      // Client-side status filter (fallback)
+      if (statusFilter) {
+        filteredVendors = filteredVendors.filter(v => 
+          v.status?.toUpperCase() === statusFilter.toUpperCase()
+        );
+        console.log(`📊 After status filter (${statusFilter}): ${filteredVendors.length} vendors`);
+      }
+      
+      // Client-side country filter (fallback)
+      if (countryFilter) {
+        filteredVendors = filteredVendors.filter(v => 
+          v.country?.toUpperCase() === countryFilter.toUpperCase()
+        );
+        console.log(`🌍 After country filter (${countryFilter}): ${filteredVendors.length} vendors`);
+      }
+      
+      // Client-side search filter (fallback)
+      if (searchQuery.trim()) {
+        filteredVendors = filteredVendors.filter(v => 
+          v.businessName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          v.businessEmail?.toLowerCase().includes(searchQuery.toLowerCase())
+        );
+        console.log(`🔍 After search filter ("${searchQuery}"): ${filteredVendors.length} vendors`);
+      }
+      
+      setVendors(filteredVendors);
+      setPageInfo(response.pageInfo);
+    } catch (error: any) {
+      const errorMsg = error?.response?.data?.message || error?.message || 'Failed to load vendors';
+      console.error('❌ Failed to load vendors:', errorMsg);
+      setError(errorMsg);
+      setVendors([]);
     } finally {
       setLoading(false);
     }
   };
 
-  const loadPendingVendors = async () => {
+  const clearFilters = () => {
+    setApprovalStatusFilter('');
+    setStatusFilter('');
+    setCountryFilter('');
+    setSearchQuery('');
+    setCurrentPage(0);
+    console.log('🔄 All filters cleared');
+  };
+
+  const activeFilters = [
+    approvalStatusFilter && `Approval: ${approvalStatusFilter}`,
+    statusFilter && `Status: ${statusFilter}`,
+    countryFilter && `Country: ${countryFilter}`,
+    searchQuery && `Search: ${searchQuery}`,
+  ].filter(Boolean);
+
+  const handleSearch = () => { setCurrentPage(0); loadVendors(); };
+
+  const openAction = (vendor: Vendor, type: 'approve' | 'reject' | 'suspend' | 'activate' | 'unlock') => {
+    setSelectedVendor(vendor);
+    setActionType(type);
+    setActionReason('');
+    setShowActionModal(true);
+  };
+
+  const confirmAction = async () => {
+    if (!selectedVendor) return;
     try {
-      setLoading(true);
-      // Backend requires an access code for this endpoint. Read from env or localStorage.
-      const envAccessCode = import.meta.env.VITE_PENDING_ACCESS_CODE as string | undefined;
-      const storedAccessCode = localStorage.getItem('vendorAccessCode') || undefined;
-      const accessCode = envAccessCode || storedAccessCode;
-
-      const items: Vendor[] = await vendorApi.getPendingVendors({ accessCode });
-      setPendingVendors(items);
-    } catch (error) {
-      console.error('Failed to load pending vendors:', error);
-    } finally {
-      setLoading(false);
+      if (actionType === 'approve') await vendorApi.approveVendor(selectedVendor.vendorId, actionReason || undefined);
+      else if (actionType === 'reject') await vendorApi.rejectVendor(selectedVendor.vendorId, actionReason);
+      else if (actionType === 'suspend') await vendorApi.suspendVendor(selectedVendor.vendorId, actionReason);
+      else if (actionType === 'activate') await vendorApi.activateVendor(selectedVendor.vendorId);
+      else if (actionType === 'unlock') await vendorApi.unlockVendor(selectedVendor.vendorId);
+      
+      setShowActionModal(false);
+      loadVendors();
+      alert(`Vendor ${actionType}d successfully!`);
+    } catch (error: any) { 
+      alert(error.response?.data?.message || `Failed to ${actionType} vendor`);
     }
   };
 
-  const handleApprove = async (vendorId: string) => {
-    if (!confirm('Are you sure you want to approve this vendor?')) return;
-
-    try {
-      await vendorApi.approveVendor(vendorId);
-      alert('Vendor approved successfully!');
-      if (activeTab === 'pending') {
-        loadPendingVendors();
-      } else {
-        loadVendors();
-      }
-    } catch (error) {
-      console.error('Failed to approve vendor:', error);
-      alert('Failed to approve vendor');
-    }
-  };
-
-  const handleRejectClick = (vendorId: string) => {
-    setVendorToReject(vendorId);
-    setShowRejectModal(true);
-  };
-
-  const handleRejectConfirm = async () => {
-    if (!vendorToReject) return;
-    if (!rejectReason.trim()) {
-      alert('Please provide a reason for rejection');
-      return;
-    }
-
-    try {
-      await vendorApi.rejectVendor(vendorToReject, rejectReason);
-      alert('Vendor rejected successfully!');
-      setShowRejectModal(false);
-      setRejectReason('');
-      setVendorToReject(null);
-      if (activeTab === 'pending') {
-        loadPendingVendors();
-      } else {
-        loadVendors();
-      }
-    } catch (error) {
-      console.error('Failed to reject vendor:', error);
-      alert('Failed to reject vendor');
-    }
-  };
-
-  const handleViewDetails = async (vendor: Vendor) => {
-    try {
-      setDetailLoading(true);
-      // prefer backend vendorId when available
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const vendorIdFromRow = (vendor as any).vendorId || vendor.vendorOrganizationId || vendor.id;
-      const full = await vendorApi.getVendorDetails(vendorIdFromRow);
-      setSelectedVendor(full);
-      setShowDetailModal(true);
-    } catch (error) {
-      console.error('Failed to load vendor details:', error);
-      alert('Failed to load vendor details');
-    } finally {
-      setDetailLoading(false);
-    }
-  };
-
-  const getStatusBadge = (status: string) => {
-    const statusColors: Record<string, string> = {
-      ACTIVE: 'bg-green-100 text-green-800',
-      PENDING: 'bg-yellow-100 text-yellow-800',
-      REJECTED: 'bg-red-100 text-red-800',
-      SUSPENDED: 'bg-gray-100 text-gray-800',
-    };
-    return statusColors[status] || 'bg-gray-100 text-gray-800';
-  };
-
-  const getApprovalBadge = (approvalStatus: string) => {
-    const approvalColors: Record<string, string> = {
-      APPROVED: 'bg-green-100 text-green-800',
-      PENDING: 'bg-yellow-100 text-yellow-800',
-      REJECTED: 'bg-red-100 text-red-800',
-    };
-    return approvalColors[approvalStatus] || 'bg-gray-100 text-gray-800';
-  };
-
-  const allVendorsColumns = [
+  const columns = [
     {
-      key: 'businessName',
-      header: 'Business Name',
-      render: (vendor: Vendor) => (
+      key: 'business', header: 'Business',
+      render: (v: Vendor) => (
         <div>
-          <p className="font-semibold text-gray-900">{vendor.businessName}</p>
-          <p className="text-sm text-gray-500">{vendor.contactName}</p>
+          <p className="font-semibold text-gray-900">{v.businessName}</p>
+          <p className="text-sm text-gray-500">{v.businessEmail}</p>
         </div>
       ),
     },
+    { key: 'businessType', header: 'Type', render: (v: Vendor) => <span className="px-3 py-1 bg-gradient-to-r from-blue-400 to-blue-600 text-white rounded-full text-xs font-semibold">{v.businessType}</span> },
+    { key: 'country', header: 'Country', render: (v: Vendor) => v.country },
     {
-      key: 'email',
-      header: 'Contact',
-      render: (vendor: Vendor) => (
-        <div>
-          <p className="text-sm text-gray-900">{vendor.email}</p>
-          <p className="text-sm text-gray-500">{vendor.mobile}</p>
+      key: 'approvalStatus', header: 'Approval',
+      render: (v: Vendor) => (
+        <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+          v.approvalStatus === 'APPROVED' ? 'bg-gradient-to-r from-green-400 to-emerald-500 text-white'
+          : v.approvalStatus === 'REJECTED' ? 'bg-gradient-to-r from-red-400 to-rose-500 text-white'
+          : v.approvalStatus === 'PENDING' ? 'bg-gradient-to-r from-yellow-400 to-amber-500 text-white'
+          : 'bg-gray-100 text-gray-800'
+        }`}>{v.approvalStatus}</span>
+      ),
+    },
+    {
+      key: 'status', header: 'Status',
+      render: (v: Vendor) => (
+        <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+          v.status === 'ACTIVE' ? 'bg-gradient-to-r from-green-400 to-emerald-500 text-white'
+          : v.status === 'SUSPENDED' ? 'bg-gradient-to-r from-red-400 to-rose-500 text-white'
+          : 'bg-gray-100 text-gray-800'
+        }`}>{v.status}</span>
+      ),
+    },
+    {
+      key: 'stats', header: 'Orders',
+      render: (v: Vendor) => v.stats ? (
+        <div className="flex items-center justify-between gap-4">
+          <div className="text-center">
+            <p className="text-sm font-semibold text-gray-900">{v.stats.completedOrders}</p>
+            <p className="text-xs text-gray-500">Completed</p>
+          </div>
+          <div className="h-8 border-l border-gray-300"></div>
+          <div className="text-center">
+            <p className="text-sm font-semibold text-gray-900">{v.stats.totalOrders}</p>
+            <p className="text-xs text-gray-500">Total</p>
+          </div>
         </div>
-      ),
+      ) : 'N/A',
     },
     {
-      key: 'status',
-      header: 'Status',
-      render: (vendor: Vendor) => (
-        <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusBadge(vendor.status || 'PENDING')}`}>
-          {vendor.status || 'PENDING'}
-        </span>
-      ),
-    },
-    {
-      key: 'approvalStatus',
-      header: 'Approval',
-      render: (vendor: Vendor) => (
-        <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getApprovalBadge(vendor.approvalStatus || 'PENDING')}`}>
-          {vendor.approvalStatus || 'PENDING'}
-        </span>
-      ),
-    },
-    {
-      key: 'isOnline',
-      header: 'Online',
-      render: (vendor: Vendor) => (
-        <span className={`px-3 py-1 rounded-full text-xs font-semibold ${vendor.isOnline ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'}`}>
-          {vendor.isOnline ? 'Online' : 'Offline'}
-        </span>
-      ),
-    },
-    {
-      key: 'actions',
-      header: 'Actions',
-      render: (vendor: Vendor) => (
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            handleViewDetails(vendor);
-          }}
-          className="p-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200"
-        >
-          <Eye className="w-4 h-4" />
-        </button>
-      ),
-    },
-  ];
-
-  const pendingVendorsColumns = [
-    {
-      key: 'businessName',
-      header: 'Business Name',
-      render: (vendor: Vendor) => (
-        <div>
-          <p className="font-semibold text-gray-900">{vendor.businessName}</p>
-          <p className="text-sm text-gray-500">{vendor.contactName}</p>
-        </div>
-      ),
-    },
-    {
-      key: 'email',
-      header: 'Contact',
-      render: (vendor: Vendor) => (
-        <div>
-          <p className="text-sm text-gray-900">{vendor.email}</p>
-          <p className="text-sm text-gray-500">{vendor.mobile}</p>
-        </div>
-      ),
-    },
-    {
-      key: 'approvalStatus',
-      header: 'Approval Status',
-      render: (vendor: Vendor) => (
-        <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getApprovalBadge(vendor.approvalStatus || 'PENDING')}`}>
-          {vendor.approvalStatus || 'PENDING'}
-        </span>
-      ),
-    },
-    {
-      key: 'actions',
-      header: 'Actions',
-      render: (vendor: Vendor) => (
-        <div className="flex gap-2">
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              handleViewDetails(vendor);
-            }}
-            className="p-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200"
-            title="View Details"
-          >
-            <Eye className="w-4 h-4" />
-          </button>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              handleApprove(vendor.id);
-            }}
-            className="p-2 bg-green-100 text-green-600 rounded-lg hover:bg-green-200"
-            title="Approve"
-          >
-            <CheckCircle className="w-4 h-4" />
-          </button>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              handleRejectClick(vendor.id);
-            }}
-            className="p-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200"
-            title="Reject"
-          >
-            <XCircle className="w-4 h-4" />
-          </button>
+      key: 'actions', header: 'Actions',
+      render: (v: Vendor) => (
+        <div className="flex items-center gap-2 flex-wrap">
+          <button onClick={(e) => { e.stopPropagation(); setSelectedVendor(v); setShowDetailModal(true); }}
+            className="p-2 bg-gradient-to-br from-blue-400 to-blue-600 text-white rounded-lg hover:shadow-lg hover:scale-105 transition-all duration-200" title="View Details"><Eye className="w-4 h-4" /></button>
+          {v.approvalStatus === 'PENDING' && (
+            <>
+              <button onClick={(e) => { e.stopPropagation(); openAction(v, 'approve'); }}
+                className="p-2 bg-gradient-to-br from-green-400 to-green-600 text-white rounded-lg hover:shadow-lg hover:scale-105 transition-all duration-200" title="Approve"><CheckCircle className="w-4 h-4" /></button>
+              <button onClick={(e) => { e.stopPropagation(); openAction(v, 'reject'); }}
+                className="p-2 bg-gradient-to-br from-red-400 to-red-600 text-white rounded-lg hover:shadow-lg hover:scale-105 transition-all duration-200" title="Reject"><XCircle className="w-4 h-4" /></button>
+            </>
+          )}
+          {v.status === 'ACTIVE' && v.approvalStatus === 'APPROVED' && (
+            <button onClick={(e) => { e.stopPropagation(); openAction(v, 'suspend'); }}
+              className="p-2 bg-gradient-to-br from-orange-400 to-orange-600 text-white rounded-lg hover:shadow-lg hover:scale-105 transition-all duration-200" title="Suspend"><Ban className="w-4 h-4" /></button>
+          )}
+          {v.status === 'SUSPENDED' && (
+            <button onClick={(e) => { e.stopPropagation(); openAction(v, 'activate'); }}
+              className="p-2 bg-gradient-to-br from-green-400 to-green-600 text-white rounded-lg hover:shadow-lg hover:scale-105 transition-all duration-200" title="Activate"><CheckCircle className="w-4 h-4" /></button>
+          )}
+          {(v.approvalStatus === 'PENDING' || v.status === 'SUSPENDED') && (
+            <button onClick={(e) => { e.stopPropagation(); openAction(v, 'unlock'); }}
+              className="p-2 bg-gradient-to-br from-purple-400 to-purple-600 text-white rounded-lg hover:shadow-lg hover:scale-105 transition-all duration-200" title="Unlock"><Ban className="w-4 h-4" /></button>
+          )}
         </div>
       ),
     },
   ];
 
-  // pagination removed; totalVendors available for informational UI
-
-  if (loading && vendors.length === 0 && pendingVendors.length === 0) {
+  if (loading && vendors.length === 0) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+      <div className="flex items-center justify-center h-96">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="text-gray-600 mt-4">Loading vendors...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <div className="text-center bg-red-50 p-8 rounded-xl">
+          <p className="text-red-700 font-semibold">Error Loading Vendors</p>
+          <p className="text-red-600 mt-2">{error}</p>
+          <button onClick={() => loadVendors()} className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">
+            Try Again
+          </button>
+        </div>
       </div>
     );
   }
@@ -295,283 +262,228 @@ const Vendors: React.FC = () => {
   return (
     <div className="space-y-6 animate-fadeIn">
       {/* Header */}
-      <div className="bg-gradient-to-r from-purple-500 to-purple-600 rounded-2xl shadow-lg p-6 text-white">
-        <div className="flex items-center justify-between">
+      <div className="bg-gradient-to-r from-purple-500 to-indigo-600 rounded-2xl shadow-lg p-6 text-white relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full -mr-20 -mt-20"></div>
+        <div className="flex items-center justify-between relative z-10">
           <div>
-            <h1 className="text-3xl font-bold">Vendors Management</h1>
-            <p className="text-purple-100 mt-1">Manage vendor registrations and approvals</p>
+            <h1 className="text-4xl font-bold flex items-center gap-3"><Building2 className="w-8 h-8" />Vendor Management</h1>
+            <p className="text-purple-100 mt-2">Manage all vendors — Total: {pageInfo.totalElements.toLocaleString()}</p>
           </div>
-          <Store className="w-12 h-12 opacity-50" />
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-1 flex gap-2">
-        <button
-          onClick={() => {
-            setActiveTab('all');
-          }}
-          className={`flex-1 px-4 py-2.5 rounded-lg font-medium transition-all duration-200 ${
-            activeTab === 'all'
-              ? 'bg-gradient-to-r from-purple-600 to-purple-700 text-white shadow-md'
-              : 'text-gray-600 hover:bg-gray-50'
-          }`}
-        >
-          All Vendors
-        </button>
-        <button
-          onClick={() => {
-            setActiveTab('pending');
-          }}
-          className={`flex-1 px-4 py-2.5 rounded-lg font-medium transition-all duration-200 ${
-            activeTab === 'pending'
-              ? 'bg-gradient-to-r from-yellow-600 to-yellow-700 text-white shadow-md'
-              : 'text-gray-600 hover:bg-gray-50'
-          }`}
-        >
-          Pending Approval ({pendingVendors.length})
-        </button>
-      </div>
-
-      {/* Filters (for All Vendors tab) */}
-      {activeTab === 'all' && (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
-            <div className="flex gap-4 items-center">
-              <div className="flex-1">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Page Size</label>
-                <select
-                  value={pageSize}
-                  onChange={(e) => {
-                    setPageSize(Number(e.target.value));
-                  }}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500"
-                >
-                  <option value="10">10 per page</option>
-                  <option value="25">25 per page</option>
-                  <option value="50">50 per page</option>
-                  <option value="100">100 per page</option>
-                </select>
-              </div>
-            </div>
+      {/* Filters */}
+      <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-4">
+          <div className="relative md:col-span-1">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+            <input type="text" placeholder="Search vendors..." value={searchQuery} onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(0); }}
+              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500" />
           </div>
-      )}
-
-      {/* Data Table */}
-      <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
-        {loading ? (
-          <div className="flex items-center justify-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
-          </div>
-        ) : (
-          <DataTable
-            data={activeTab === 'all' ? vendors : pendingVendors}
-            columns={activeTab === 'all' ? allVendorsColumns : pendingVendorsColumns}
-            emptyMessage={activeTab === 'all' ? 'No vendors found' : 'No pending vendors'}
+          <CustomSelect
+            value={approvalStatusFilter}
+            onChange={(val) => { setApprovalStatusFilter(val); setCurrentPage(0); }}
+            options={[
+              { value: '', label: 'All Approval' },
+              { value: 'PENDING', label: 'Pending' },
+              { value: 'APPROVED', label: 'Approved' },
+              { value: 'REJECTED', label: 'Rejected' },
+            ]}
+            placeholder="Filter by approval"
           />
+          <CustomSelect
+            value={statusFilter}
+            onChange={(val) => { setStatusFilter(val); setCurrentPage(0); }}
+            options={[
+              { value: '', label: 'All Status' },
+              { value: 'ACTIVE', label: 'Active' },
+              { value: 'SUSPENDED', label: 'Suspended' },
+              { value: 'INACTIVE', label: 'Inactive' },
+            ]}
+            placeholder="Filter by status"
+          />
+          <CustomSelect
+            value={countryFilter}
+            onChange={(val) => { setCountryFilter(val); setCurrentPage(0); }}
+            options={[
+              { value: '', label: 'All Countries' },
+              { value: 'INDIA', label: 'India' },
+              { value: 'USA', label: 'USA' },
+            ]}
+            placeholder="Filter by country"
+          />
+        </div>
+
+        {/* Active Filters Display */}
+        {activeFilters.length > 0 && (
+          <div className="flex flex-wrap gap-2 items-center mt-4 pt-4 border-t border-gray-200">
+            <span className="text-sm font-semibold text-gray-700">Filters:</span>
+            {activeFilters.map((filter, idx) => (
+              <span key={idx} className="inline-flex items-center gap-2 bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm font-medium">
+                {filter}
+              </span>
+            ))}
+            <button
+              onClick={clearFilters}
+              className="ml-2 flex items-center gap-1 text-red-600 hover:text-red-800 text-sm font-semibold transition-colors"
+            >
+              <X className="w-4 h-4" />
+              Clear All
+            </button>
+          </div>
         )}
       </div>
 
-      {/* Pagination removed; API returns full lists */}
-
-      {/* Vendor Detail Modal */}
-      <Modal isOpen={showDetailModal} onClose={() => setShowDetailModal(false)} title="Vendor Details">
-        {detailLoading ? (
-          <div className="flex items-center justify-center h-48">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+      {/* Table */}
+      <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+        {vendors.length === 0 ? (
+          <div className="p-12 text-center">
+            <Building2 className="w-16 h-16 mx-auto text-gray-300 mb-4" />
+            <p className="text-gray-600 text-lg">No vendors found</p>
+            <p className="text-gray-500 mt-1">Try adjusting your filters or check back later</p>
           </div>
-        ) : selectedVendor ? (
-          <div className="space-y-4">
+        ) : (
+          <>
+            <DataTable data={getFilteredVendors()} columns={columns} />
+          </>
+        )}
+        {pageInfo.totalPages > 1 && getFilteredVendors().length > 0 && (
+          <div className="border-t border-gray-200 px-6 py-4 flex items-center justify-between">
+            <span className="text-sm text-gray-600">Page {pageInfo.pageNumber + 1} of {pageInfo.totalPages}</span>
+            <div className="flex items-center gap-2">
+              <button onClick={() => setCurrentPage(Math.max(0, currentPage - 1))} disabled={currentPage === 0}
+                className="p-2 rounded-lg border border-gray-300 hover:bg-gray-50 disabled:opacity-50"><ChevronLeft className="w-5 h-5" /></button>
+              <button onClick={() => setCurrentPage(Math.min(pageInfo.totalPages - 1, currentPage + 1))} disabled={currentPage >= pageInfo.totalPages - 1}
+                className="p-2 rounded-lg border border-gray-300 hover:bg-gray-50 disabled:opacity-50"><ChevronRight className="w-5 h-5" /></button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Detail Modal */}
+      <Modal isOpen={showDetailModal} onClose={() => setShowDetailModal(false)} title="Vendor Details" size="lg">
+        {selectedVendor && (
+          <div className="space-y-6">
             <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Business Name</label>
-                <p className="text-gray-900">{selectedVendor.businessName}</p>
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Contact Name</label>
-                <p className="text-gray-900">{selectedVendor.contactName}</p>
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Email</label>
-                <p className="text-gray-900">{selectedVendor.email}</p>
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Phone</label>
-                <p className="text-gray-900">{selectedVendor.mobile}</p>
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Status</label>
-                <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusBadge(selectedVendor.status || 'PENDING')}`}>
-                  {selectedVendor.status || 'PENDING'}
-                </span>
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Approval Status</label>
-                <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getApprovalBadge(selectedVendor.approvalStatus || 'PENDING')}`}>
-                  {selectedVendor.approvalStatus || 'PENDING'}
-                </span>
+              <div><label className="text-sm font-semibold text-gray-700">Business Name</label><p className="mt-1">{selectedVendor.businessName}</p></div>
+              <div><label className="text-sm font-semibold text-gray-700">Business Type</label><p className="mt-1">{selectedVendor.businessType}</p></div>
+              <div><label className="text-sm font-semibold text-gray-700">Business Email</label><p className="mt-1">{selectedVendor.businessEmail} {selectedVendor.businessEmailVerified ? '✅' : '❌'}</p></div>
+              <div><label className="text-sm font-semibold text-gray-700">Business Phone</label><p className="mt-1">{selectedVendor.businessPhone} {selectedVendor.businessPhoneVerified ? '✅' : '❌'}</p></div>
+              <div><label className="text-sm font-semibold text-gray-700">Registration Number</label><p className="mt-1">{selectedVendor.businessRegistrationNumber}</p></div>
+              <div><label className="text-sm font-semibold text-gray-700">Tax ID</label><p className="mt-1">{selectedVendor.taxId}</p></div>
+              <div><label className="text-sm font-semibold text-gray-700">Established Year</label><p className="mt-1">{selectedVendor.establishedYear}</p></div>
+              <div><label className="text-sm font-semibold text-gray-700">Country</label><p className="mt-1">{selectedVendor.country}</p></div>
+            </div>
+
+            {/* Owner Info */}
+            <div>
+              <h3 className="text-lg font-bold text-gray-900 mb-2">Owner Information</h3>
+              <div className="grid grid-cols-2 gap-4 bg-gray-50 rounded-xl p-4">
+                <div><label className="text-sm font-semibold text-gray-700">Name</label><p className="mt-1">{selectedVendor.ownerInfo.firstName} {selectedVendor.ownerInfo.lastName}</p></div>
+                <div><label className="text-sm font-semibold text-gray-700">Email</label><p className="mt-1">{selectedVendor.ownerInfo.email}</p></div>
+                <div><label className="text-sm font-semibold text-gray-700">Phone</label><p className="mt-1">{selectedVendor.ownerInfo.phone}</p></div>
+                <div><label className="text-sm font-semibold text-gray-700">ID Proof</label><p className="mt-1">{selectedVendor.ownerInfo.idProofType}: {selectedVendor.ownerInfo.idProofNumber}</p></div>
               </div>
             </div>
 
-            {selectedVendor.aboutBusiness && (
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">About Business</label>
-                <p className="text-sm text-gray-900">{selectedVendor.aboutBusiness}</p>
-              </div>
-            )}
+            {/* Address */}
+            <div>
+              <h3 className="text-lg font-bold text-gray-900 mb-2">Business Address</h3>
+              <p className="text-gray-700">{selectedVendor.businessAddress.streetAddress}, {selectedVendor.businessAddress.city}, {selectedVendor.businessAddress.state} - {selectedVendor.businessAddress.postalCode}, {selectedVendor.businessAddress.country}</p>
+            </div>
 
-            {selectedVendor.cuisinesOffered && selectedVendor.cuisinesOffered.length > 0 && (
+            {/* Capacity & Pricing */}
+            <div className="grid grid-cols-2 gap-6">
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Cuisines</label>
-                <p className="text-sm text-gray-900">{selectedVendor.cuisinesOffered.join(', ')}</p>
+                <h3 className="text-lg font-bold text-gray-900 mb-2">Capacity</h3>
+                <div className="bg-gray-50 rounded-xl p-4 space-y-1">
+                  <p><span className="text-sm text-gray-600">Min Guests:</span> {selectedVendor.capacity.minGuests}</p>
+                  <p><span className="text-sm text-gray-600">Max Guests:</span> {selectedVendor.capacity.maxGuests}</p>
+                  <p><span className="text-sm text-gray-600">Concurrent Events:</span> {selectedVendor.capacity.concurrentEvents}</p>
+                </div>
               </div>
-            )}
-
-            {selectedVendor.specialties && selectedVendor.specialties.length > 0 && (
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Specialties</label>
-                <p className="text-sm text-gray-900">{selectedVendor.specialties.join(', ')}</p>
+                <h3 className="text-lg font-bold text-gray-900 mb-2">Pricing</h3>
+                <div className="bg-gray-50 rounded-xl p-4 space-y-1">
+                  <p><span className="text-sm text-gray-600">Starting:</span> {selectedVendor.pricing.currency} {selectedVendor.pricing.startingPricePerPlate}/plate</p>
+                  <p><span className="text-sm text-gray-600">Average:</span> {selectedVendor.pricing.currency} {selectedVendor.pricing.averagePricePerPlate}/plate</p>
+                </div>
               </div>
-            )}
+            </div>
 
-            {selectedVendor.rejectionReason && (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-                <label className="block text-sm font-semibold text-red-700 mb-1">Rejection Reason</label>
-                <p className="text-sm text-red-900">{selectedVendor.rejectionReason}</p>
-              </div>
-            )}
-
-            {selectedVendor.addresses && selectedVendor.addresses.length > 0 && (
+            {/* Cuisines & Specialties */}
+            <div className="grid grid-cols-2 gap-6">
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Addresses</label>
-                {selectedVendor.addresses.map((addr, idx) => (
-                  <div key={idx} className="bg-gray-50 rounded-lg p-3 mb-2">
-                    <p className="text-sm text-gray-900">
-                      {addr.street}, {addr.city}, {addr.state} {addr.zipCode}, {addr.country}
-                    </p>
-                  </div>
-                ))}
+                <h3 className="text-lg font-bold text-gray-900 mb-2">Cuisines</h3>
+                <div className="flex flex-wrap gap-2">{selectedVendor.cuisinesOffered.map(c => <span key={c} className="px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-sm">{c}</span>)}</div>
               </div>
-            )}
-
-            {selectedVendor.licenseDocuments && selectedVendor.licenseDocuments.length > 0 && (
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">License Documents</label>
-                {selectedVendor.licenseDocuments.map((doc, idx) => (
-                  <div key={idx} className="bg-blue-50 rounded-lg p-3 mb-2">
-                    <p className="text-sm font-medium text-gray-900">{doc.documentType}</p>
-                    <a
-                      href={doc.documentUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-xs text-blue-600 hover:underline"
-                    >
-                      View Document
-                    </a>
-                  </div>
-                ))}
+                <h3 className="text-lg font-bold text-gray-900 mb-2">Specialties</h3>
+                <div className="flex flex-wrap gap-2">{selectedVendor.specialties.map(s => <span key={s} className="px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-sm">{s}</span>)}</div>
               </div>
-            )}
+            </div>
 
-            {selectedVendor.documents && selectedVendor.documents.length > 0 && (
+            {/* Documents */}
+            {selectedVendor.documents.length > 0 && (
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Uploaded Documents</label>
-                {selectedVendor.documents.map((doc, idx) => (
-                  <div key={idx} className="bg-blue-50 rounded-lg p-3 mb-2">
-                    <p className="text-sm font-medium text-gray-900">{doc.documentName || doc.documentType}</p>
-                    <p className="text-xs text-gray-600">Number: {doc.documentNumber}</p>
-                    <a
-                      href={doc.documentUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-xs text-blue-600 hover:underline"
-                    >
-                      View Document
-                    </a>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {selectedVendor.capacity && (
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Capacity</label>
-                <p className="text-sm text-gray-900">Min: {selectedVendor.capacity.minGuests || '-'} | Max: {selectedVendor.capacity.maxGuests || '-'}</p>
-              </div>
-            )}
-
-            {selectedVendor.pricing && (
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Pricing</label>
-                <p className="text-sm text-gray-900">{selectedVendor.pricing.currency || ''} {selectedVendor.pricing.startingPricePerPlate || '-'} starting</p>
-              </div>
-            )}
-
-            {selectedVendor.ratings && (
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Ratings</label>
-                <p className="text-sm text-gray-900">{selectedVendor.ratings.averageRating || 0} ({selectedVendor.ratings.totalReviews || 0} reviews)</p>
-              </div>
-            )}
-
-            {selectedVendor.ownerInfo && (
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Owner</label>
-                <p className="text-sm text-gray-900">{selectedVendor.ownerInfo.firstName} {selectedVendor.ownerInfo.lastName} — {selectedVendor.ownerInfo.phone}</p>
+                <h3 className="text-lg font-bold text-gray-900 mb-2 flex items-center gap-2"><FileText className="w-5 h-5" />Documents</h3>
+                <div className="space-y-2">
+                  {selectedVendor.documents.map(doc => (
+                    <div key={doc.documentId} className="flex items-center justify-between bg-gray-50 rounded-xl p-3">
+                      <div>
+                        <p className="font-semibold text-gray-900">{doc.documentName}</p>
+                        <p className="text-sm text-gray-500">{doc.documentType} • {doc.documentNumber}</p>
+                      </div>
+                      <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                        doc.verificationStatus === 'VERIFIED' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                      }`}>{doc.verificationStatus}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
           </div>
-        ) : (
-          <div className="text-center text-sm text-gray-500">No vendor selected</div>
         )}
       </Modal>
 
-      {/* Reject Reason Modal */}
-      <Modal
-        isOpen={showRejectModal}
-        onClose={() => {
-          setShowRejectModal(false);
-          setRejectReason('');
-          setVendorToReject(null);
-        }}
-        title="Reject Vendor"
-      >
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Rejection Reason <span className="text-red-500">*</span>
-            </label>
-            <textarea
-              value={rejectReason}
-              onChange={(e) => setRejectReason(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-500"
-              rows={4}
-              placeholder="Provide a reason for rejecting this vendor..."
-              required
-            />
+      {/* Action Modal */}
+      <Modal isOpen={showActionModal} onClose={() => setShowActionModal(false)}
+        title={`${actionType.charAt(0).toUpperCase() + actionType.slice(1)} Vendor`}>
+        {selectedVendor && (
+          <div className="space-y-4">
+            <p className="text-gray-600">
+              Are you sure you want to <strong>{actionType}</strong> <strong>{selectedVendor.businessName}</strong>?
+            </p>
+            {(actionType === 'approve' || actionType === 'reject' || actionType === 'suspend') && (
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  {actionType === 'approve' ? 'Notes (Optional)' : 'Reason (Required)'}
+                </label>
+                <textarea value={actionReason} onChange={(e) => setActionReason(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500" rows={3}
+                  placeholder={`Enter ${actionType === 'approve' ? 'notes' : 'reason'}...`} />
+              </div>
+            )}
+            <div className="flex gap-3">
+              <button onClick={confirmAction}
+                disabled={(actionType === 'reject' || actionType === 'suspend') && !actionReason.trim()}
+                className={`flex-1 text-white px-4 py-2 rounded-xl disabled:opacity-50 ${
+                  actionType === 'approve' ? 'bg-green-600 hover:bg-green-700'
+                  : actionType === 'reject' ? 'bg-red-600 hover:bg-red-700'
+                  : actionType === 'suspend' ? 'bg-orange-600 hover:bg-orange-700'
+                  : actionType === 'activate' ? 'bg-green-600 hover:bg-green-700'
+                  : 'bg-purple-600 hover:bg-purple-700'
+                }`}>
+                Confirm {actionType.charAt(0).toUpperCase() + actionType.slice(1)}
+              </button>
+              <button onClick={() => setShowActionModal(false)} className="flex-1 bg-gray-200 text-gray-700 px-4 py-2 rounded-xl">Cancel</button>
+            </div>
           </div>
-          <div className="flex gap-3">
-            <button
-              onClick={handleRejectConfirm}
-              className="flex-1 bg-gradient-to-r from-red-600 to-red-700 text-white px-4 py-2 rounded-xl hover:from-red-700 hover:to-red-800"
-            >
-              Confirm Reject
-            </button>
-            <button
-              onClick={() => {
-                setShowRejectModal(false);
-                setRejectReason('');
-                setVendorToReject(null);
-              }}
-              className="flex-1 bg-gray-200 text-gray-700 px-4 py-2 rounded-xl hover:bg-gray-300"
-            >
-              Cancel
-            </button>
-          </div>
-        </div>
+        )}
       </Modal>
     </div>
   );
 };
 
 export default Vendors;
-
