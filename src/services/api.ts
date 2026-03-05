@@ -409,6 +409,9 @@ export const announcementApi = {
 
   delete: (announcementId: string): Promise<void> =>
     api.delete(`/api/v1/admin/announcements/${announcementId}`).then(() => {}),
+
+  changeStatus: (announcementId: string, isActive: boolean): Promise<Announcement> =>
+    api.patch(`/api/v1/admin/announcements/${announcementId}/status`, { isActive }).then(res => unwrap<Announcement>(res)),
 };
 
 // ==================== Audit Logs ====================

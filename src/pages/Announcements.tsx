@@ -4,7 +4,7 @@ import type { Announcement, CreateAnnouncementRequest, UpdateAnnouncementRequest
 import DataTable from '../components/DataTable';
 import Modal from '../components/Modal';
 import CustomSelect from '../components/CustomSelect';
-import { Megaphone, Plus, ChevronLeft, ChevronRight, Edit2, Trash2, Eye } from 'lucide-react';
+import { Megaphone, Plus, ChevronLeft, ChevronRight, Edit2, Trash2, Eye, Power } from 'lucide-react';
 
 const Announcements: React.FC = () => {
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
@@ -18,6 +18,7 @@ const Announcements: React.FC = () => {
   const [pageSize] = useState(20);
   const [pageInfo, setPageInfo] = useState<PageInfo>({ pageNumber: 0, pageSize: 20, totalElements: 0, totalPages: 0 });
   const [submitting, setSubmitting] = useState(false);
+  const [togglingId, setTogglingId] = useState<string | null>(null);
   const [form, setForm] = useState<CreateAnnouncementRequest>({
     title: '',
     message: '',
@@ -137,6 +138,20 @@ const Announcements: React.FC = () => {
     finally { setSubmitting(false); }
   };
 
+  const handleToggleStatus = async (announcement: Announcement) => {
+    setTogglingId(announcement.announcementId);
+    try {
+      const newStatus = !(announcement.isActive ?? true);
+      await announcementApi.changeStatus(announcement.announcementId, newStatus);
+      console.log(`✅ Announcement status toggled to ${newStatus ? 'active' : 'inactive'}`);
+      loadAnnouncements();
+    } catch (error: any) {
+      console.error('❌ Toggle status error:', error);
+      alert(error.response?.data?.message || 'Failed to change announcement status');
+    }
+    finally { setTogglingId(null); }
+  };
+
   const priorityColors: Record<string, string> = {
     LOW: 'bg-blue-100 text-blue-800',
     NORMAL: 'bg-green-100 text-green-800',
@@ -189,19 +204,35 @@ const Announcements: React.FC = () => {
     },
     {
       key: 'actions', header: 'Actions',
-      render: (a: Announcement) => (
-        <div className="flex gap-2">
-          <button onClick={() => handleOpenView(a)} className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition" title="View details">
-            <Eye className="w-4 h-4" />
-          </button>
-          <button onClick={() => handleOpenEdit(a)} className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition" title="Edit">
-            <Edit2 className="w-4 h-4" />
-          </button>
-          <button onClick={() => { setSelectedAnnouncement(a); setShowDeleteConfirm(true); }} className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition" title="Delete">
-            <Trash2 className="w-4 h-4" />
-          </button>
-        </div>
-      ),
+      render: (a: Announcement) => {
+        const isToggling = togglingId === a.announcementId;
+        const isActive = a.isActive ?? true;
+        return (
+          <div className="flex gap-2">
+            <button
+              onClick={() => handleToggleStatus(a)}
+              disabled={isToggling}
+              className={`p-2 transition rounded-lg ${
+                isActive
+                  ? 'text-orange-600 hover:bg-orange-50'
+                  : 'text-green-600 hover:bg-green-50'
+              } ${isToggling ? 'opacity-50 cursor-not-allowed' : ''}`}
+              title={`Click to ${isActive ? 'deactivate' : 'activate'}`}
+            >
+              <Power className={`w-4 h-4 ${isToggling ? 'animate-spin' : ''}`} />
+            </button>
+            <button onClick={() => handleOpenView(a)} className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition" title="View details">
+              <Eye className="w-4 h-4" />
+            </button>
+            <button onClick={() => handleOpenEdit(a)} className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition" title="Edit">
+              <Edit2 className="w-4 h-4" />
+            </button>
+            <button onClick={() => { setSelectedAnnouncement(a); setShowDeleteConfirm(true); }} className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition" title="Delete">
+              <Trash2 className="w-4 h-4" />
+            </button>
+          </div>
+        );
+      },
     },
   ];
 
