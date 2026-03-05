@@ -667,7 +667,9 @@ export interface Announcement {
   targetAudience: 'ALL' | 'USERS' | 'VENDORS' | 'ADMINS';
   startDate?: string | null;
   endDate?: string | null;
+  isActive?: boolean;
   createdBy: string;
+  createdByName?: string;
   createdAt: string;
 }
 

@@ -144,6 +144,11 @@ const Announcements: React.FC = () => {
     URGENT: 'bg-red-100 text-red-800',
   };
 
+  const statusColors: Record<string, string> = {
+    active: 'bg-emerald-100 text-emerald-800',
+    inactive: 'bg-gray-100 text-gray-800',
+  };
+
   const columns = [
     {
       key: 'title', header: 'Title',
@@ -161,6 +166,14 @@ const Announcements: React.FC = () => {
     {
       key: 'audience', header: 'Audience',
       render: (a: Announcement) => <span className="px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-xs font-semibold">{a.targetAudience}</span>,
+    },
+    {
+      key: 'isActive', header: 'Status',
+      render: (a: Announcement) => {
+        const isActive = a.isActive ?? true;
+        const statusKey = isActive ? 'active' : 'inactive';
+        return <span className={`px-3 py-1 rounded-full text-xs font-semibold ${statusColors[statusKey]}`}>{isActive ? 'Active' : 'Inactive'}</span>;
+      },
     },
     {
       key: 'startDate', header: 'Date Range',
@@ -319,10 +332,22 @@ const Announcements: React.FC = () => {
                 </span>
               </div>
               <div>
+                <p className="text-xs font-semibold text-gray-500 uppercase">Status</p>
+                <span className={`inline-block mt-1 px-3 py-1 rounded-full text-xs font-semibold ${statusColors[selectedAnnouncement.isActive ? 'active' : 'inactive']}`}>
+                  {selectedAnnouncement.isActive ? 'Active' : 'Inactive'}
+                </span>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
                 <p className="text-xs font-semibold text-gray-500 uppercase">Target Audience</p>
                 <span className="inline-block mt-1 px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-xs font-semibold">
                   {selectedAnnouncement.targetAudience}
                 </span>
+              </div>
+              <div>
+                <p className="text-xs font-semibold text-gray-500 uppercase">Created By</p>
+                <p className="text-sm text-gray-700 mt-1">{selectedAnnouncement.createdByName || selectedAnnouncement.createdBy}</p>
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
@@ -334,10 +359,6 @@ const Announcements: React.FC = () => {
                 <p className="text-xs font-semibold text-gray-500 uppercase">End Date</p>
                 <p className="text-sm text-gray-700 mt-1">{selectedAnnouncement.endDate ? new Date(selectedAnnouncement.endDate).toLocaleString() : '—'}</p>
               </div>
-            </div>
-            <div>
-              <p className="text-xs font-semibold text-gray-500 uppercase">Created By</p>
-              <p className="text-sm text-gray-700 mt-1">{selectedAnnouncement.createdBy} on {new Date(selectedAnnouncement.createdAt).toLocaleString()}</p>
             </div>
             <div className="flex gap-3">
               <button onClick={() => { setShowViewModal(false); handleOpenEdit(selectedAnnouncement); }} 
