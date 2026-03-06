@@ -31,7 +31,7 @@ const ToastDisplay: React.FC = () => {
       case 'success':
         return {
           icon: <CheckCircle2 className="w-5 h-5" />,
-          bg: 'bg-gradient-to-br from-emerald-50 to-teal-50',
+          bg: 'bg-gradient-to-br from-emerald-50 to-green-50',
           border: 'border-emerald-200/50',
           text: 'text-emerald-900',
           progressBg: 'bg-emerald-500',
@@ -55,10 +55,10 @@ const ToastDisplay: React.FC = () => {
       default:
         return {
           icon: <Info className="w-5 h-5" />,
-          bg: 'bg-gradient-to-br from-blue-50 to-cyan-50',
-          border: 'border-blue-200/50',
-          text: 'text-blue-900',
-          progressBg: 'bg-blue-500',
+          bg: 'bg-gradient-to-br from-orange-50 to-amber-50',
+          border: 'border-orange-200/50',
+          text: 'text-orange-900',
+          progressBg: 'bg-orange-500',
         };
     }
   };

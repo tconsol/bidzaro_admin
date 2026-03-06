@@ -38,21 +38,21 @@ const Payments: React.FC = () => {
 
   return (
     <div className="space-y-6 animate-fadeIn">
-      <div className="bg-gradient-to-r from-pink-500 to-rose-600 rounded-2xl shadow-lg p-6 text-white">
+      <div className="bg-orange-500 rounded-2xl shadow-lg p-6 text-white">
         <h1 className="text-3xl font-bold flex items-center gap-3"><CreditCard className="w-8 h-8" />Payments & Refunds</h1>
-        <p className="text-pink-100 mt-1">Manage payment refunds for transactions</p>
+        <p className="text-orange-100 mt-1">Manage payment refunds for transactions</p>
       </div>
 
       {/* Refund Action Card */}
       <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-8">
         <div className="max-w-2xl mx-auto text-center">
-          <div className="w-16 h-16 bg-gradient-to-br from-pink-500 to-rose-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+          <div className="w-16 h-16 bg-orange-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
             <RefreshCw className="w-8 h-8 text-white" />
           </div>
           <h2 className="text-2xl font-bold text-gray-900 mb-2">Initiate Refund</h2>
           <p className="text-gray-500 mb-6">Process a refund for a specific payment transaction. Enter the transaction ID, refund amount, and reason to proceed.</p>
           <button onClick={() => setShowRefundModal(true)}
-            className="bg-gradient-to-r from-pink-600 to-rose-600 text-white px-8 py-3 rounded-xl font-semibold hover:shadow-lg transition-all">
+            className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-3 rounded-xl font-semibold hover:shadow-lg transition-all">
             Start Refund Process
           </button>
         </div>
@@ -73,27 +73,27 @@ const Payments: React.FC = () => {
       <Modal isOpen={showRefundModal} onClose={() => setShowRefundModal(false)} title="Initiate Refund">
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1">Transaction ID *</label>
+            <label className="block text-sm font-semibold text-gray-700 mb-1">Transaction ID <span className="text-red-500">*</span></label>
             <input type="text" value={transactionId} onChange={(e) => setTransactionId(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-pink-500"
+              className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500"
               placeholder="Enter transaction ID" />
           </div>
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1">Refund Amount (INR) *</label>
+            <label className="block text-sm font-semibold text-gray-700 mb-1">Refund Amount (INR) <span className="text-red-500">*</span></label>
             <input type="number" value={refundAmount || ''} onChange={(e) => setRefundAmount(Number(e.target.value))}
-              className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-pink-500"
+              className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500"
               placeholder="0.00" min={0} step="0.01" />
           </div>
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1">Reason *</label>
+            <label className="block text-sm font-semibold text-gray-700 mb-1">Reason <span className="text-red-500">*</span></label>
             <textarea value={refundReason} onChange={(e) => setRefundReason(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-pink-500" rows={3}
+              className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500" rows={3}
               placeholder="Reason for refund..." />
           </div>
           <div className="flex gap-3">
             <button onClick={handleInitiateRefund}
               disabled={submitting || !transactionId || !refundAmount || !refundReason}
-              className="flex-1 bg-gradient-to-r from-pink-600 to-rose-600 text-white px-4 py-2 rounded-xl disabled:opacity-50">
+              className="flex-1 bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-xl disabled:opacity-50">
               {submitting ? 'Processing...' : 'Initiate Refund'}
             </button>
             <button onClick={() => setShowRefundModal(false)} className="flex-1 bg-gray-200 text-gray-700 px-4 py-2 rounded-xl">Cancel</button>

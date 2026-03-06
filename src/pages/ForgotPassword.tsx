@@ -90,7 +90,7 @@ const ForgotPassword: React.FC = () => {
 
       <form onSubmit={handleSubmit} className="space-y-5">
         <div>
-          <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-1.5">Email Address</label>
+          <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-1.5">Email Address <span className="text-red-500">*</span></label>
           <input
             id="email"
             name="email"
@@ -133,3 +133,4 @@ const ForgotPassword: React.FC = () => {
 };
 
 export default ForgotPassword;
+

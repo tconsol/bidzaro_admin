@@ -115,7 +115,7 @@ const Register: React.FC = () => {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label htmlFor="firstName" className="block text-sm font-semibold text-gray-700">
-                  First Name
+                  First Name <span className="text-red-500">*</span>
                 </label>
                 <input
                   id="firstName"
@@ -131,7 +131,7 @@ const Register: React.FC = () => {
 
               <div className="space-y-2">
                 <label htmlFor="lastName" className="block text-sm font-semibold text-gray-700">
-                  Last Name
+                  Last Name <span className="text-red-500">*</span>
                 </label>
                 <input
                   id="lastName"
@@ -148,7 +148,7 @@ const Register: React.FC = () => {
 
             <div className="space-y-2">
               <label htmlFor="email" className="block text-sm font-semibold text-gray-700">
-                Email Address
+                Email Address <span className="text-red-500">*</span>
               </label>
               <input
                 id="email"
@@ -164,7 +164,7 @@ const Register: React.FC = () => {
 
             <div className="space-y-2">
               <label htmlFor="phone" className="block text-sm font-semibold text-gray-700">
-                Phone Number
+                Phone Number <span className="text-red-500">*</span>
               </label>
               <input
                 id="phone"
@@ -180,7 +180,7 @@ const Register: React.FC = () => {
 
             <div className="space-y-2">
               <label htmlFor="password" className="block text-sm font-semibold text-gray-700">
-                Password
+                Password <span className="text-red-500">*</span>
               </label>
               <input
                 id="password"
@@ -269,4 +269,7 @@ const Register: React.FC = () => {
 };
 
 export default Register;
+
+
+
 

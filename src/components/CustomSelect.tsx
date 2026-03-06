@@ -55,8 +55,8 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
         onClick={() => !disabled && setIsOpen(!isOpen)}
         disabled={disabled}
         className={`w-full px-4 py-2 border border-gray-300 rounded-xl bg-white text-left flex items-center justify-between transition-all ${
-          disabled ? 'bg-gray-100 cursor-not-allowed opacity-50' : 'hover:border-teal-400'
-        } ${isOpen ? 'ring-2 ring-teal-500 border-teal-500' : 'focus:ring-2 focus:ring-teal-500'}`}
+          disabled ? 'bg-gray-100 cursor-not-allowed opacity-50' : 'hover:border-orange-400'
+        } ${isOpen ? 'ring-2 ring-orange-500 border-orange-500' : 'focus:ring-2 focus:ring-orange-500'}`}
       >
         <span className={value ? 'text-gray-900' : 'text-gray-500'}>
           {displayLabel}
@@ -73,9 +73,9 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
                 onChange(option.value);
                 setIsOpen(false);
               }}
-              className={`w-full px-4 py-3 text-left transition-colors hover:bg-teal-50 ${
+              className={`w-full px-4 py-3 text-left transition-colors hover:bg-orange-50 ${
                 value === option.value
-                  ? 'bg-teal-100 text-teal-900 font-semibold'
+                  ? 'bg-orange-100 text-orange-900 font-semibold'
                   : 'text-gray-700 hover:text-gray-900'
               }`}
             >
@@ -89,3 +89,4 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
 };
 
 export default CustomSelect;
+

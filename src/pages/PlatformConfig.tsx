@@ -83,11 +83,11 @@ const PlatformConfigPage: React.FC = () => {
 
   return (
     <div className="space-y-6 animate-fadeIn">
-      <div className="bg-gradient-to-r from-slate-600 to-gray-800 rounded-2xl shadow-lg p-6 text-white">
+      <div className="bg-orange-500 rounded-2xl shadow-lg p-6 text-white">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold flex items-center gap-3"><Settings className="w-8 h-8" />Platform Configuration</h1>
-            {config && <p className="text-gray-300 mt-1">Last updated: {new Date(config.updatedAt).toLocaleString()} by {config.updatedBy}</p>}
+            {config && <p className="text-orange-100 mt-1">Last updated: {new Date(config.updatedAt).toLocaleString()} by {config.updatedBy}</p>}
           </div>
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2 bg-white/10 rounded-xl px-4 py-2 w-48">
@@ -138,13 +138,13 @@ const PlatformConfigPage: React.FC = () => {
         <h2 className="text-xl font-bold text-gray-900 mb-4">Payment Configuration</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1">Token Percentage (%)</label>
+            <label className="block text-sm font-semibold text-gray-700 mb-1">Token Percentage (%) <span className="text-red-500">*</span></label>
             <input type="number" value={paymentConfig.tokenPercentage}
               onChange={(e) => setPaymentConfig({ ...paymentConfig, tokenPercentage: Number(e.target.value) })}
               className="w-full px-4 py-2 border border-gray-300 rounded-xl" />
           </div>
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1">Default Gateway</label>
+            <label className="block text-sm font-semibold text-gray-700 mb-1">Default Gateway <span className="text-red-500">*</span></label>
             <input type="text" value={paymentConfig.defaultGateway}
               onChange={(e) => setPaymentConfig({ ...paymentConfig, defaultGateway: e.target.value })}
               className="w-full px-4 py-2 border border-gray-300 rounded-xl" />
@@ -177,19 +177,19 @@ const PlatformConfigPage: React.FC = () => {
         <h2 className="text-xl font-bold text-gray-900 mb-4">Commission Configuration</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1">Platform Fee (%)</label>
+            <label className="block text-sm font-semibold text-gray-700 mb-1">Platform Fee (%) <span className="text-red-500">*</span></label>
             <input type="number" step="0.1" value={commissionConfig.platformFeePercentage}
               onChange={(e) => setCommissionConfig({ ...commissionConfig, platformFeePercentage: Number(e.target.value) })}
               className="w-full px-4 py-2 border border-gray-300 rounded-xl" />
           </div>
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1">Vendor Commission (%)</label>
+            <label className="block text-sm font-semibold text-gray-700 mb-1">Vendor Commission (%) <span className="text-red-500">*</span></label>
             <input type="number" step="0.1" value={commissionConfig.vendorCommissionPercentage}
               onChange={(e) => setCommissionConfig({ ...commissionConfig, vendorCommissionPercentage: Number(e.target.value) })}
               className="w-full px-4 py-2 border border-gray-300 rounded-xl" />
           </div>
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1">Payment Gateway Fee (%)</label>
+            <label className="block text-sm font-semibold text-gray-700 mb-1">Payment Gateway Fee (%) <span className="text-red-500">*</span></label>
             <input type="number" step="0.1" value={commissionConfig.paymentGatewayFeePercentage}
               onChange={(e) => setCommissionConfig({ ...commissionConfig, paymentGatewayFeePercentage: Number(e.target.value) })}
               className="w-full px-4 py-2 border border-gray-300 rounded-xl" />

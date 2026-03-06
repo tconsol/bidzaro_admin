@@ -114,7 +114,7 @@ const Orders: React.FC = () => {
       render: (o: Order) => (
         <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
           o.status === 'COMPLETED' ? 'bg-green-100 text-green-800'
-          : o.status === 'CONFIRMED' ? 'bg-blue-100 text-blue-800'
+          : o.status === 'CONFIRMED' ? 'bg-orange-100 text-orange-800'
           : o.status === 'CANCELLED' ? 'bg-red-100 text-red-800'
           : o.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800'
           : 'bg-gray-100 text-gray-800'
@@ -154,7 +154,7 @@ const Orders: React.FC = () => {
               placeholder="Search orders by ID, customer, or vendor..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+              className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
             />
           </div>
           <div className="w-52">
@@ -284,7 +284,7 @@ const Orders: React.FC = () => {
         title="Override Order Status">
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">New Status</label>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">New Status <span className="text-red-500">*</span></label>
             <CustomSelect
               value={overrideStatus}
               onChange={(val) => setOverrideStatus(val)}
@@ -300,7 +300,7 @@ const Orders: React.FC = () => {
             />
           </div>
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">Reason</label>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">Reason <span className="text-red-500">*</span></label>
             <textarea value={overrideReason} onChange={(e) => setOverrideReason(e.target.value)}
               className="w-full px-4 py-2 border border-gray-300 rounded-xl" rows={3} placeholder="Reason for status override..." />
           </div>
@@ -316,5 +316,7 @@ const Orders: React.FC = () => {
 };
 
 export default Orders;
+
+
 
 

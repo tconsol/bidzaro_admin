@@ -172,7 +172,7 @@ const Admins: React.FC = () => {
         <div className="flex items-center justify-between relative z-10">
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold flex items-center gap-3"><Shield className="w-8 h-8" />Admin Management</h1>
-            <p className="text-white mt-2">Manage admins — Total: {pageInfo.totalElements.toLocaleString()}</p>
+            <p className="text-white mt-2">Manage admins — Total: {getFilteredAdmins().length.toLocaleString()}</p>
           </div>
           <button onClick={() => setShowCreateModal(true)}
             className="flex items-center gap-2 bg-white text-orange-600 px-4 py-2 rounded-xl font-semibold hover:shadow-lg hover:scale-105 transition-all duration-200">
@@ -300,28 +300,28 @@ const Admins: React.FC = () => {
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1">First Name *</label>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">First Name <span className="text-red-500">*</span></label>
               <input type="text" value={agentForm.firstName} onChange={(e) => setAgentForm({ ...agentForm, firstName: e.target.value })}
                 className="w-full px-4 py-2 border border-gray-300 rounded-xl" />
             </div>
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1">Last Name *</label>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">Last Name <span className="text-red-500">*</span></label>
               <input type="text" value={agentForm.lastName} onChange={(e) => setAgentForm({ ...agentForm, lastName: e.target.value })}
                 className="w-full px-4 py-2 border border-gray-300 rounded-xl" />
             </div>
           </div>
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1">Email *</label>
+            <label className="block text-sm font-semibold text-gray-700 mb-1">Email <span className="text-red-500">*</span></label>
             <input type="email" value={agentForm.email} onChange={(e) => setAgentForm({ ...agentForm, email: e.target.value })}
               className="w-full px-4 py-2 border border-gray-300 rounded-xl" />
           </div>
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1">Phone *</label>
+            <label className="block text-sm font-semibold text-gray-700 mb-1">Phone <span className="text-red-500">*</span></label>
             <input type="tel" value={agentForm.phone} onChange={(e) => setAgentForm({ ...agentForm, phone: e.target.value })}
               className="w-full px-4 py-2 border border-gray-300 rounded-xl" placeholder="+917890111222" />
           </div>
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1">Password *</label>
+            <label className="block text-sm font-semibold text-gray-700 mb-1">Password <span className="text-red-500">*</span></label>
             <input type="password" value={agentForm.password} onChange={(e) => setAgentForm({ ...agentForm, password: e.target.value })}
               className="w-full px-4 py-2 border border-gray-300 rounded-xl" />
           </div>

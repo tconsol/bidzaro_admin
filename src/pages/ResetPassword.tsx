@@ -156,7 +156,7 @@ const ResetPassword: React.FC = () => {
 
             <div className="space-y-2">
               <label htmlFor="email" className="block text-sm font-semibold text-gray-700">
-                Email Address
+                Email Address <span className="text-red-500">*</span>
               </label>
               <input
                 id="email"
@@ -172,7 +172,7 @@ const ResetPassword: React.FC = () => {
 
             <div className="space-y-2">
               <label htmlFor="otp" className="block text-sm font-semibold text-gray-700">
-                OTP Code
+                OTP Code <span className="text-red-500">*</span>
               </label>
               <input
                 id="otp"
@@ -189,7 +189,7 @@ const ResetPassword: React.FC = () => {
 
             <div className="space-y-2">
               <label htmlFor="newPassword" className="block text-sm font-semibold text-gray-700">
-                New Password
+                New Password <span className="text-red-500">*</span>
               </label>
               <div className="relative">
                 <input
@@ -215,7 +215,7 @@ const ResetPassword: React.FC = () => {
 
             <div className="space-y-2">
               <label htmlFor="confirmPassword" className="block text-sm font-semibold text-gray-700">
-                Confirm Password
+                Confirm Password <span className="text-red-500">*</span>
               </label>
               <div className="relative">
                 <input
@@ -283,4 +283,8 @@ const ResetPassword: React.FC = () => {
 };
 
 export default ResetPassword;
+
+
+
+
 

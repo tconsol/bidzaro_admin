@@ -92,9 +92,9 @@ export default function SupportManagement({ className = '' }: SupportManagementP
       case 'OPEN':
         return 'bg-yellow-100 text-yellow-800';
       case 'ASSIGNED':
-        return 'bg-blue-100 text-blue-800';
+        return 'bg-orange-100 text-orange-800';
       case 'IN_PROGRESS':
-        return 'bg-blue-100 text-blue-800';
+        return 'bg-orange-100 text-orange-800';
       case 'WAITING_FOR_CUSTOMER':
         return 'bg-orange-100 text-orange-800';
       case 'RESOLVED':
@@ -170,7 +170,7 @@ export default function SupportManagement({ className = '' }: SupportManagementP
                 <p className="text-sm text-gray-600 mb-1">My Assigned</p>
                 <p className="text-2xl font-bold text-gray-900">{myAssignedTickets.length}</p>
               </div>
-              <Clock className="h-8 w-8 text-blue-500" />
+              <Clock className="h-8 w-8 text-orange-500" />
             </div>
           </div>
 
@@ -234,7 +234,7 @@ export default function SupportManagement({ className = '' }: SupportManagementP
               >
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex items-start gap-3 flex-1 min-w-0">
-                    <Ticket className="h-5 w-5 text-blue-500 flex-shrink-0 mt-1" />
+                    <Ticket className="h-5 w-5 text-orange-500 flex-shrink-0 mt-1" />
                     <div className="flex-1 min-w-0">
                       <h3 className="font-semibold text-gray-900 truncate">{ticket.subject}</h3>
                       <p className="text-sm text-gray-500">{ticket.ticketNumber}</p>
@@ -257,7 +257,7 @@ export default function SupportManagement({ className = '' }: SupportManagementP
                     </span>
                   </div>
                   {ticket.conversationId && (
-                    <span className="px-2 py-1 bg-blue-50 text-blue-700 rounded text-xs font-medium">
+                    <span className="px-2 py-1 bg-orange-50 text-orange-700 rounded text-xs font-medium">
                       Chat available
                     </span>
                   )}
@@ -372,6 +372,7 @@ export default function SupportManagement({ className = '' }: SupportManagementP
     </div>
   );
 }
+
 
 
 

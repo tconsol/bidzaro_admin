@@ -61,12 +61,12 @@ const AuditLogs: React.FC = () => {
           'REJECT': 'bg-red-100 text-red-800',
           'SUSPEND': 'bg-red-100 text-red-800',
           'ACTIVATE': 'bg-emerald-100 text-emerald-800',
-          'CREATE': 'bg-blue-100 text-blue-800',
+          'CREATE': 'bg-orange-100 text-orange-800',
           'UPDATE': 'bg-amber-100 text-amber-800',
           'DELETE': 'bg-rose-100 text-rose-800',
-          'UNLOCK': 'bg-purple-100 text-purple-800',
-          'PROCESS': 'bg-cyan-100 text-cyan-800',
-          'REFUND': 'bg-indigo-100 text-indigo-800',
+          'UNLOCK': 'bg-orange-100 text-orange-800',
+          'PROCESS': 'bg-orange-100 text-orange-800',
+          'REFUND': 'bg-orange-100 text-orange-800',
         };
         const colors = actionColors[log.action] || 'bg-gray-100 text-gray-800';
         return <span className={`px-3 py-1 ${colors} rounded-full text-xs font-semibold`}>{log.action || 'Unknown'}</span>;
@@ -111,9 +111,9 @@ const AuditLogs: React.FC = () => {
 
   return (
     <div className="space-y-6 animate-fadeIn">
-      <div className="bg-gradient-to-r from-gray-700 to-zinc-800 rounded-2xl shadow-lg p-6 text-white">
+      <div className="bg-orange-500 rounded-2xl shadow-lg p-6 text-white">
         <h1 className="text-3xl font-bold flex items-center gap-3"><FileText className="w-8 h-8" />Audit Logs</h1>
-        <p className="text-gray-300 mt-1">Total: {pageInfo.totalElements} entries across {pageInfo.totalPages} page{pageInfo.totalPages !== 1 ? 's' : ''}</p>
+        <p className="text-orange-100 mt-1">Total: {pageInfo.totalElements} entries across {pageInfo.totalPages} page{pageInfo.totalPages !== 1 ? 's' : ''}</p>
       </div>
 
       <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 space-y-4">
@@ -179,7 +179,7 @@ const AuditLogs: React.FC = () => {
             <button onClick={() => applyQuickFilter('', 'VENDOR')}
               className="px-3 py-1 bg-orange-100 text-orange-700 rounded-lg text-xs font-medium hover:bg-orange-200">All Vendor Actions</button>
             <button onClick={() => applyQuickFilter('', 'PLATFORM_CONFIG')}
-              className="px-3 py-1 bg-gray-100 text-gray-700 rounded-lg text-xs font-medium hover:bg-gray-200">Platform Changes</button>
+              className="px-3 py-1 bg-orange-100 text-orange-700 rounded-lg text-xs font-medium hover:bg-orange-200">Platform Changes</button>
             <button onClick={() => applyQuickFilter('REJECT', '')}
               className="px-3 py-1 bg-orange-100 text-orange-700 rounded-lg text-xs font-medium hover:bg-orange-200">All Rejections</button>
           </div>
@@ -205,5 +205,6 @@ const AuditLogs: React.FC = () => {
 };
 
 export default AuditLogs;
+
 
 

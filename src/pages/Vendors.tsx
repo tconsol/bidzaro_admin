@@ -222,7 +222,7 @@ const Vendors: React.FC = () => {
           )}
           {(v.approvalStatus === 'PENDING' || v.status === 'SUSPENDED') && (
             <button onClick={(e) => { e.stopPropagation(); openAction(v, 'unlock'); }}
-              className="p-2 bg-gradient-to-br from-purple-400 to-purple-600 text-white rounded-lg hover:shadow-lg hover:scale-105 transition-all duration-200" title="Unlock"><Ban className="w-4 h-4" /></button>
+              className="p-2 bg-orange-500 text-white rounded-lg hover:shadow-lg hover:scale-105 transition-all duration-200" title="Unlock"><Ban className="w-4 h-4" /></button>
           )}
         </div>
       ),
@@ -257,12 +257,12 @@ const Vendors: React.FC = () => {
   return (
     <div className="space-y-6 animate-fadeIn">
       {/* Header */}
-      <div className="bg-gradient-to-r from-purple-500 to-indigo-600 rounded-2xl shadow-lg p-6 text-white relative overflow-hidden">
+      <div className="bg-orange-500 rounded-2xl shadow-lg p-6 text-white relative overflow-hidden">
         <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full -mr-20 -mt-20"></div>
         <div className="flex items-center justify-between relative z-10">
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold flex items-center gap-3"><Building2 className="w-8 h-8" />Vendor Management</h1>
-            <p className="text-purple-100 mt-2">Manage all vendors — Total: {pageInfo.totalElements.toLocaleString()}</p>
+            <p className="text-orange-100 mt-2">Manage all vendors — Total: {pageInfo.totalElements.toLocaleString()}</p>
           </div>
         </div>
       </div>
@@ -274,7 +274,7 @@ const Vendors: React.FC = () => {
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
             <input type="text" placeholder="Search vendors..." value={searchQuery} onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(0); }}
               onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500" />
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500" />
           </div>
           <CustomSelect
             value={approvalStatusFilter}
@@ -315,7 +315,7 @@ const Vendors: React.FC = () => {
           <div className="flex flex-wrap gap-2 items-center mt-4 pt-4 border-t border-gray-200">
             <span className="text-sm font-semibold text-gray-700">Filters:</span>
             {activeFilters.map((filter, idx) => (
-              <span key={idx} className="inline-flex items-center gap-2 bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm font-medium">
+              <span key={idx} className="inline-flex items-center gap-2 bg-orange-100 text-orange-800 px-3 py-1 rounded-full text-sm font-medium">
                 {filter}
               </span>
             ))}
@@ -415,7 +415,7 @@ const Vendors: React.FC = () => {
               </div>
               <div>
                 <h3 className="text-lg font-bold text-gray-900 mb-2">Specialties</h3>
-                <div className="flex flex-wrap gap-2">{selectedVendor.specialties?.length ? selectedVendor.specialties.map(s => <span key={s} className="px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-sm">{s}</span>) : <span className="text-gray-500">No specialties listed</span>}</div>
+                <div className="flex flex-wrap gap-2">{selectedVendor.specialties?.length ? selectedVendor.specialties.map(s => <span key={s} className="px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-sm">{s}</span>) : <span className="text-gray-500">No specialties listed</span>}</div>
               </div>
             </div>
 
@@ -453,10 +453,10 @@ const Vendors: React.FC = () => {
             {(actionType === 'approve' || actionType === 'reject' || actionType === 'suspend') && (
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  {actionType === 'approve' ? 'Notes (Optional)' : 'Reason (Required)'}
+                  {actionType === 'approve' ? 'Notes (Optional)' : <>Reason <span className="text-red-500">*</span></>}
                 </label>
                 <textarea value={actionReason} onChange={(e) => setActionReason(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500" rows={3}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500" rows={3}
                   placeholder={`Enter ${actionType === 'approve' ? 'notes' : 'reason'}...`} />
               </div>
             )}
@@ -482,6 +482,7 @@ const Vendors: React.FC = () => {
 };
 
 export default Vendors;
+
 
 
 

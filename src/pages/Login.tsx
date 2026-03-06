@@ -109,7 +109,7 @@ const Login: React.FC = () => {
             <div>
               <div className="flex items-center justify-between mb-2">
                 <label htmlFor="identifier" className="text-sm font-semibold text-gray-700">
-                  Email or Phone
+                  Email or Phone <span className="text-red-500">*</span>
                 </label>
                 <Link to="/account-recovery" className="text-xs font-medium text-orange-600 hover:text-orange-700">
                   Forgot email or phone?
@@ -132,7 +132,7 @@ const Login: React.FC = () => {
             <div>
               <div className="flex items-center justify-between mb-2">
                 <label htmlFor="password" className="text-sm font-semibold text-gray-700">
-                  Password
+                  Password <span className="text-red-500">*</span>
                 </label>
                 <Link to="/forgot-password" className="text-xs font-medium text-orange-600 hover:text-orange-700">
                   Forgot password?
@@ -224,7 +224,7 @@ const Login: React.FC = () => {
                 onClick={() => { setShowAccountLockedModal(false); navigate('/forgot-password'); }}
                 className="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 px-4 rounded-xl transition-all"
               >
-                Reset Password
+                Reset Password <span className="text-red-500">*</span>
               </button>
               <button
                 onClick={() => { setShowAccountLockedModal(false); navigate('/account-recovery'); }}
@@ -242,3 +242,5 @@ const Login: React.FC = () => {
 };
 
 export default Login;
+
+

@@ -134,7 +134,7 @@ const Bids: React.FC = () => {
       render: (b: BidRequest) => (
         <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
           b.status === 'ACTIVE' ? 'bg-green-100 text-green-800'
-          : b.status === 'ACCEPTED' ? 'bg-blue-100 text-blue-800'
+          : b.status === 'ACCEPTED' ? 'bg-orange-100 text-orange-800'
           : b.status === 'EXPIRED' ? 'bg-red-100 text-red-800'
           : b.status === 'CANCELLED' ? 'bg-gray-100 text-gray-800'
           : 'bg-yellow-100 text-yellow-800'
@@ -157,11 +157,11 @@ const Bids: React.FC = () => {
 
   return (
     <div className="space-y-6 animate-fadeIn">
-      <div className="bg-gradient-to-r from-amber-500 to-yellow-600 rounded-2xl shadow-lg p-6 text-white relative overflow-hidden">
+      <div className="bg-orange-500 rounded-2xl shadow-lg p-6 text-white relative overflow-hidden">
         <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full -mr-20 -mt-20"></div>
         <div className="relative z-10">
           <h1 className="text-2xl sm:text-3xl font-bold flex items-center gap-3"><Gavel className="w-8 h-8" />Bid Requests</h1>
-          <p className="text-amber-100 mt-2">Total: {pageInfo.totalElements.toLocaleString()} bid requests</p>
+          <p className="text-orange-100 mt-2">Total: {pageInfo.totalElements.toLocaleString()} bid requests</p>
         </div>
       </div>
 
@@ -175,7 +175,7 @@ const Bids: React.FC = () => {
               value={searchQuery}
               onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(0); }}
               onKeyDown={(e) => e.key === 'Enter' && setCurrentPage(0)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
             />
           </div>
           <CustomSelect
@@ -198,7 +198,7 @@ const Bids: React.FC = () => {
           <div className="flex flex-wrap gap-2 items-center mt-4 pt-4 border-t border-gray-200">
             <span className="text-sm font-semibold text-gray-700">Filters:</span>
             {activeFilters.map((filter, idx) => (
-              <span key={idx} className="inline-flex items-center gap-2 bg-amber-100 text-amber-800 px-3 py-1 rounded-full text-sm font-medium">
+              <span key={idx} className="inline-flex items-center gap-2 bg-orange-100 text-orange-800 px-3 py-1 rounded-full text-sm font-medium">
                 {filter}
               </span>
             ))}
@@ -356,5 +356,6 @@ const Bids: React.FC = () => {
 };
 
 export default Bids;
+
 
 

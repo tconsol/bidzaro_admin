@@ -228,17 +228,17 @@ const MenuItems: React.FC = () => {
 
   return (
     <div className="space-y-6 animate-fadeIn">
-      <div className="bg-gradient-to-r from-teal-500 to-cyan-600 rounded-2xl shadow-lg p-6 text-white">
+      <div className="bg-orange-500 rounded-2xl shadow-lg p-6 text-white">
         <h1 className="text-3xl font-bold flex items-center gap-3"><UtensilsCrossed className="w-8 h-8" />Menu Management</h1>
-        <p className="text-teal-100 mt-1">{categories.length} categories • {menuItems.length} items</p>
+        <p className="text-orange-100 mt-1">{categories.length} categories • {menuItems.length} items</p>
       </div>
 
       {/* Tabs */}
       <div className="flex gap-2">
-        <button onClick={() => setActiveTab('categories')} className={`px-6 py-3 rounded-xl font-semibold transition-all ${activeTab === 'categories' ? 'bg-teal-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50 border'}`}>
+        <button onClick={() => setActiveTab('categories')} className={`px-6 py-3 rounded-xl font-semibold transition-all ${activeTab === 'categories' ? 'bg-orange-500 text-white' : 'bg-white text-gray-700 hover:bg-gray-50 border'}`}>
           <Tag className="w-4 h-4 inline mr-2" />Categories ({categories.length})
         </button>
-        <button onClick={() => setActiveTab('items')} className={`px-6 py-3 rounded-xl font-semibold transition-all ${activeTab === 'items' ? 'bg-teal-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50 border'}`}>
+        <button onClick={() => setActiveTab('items')} className={`px-6 py-3 rounded-xl font-semibold transition-all ${activeTab === 'items' ? 'bg-orange-500 text-white' : 'bg-white text-gray-700 hover:bg-gray-50 border'}`}>
           <UtensilsCrossed className="w-4 h-4 inline mr-2" />Menu Items ({menuItems.length})
         </button>
       </div>
@@ -259,7 +259,7 @@ const MenuItems: React.FC = () => {
                 placeholder="Filter by status"
               />
             </div>
-            <button onClick={openCreateCategoryModal} className="flex items-center gap-2 bg-teal-600 text-white px-4 py-2 rounded-xl hover:bg-teal-700 hover:scale-105 transition-all duration-200">
+            <button onClick={openCreateCategoryModal} className="flex items-center gap-2 bg-orange-500 text-white px-4 py-2 rounded-xl hover:bg-orange-600 hover:scale-105 transition-all duration-200">
               <Plus className="w-5 h-5" />Add Category
             </button>
           </div>
@@ -305,9 +305,9 @@ const MenuItems: React.FC = () => {
             <div className="relative w-64">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
               <input type="text" placeholder="Search items..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-500" />
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500" />
             </div>
-            <button onClick={() => setShowItemModal(true)} className="flex items-center gap-2 bg-teal-600 text-white px-4 py-2 rounded-xl hover:bg-teal-700">
+            <button onClick={() => setShowItemModal(true)} className="flex items-center gap-2 bg-orange-500 text-white px-4 py-2 rounded-xl hover:bg-orange-600">
               <Plus className="w-5 h-5" />Add Item
             </button>
           </div>
@@ -326,10 +326,10 @@ const MenuItems: React.FC = () => {
                     item.foodType === 'NON_VEG' ? 'bg-red-100 text-red-800' :
                     item.foodType === 'VEGAN' ? 'bg-emerald-100 text-emerald-800' :
                     item.foodType === 'EGG' ? 'bg-amber-100 text-amber-800' :
-                    item.foodType === 'BEVERAGES' ? 'bg-blue-100 text-blue-800' :
+                    item.foodType === 'BEVERAGES' ? 'bg-orange-100 text-orange-800' :
                     item.foodType === 'DESSERTS' ? 'bg-pink-100 text-pink-800' :
                     item.foodType === 'SNACKS' ? 'bg-orange-100 text-orange-800' :
-                    item.foodType === 'SWEETS' ? 'bg-purple-100 text-purple-800' :
+                    item.foodType === 'SWEETS' ? 'bg-orange-100 text-orange-800' :
                     item.foodType === 'OTHER' ? 'bg-gray-100 text-gray-800' :
                     'bg-yellow-100 text-yellow-800'
                   }`}>{item.foodType}</span>
@@ -371,7 +371,7 @@ const MenuItems: React.FC = () => {
       <Modal isOpen={showCategoryModal} onClose={() => setShowCategoryModal(false)} title="Create Category">
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1">Category Name *</label>
+            <label className="block text-sm font-semibold text-gray-700 mb-1">Category Name <span className="text-red-500">*</span></label>
             <input type="text" value={categoryForm.categoryName} onChange={(e) => setCategoryForm({ ...categoryForm, categoryName: e.target.value })}
               className="w-full px-4 py-2 border border-gray-300 rounded-xl" placeholder="e.g., Main Course" />
           </div>
@@ -399,7 +399,7 @@ const MenuItems: React.FC = () => {
           </div>
           <div className="flex gap-3">
             <button onClick={handleCreateCategory} disabled={submitting || !categoryForm.categoryName}
-              className="flex-1 bg-teal-600 text-white px-4 py-2 rounded-xl disabled:opacity-50">{submitting ? 'Creating...' : 'Create Category'}</button>
+              className="flex-1 bg-orange-500 text-white px-4 py-2 rounded-xl disabled:opacity-50">{submitting ? 'Creating...' : 'Create Category'}</button>
             <button onClick={() => setShowCategoryModal(false)} className="flex-1 bg-gray-200 text-gray-700 px-4 py-2 rounded-xl">Cancel</button>
           </div>
         </div>
@@ -467,7 +467,7 @@ const MenuItems: React.FC = () => {
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1">Item Name *</label>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">Item Name <span className="text-red-500">*</span></label>
               <input type="text" value={itemForm.itemName} onChange={(e) => setItemForm({ ...itemForm, itemName: e.target.value })}
                 className="w-full px-4 py-2 border border-gray-300 rounded-xl" placeholder="e.g., Paneer Butter Masala" />
             </div>
@@ -478,13 +478,13 @@ const MenuItems: React.FC = () => {
             </div>
           </div>
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1">Description *</label>
+            <label className="block text-sm font-semibold text-gray-700 mb-1">Description <span className="text-red-500">*</span></label>
             <textarea value={itemForm.description} onChange={(e) => setItemForm({ ...itemForm, description: e.target.value })}
               className="w-full px-4 py-2 border border-gray-300 rounded-xl" rows={2} />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1">Category *</label>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">Category <span className="text-red-500">*</span></label>
               <CustomSelect
                 value={itemForm.categoryId}
                 onChange={(val) => setItemForm({ ...itemForm, categoryId: val })}
@@ -496,14 +496,14 @@ const MenuItems: React.FC = () => {
               />
             </div>
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1">Cuisine Type *</label>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">Cuisine Type <span className="text-red-500">*</span></label>
               <input type="text" value={itemForm.cuisineType} onChange={(e) => setItemForm({ ...itemForm, cuisineType: e.target.value })}
                 className="w-full px-4 py-2 border border-gray-300 rounded-xl" placeholder="e.g., NORTH_INDIAN" />
             </div>
           </div>
           <div className="grid grid-cols-3 gap-4">
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1">Food Type *</label>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">Food Type <span className="text-red-500">*</span></label>
               <CustomSelect
                 value={itemForm.foodType}
                 onChange={(val) => setItemForm({ ...itemForm, foodType: val })}
@@ -542,14 +542,14 @@ const MenuItems: React.FC = () => {
             <div className="flex items-end pb-1">
               <label className="flex items-center gap-2 cursor-pointer">
                 <input type="checkbox" checked={itemForm.isPopular} onChange={(e) => setItemForm({ ...itemForm, isPopular: e.target.checked })}
-                  className="w-5 h-5 rounded border-gray-300 text-teal-600 focus:ring-teal-500" />
+                  className="w-5 h-5 rounded border-gray-300 text-orange-500 focus:ring-orange-500" />
                 <span className="text-sm font-semibold text-gray-700">Popular</span>
               </label>
             </div>
           </div>
           <div className="flex gap-3">
             <button onClick={handleCreateItem} disabled={submitting || !itemForm.itemName || !itemForm.description || !itemForm.categoryId || !itemForm.cuisineType}
-              className="flex-1 bg-teal-600 text-white px-4 py-2 rounded-xl disabled:opacity-50">{submitting ? 'Creating...' : 'Create Item'}</button>
+              className="flex-1 bg-orange-500 text-white px-4 py-2 rounded-xl disabled:opacity-50">{submitting ? 'Creating...' : 'Create Item'}</button>
             <button onClick={() => setShowItemModal(false)} className="flex-1 bg-gray-200 text-gray-700 px-4 py-2 rounded-xl">Cancel</button>
           </div>
         </div>
@@ -670,7 +670,7 @@ const MenuItems: React.FC = () => {
             <div className="flex items-end pb-1">
               <label className="flex items-center gap-2 cursor-pointer">
                 <input type="checkbox" checked={editForm.isPopular || false} onChange={(e) => setEditForm({ ...editForm, isPopular: e.target.checked })}
-                  className="w-5 h-5 rounded border-gray-300 text-teal-600 focus:ring-teal-500" />
+                  className="w-5 h-5 rounded border-gray-300 text-orange-500 focus:ring-orange-500" />
                 <span className="text-sm font-semibold text-gray-700">Popular</span>
               </label>
             </div>
@@ -705,5 +705,7 @@ const MenuItems: React.FC = () => {
 };
 
 export default MenuItems;
+
+
 
 

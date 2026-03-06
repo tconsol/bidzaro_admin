@@ -152,9 +152,9 @@ const Users: React.FC = () => {
       header: 'Type',
       render: (user: User) => (
         <span className={`px-3 py-1.5 rounded-full text-xs font-bold text-white ${
-          user.userType === 'ADMIN' ? 'bg-gradient-to-r from-purple-500 to-purple-600'
+          user.userType === 'ADMIN' ? 'bg-orange-600'
           : user.userType === 'SUPER_ADMIN' ? 'bg-orange-600'
-          : user.userType === 'SUPPORT_AGENT' ? 'bg-gradient-to-r from-cyan-500 to-blue-600'
+          : user.userType === 'SUPPORT_AGENT' ? 'bg-orange-500'
           : 'bg-gradient-to-r from-slate-500 to-slate-600'
         }`}>
           {user.userType}
@@ -195,7 +195,7 @@ const Users: React.FC = () => {
           <div className="flex items-center gap-2">
             <span className="text-xs font-semibold text-gray-600">Phone</span>
             {user.phoneVerified ? (
-              <div className="flex items-center justify-center w-6 h-6 bg-gradient-to-br from-blue-400 to-blue-600 rounded-md">
+              <div className="flex items-center justify-center w-6 h-6 bg-orange-500 rounded-md">
                 <Check className="w-3.5 h-3.5 text-white" />
               </div>
             ) : (
@@ -240,7 +240,7 @@ const Users: React.FC = () => {
           {(user.status === 'LOCKED' || user.status === 'INACTIVE') && (
             <button
               onClick={(e) => { e.stopPropagation(); handleStatusChange(user, 'unlock'); }}
-              className="p-2 bg-gradient-to-br from-purple-400 to-purple-600 text-white rounded-lg hover:shadow-lg hover:scale-105 transition-all duration-200"
+              className="p-2 bg-orange-500 text-white rounded-lg hover:shadow-lg hover:scale-105 transition-all duration-200"
               title="Unlock User"
             >
               <CheckCircle className="w-4 h-4" />
@@ -262,12 +262,12 @@ const Users: React.FC = () => {
   return (
     <div className="space-y-6 animate-fadeIn">
       {/* Header */}
-      <div className="bg-gradient-to-r from-green-600 via-emerald-500 to-teal-600 rounded-2xl shadow-2xl p-8 text-white relative overflow-hidden">
+      <div className="bg-orange-500 rounded-2xl shadow-2xl p-8 text-white relative overflow-hidden">
         <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full -mr-20 -mt-20"></div>
         <div className="flex items-center justify-between relative z-10">
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold">Users Management</h1>
-            <p className="text-green-50 mt-2">Manage all registered users — Total: {pageInfo.totalElements.toLocaleString()}</p>
+            <p className="text-green-50 mt-2">Manage all registered users — Total: {getFilteredUsers().length.toLocaleString()}</p>
           </div>
         </div>
       </div>
@@ -387,7 +387,7 @@ const Users: React.FC = () => {
             </p>
             {actionType === 'suspend' && (
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Reason (Required)</label>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Reason <span className="text-red-500">*</span></label>
                 <textarea value={actionReason} onChange={(e) => setActionReason(e.target.value)}
                   className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500" rows={3}
                   placeholder="Enter reason for suspension..." required />
@@ -418,6 +418,8 @@ const Users: React.FC = () => {
 };
 
 export default Users;
+
+
 
 
 

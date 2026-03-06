@@ -147,7 +147,7 @@ const AccountRecovery: React.FC = () => {
 
             <div className="space-y-2">
               <label htmlFor="input" className="block text-sm font-semibold text-gray-700">
-                {recoveryType === 'email' ? 'Enter Your Phone Number' : 'Enter Your Email Address'}
+                {recoveryType === 'email' ? 'Enter Your Phone Number <span className="text-red-500">*</span>' : 'Enter Your Email Address <span className="text-red-500">*</span>'}
               </label>
               <input
                 id="input"
@@ -226,4 +226,6 @@ const AccountRecovery: React.FC = () => {
 };
 
 export default AccountRecovery;
+
+
 

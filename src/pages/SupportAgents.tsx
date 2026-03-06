@@ -232,7 +232,7 @@ const SupportAgents: React.FC = () => {
           {(agent.status === 'LOCKED' || agent.status === 'INACTIVE') && (
             <button
               onClick={(e) => { e.stopPropagation(); handleStatusChange(agent, 'unlock'); }}
-              className="p-2 bg-gradient-to-br from-purple-400 to-purple-600 text-white rounded-lg hover:shadow-lg hover:scale-105 transition-all duration-200"
+              className="p-2 bg-orange-500 text-white rounded-lg hover:shadow-lg hover:scale-105 transition-all duration-200"
               title="Unlock Agent"
             >
               <CheckCircle className="w-4 h-4" />
@@ -254,16 +254,16 @@ const SupportAgents: React.FC = () => {
   return (
     <div className="space-y-6 animate-fadeIn">
       {/* Header */}
-      <div className="bg-gradient-to-r from-cyan-500 to-blue-600 rounded-2xl shadow-lg p-6 text-white relative overflow-hidden">
+      <div className="bg-orange-500 rounded-2xl shadow-lg p-6 text-white relative overflow-hidden">
         <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full -mr-20 -mt-20"></div>
         <div className="flex items-center justify-between relative z-10">
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold">Support Agents Management</h1>
-            <p className="text-cyan-50 mt-2">Manage support agents — Total: {pageInfo?.totalElements?.toLocaleString() || 0}</p>
+            <p className="text-orange-50 mt-2">Manage support agents — Total: {getFilteredAgents().length.toLocaleString()}</p>
           </div>
           <button
             onClick={() => setShowCreateModal(true)}
-            className="flex items-center gap-2 bg-white text-cyan-600 px-4 py-2 rounded-xl font-semibold hover:shadow-lg hover:scale-105 transition-all duration-200"
+            className="flex items-center gap-2 bg-white text-orange-600 px-4 py-2 rounded-xl font-semibold hover:shadow-lg hover:scale-105 transition-all duration-200"
           >
             <UserPlus className="w-5 h-5" />
             Create Agent
@@ -283,7 +283,7 @@ const SupportAgents: React.FC = () => {
                 value={searchQuery}
                 onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(0); }}
                 onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500"
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
               />
             </div>
           </div>
@@ -316,7 +316,7 @@ const SupportAgents: React.FC = () => {
           <div className="flex flex-wrap gap-2 items-center">
             <span className="text-sm font-semibold text-gray-700">Filters:</span>
             {activeFilters.map((filter, idx) => (
-              <span key={idx} className="inline-flex items-center gap-2 bg-cyan-100 text-cyan-800 px-3 py-1 rounded-full text-sm">
+              <span key={idx} className="inline-flex items-center gap-2 bg-orange-100 text-orange-800 px-3 py-1 rounded-full text-sm">
                 {filter}
               </span>
             ))}
@@ -385,7 +385,7 @@ const SupportAgents: React.FC = () => {
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">Reason (Required)</label>
                 <textarea value={actionReason} onChange={(e) => setActionReason(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-cyan-500" rows={3}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500" rows={3}
                   placeholder="Enter reason for suspension..." required />
               </div>
             )}
@@ -413,28 +413,28 @@ const SupportAgents: React.FC = () => {
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1">First Name</label>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">First Name <span className="text-red-500">*</span></label>
               <input type="text" value={agentForm.firstName} onChange={(e) => setAgentForm({ ...agentForm, firstName: e.target.value })}
                 className="w-full px-4 py-2 border border-gray-300 rounded-xl" placeholder="Priya" />
             </div>
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1">Last Name</label>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">Last Name <span className="text-red-500">*</span></label>
               <input type="text" value={agentForm.lastName} onChange={(e) => setAgentForm({ ...agentForm, lastName: e.target.value })}
                 className="w-full px-4 py-2 border border-gray-300 rounded-xl" placeholder="Sharma" />
             </div>
           </div>
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1">Email</label>
+            <label className="block text-sm font-semibold text-gray-700 mb-1">Email <span className="text-red-500">*</span></label>
             <input type="email" value={agentForm.email} onChange={(e) => setAgentForm({ ...agentForm, email: e.target.value })}
               className="w-full px-4 py-2 border border-gray-300 rounded-xl" placeholder="agent@bidzaro.com" />
           </div>
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1">Phone</label>
+            <label className="block text-sm font-semibold text-gray-700 mb-1">Phone <span className="text-red-500">*</span></label>
             <input type="tel" value={agentForm.phone} onChange={(e) => setAgentForm({ ...agentForm, phone: e.target.value })}
               className="w-full px-4 py-2 border border-gray-300 rounded-xl" placeholder="+917890111222" />
           </div>
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1">Password</label>
+            <label className="block text-sm font-semibold text-gray-700 mb-1">Password <span className="text-red-500">*</span></label>
             <input type="password" value={agentForm.password} onChange={(e) => setAgentForm({ ...agentForm, password: e.target.value })}
               className="w-full px-4 py-2 border border-gray-300 rounded-xl" placeholder="AgentPass@123" />
           </div>
@@ -452,7 +452,7 @@ const SupportAgents: React.FC = () => {
           </div>
           <div className="flex gap-3 pt-2">
             <button onClick={handleCreateAgent} disabled={agentLoading}
-              className="flex-1 bg-gradient-to-r from-cyan-600 to-blue-600 text-white px-4 py-2 rounded-xl disabled:opacity-50">
+              className="flex-1 bg-orange-500 text-white px-4 py-2 rounded-xl disabled:opacity-50">
               {agentLoading ? 'Creating...' : 'Create Agent'}
             </button>
             <button onClick={() => setShowCreateModal(false)} className="flex-1 bg-gray-200 text-gray-700 px-4 py-2 rounded-xl">Cancel</button>
@@ -464,5 +464,6 @@ const SupportAgents: React.FC = () => {
 };
 
 export default SupportAgents;
+
 
 

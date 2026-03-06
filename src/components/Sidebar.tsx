@@ -16,6 +16,8 @@ import {
   Megaphone,
   X
 } from 'lucide-react';
+import logoFull from '../assets/bidzaro_logof.png';
+import favicon from '../assets/favicon.png';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -51,24 +53,21 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggleSidebar, isMobileOpen, 
       )}
 
       <div 
-        className={`h-screen bg-gray-950 text-white fixed left-0 top-0 overflow-y-auto shadow-2xl border-r border-white/5 z-40 transition-all duration-300
+        className={`h-screen bg-gray-950 text-white fixed left-0 top-0 shadow-2xl border-r border-white/5 z-40 transition-all duration-300 flex flex-col
           ${isOpen ? 'w-64' : 'w-20'}
           ${isMobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
         `}
       >
-      <div className={`${isOpen ? 'p-6' : 'p-4'} transition-all duration-300`}>
+      {/* Fixed: Logo + Toggle Button */}
+      <div className={`${isOpen ? 'p-6 pb-2' : 'p-4 pb-2'} flex-shrink-0 transition-all duration-300`}>
         {/* Logo Section */}
-        <div className="mb-8">
+        <div className="mb-4">
           <div className={`flex items-center ${isOpen ? 'justify-between' : 'justify-center'}`}>
             <div className={`flex items-center gap-3 ${isOpen ? '' : 'justify-center'}`}>
-              <div className="w-10 h-10 bg-orange-500 rounded-xl flex items-center justify-center shadow-lg flex-shrink-0">
-                <UtensilsCrossed className="w-5 h-5 text-white" strokeWidth={2} />
-              </div>
-              {isOpen && (
-                <div className="overflow-hidden">
-                  <h1 className="text-lg font-bold text-white whitespace-nowrap">Bidzaro</h1>
-                  <p className="text-xs text-gray-400 whitespace-nowrap">Admin Portal</p>
-                </div>
+              {isOpen ? (
+                <img src={logoFull} alt="Bidzaro" className="h-9 w-auto object-contain" />
+              ) : (
+                <img src={favicon} alt="Bidzaro" className="w-10 h-10 object-contain" />
               )}
             </div>
             {/* Mobile close button */}
@@ -83,7 +82,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggleSidebar, isMobileOpen, 
         {/* Toggle Button — desktop only */}
         <button
           onClick={toggleSidebar}
-          className="hidden lg:flex w-full mb-4 p-2.5 text-gray-400 hover:text-white hover:bg-white/5 rounded-xl transition-all duration-200 items-center justify-center group"
+          className="hidden lg:flex w-full mb-2 p-2.5 text-gray-400 hover:text-white hover:bg-white/5 rounded-xl transition-all duration-200 items-center justify-center group"
           title={isOpen ? 'Collapse sidebar' : 'Expand sidebar'}
         >
           <PanelLeftClose 
@@ -91,7 +90,10 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggleSidebar, isMobileOpen, 
           />
           {isOpen && <span className="ml-2 text-sm font-medium">Collapse</span>}
         </button>
-        
+      </div>
+
+      {/* Scrollable: Navigation + Bottom Section */}
+      <div className={`flex-1 overflow-y-auto sidebar-scroll ${isOpen ? 'px-6 pb-6' : 'px-4 pb-4'} transition-all duration-300`}>
         {/* Navigation */}
         <nav className="space-y-1.5">
           {navItems.map((item) => (
