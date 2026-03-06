@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { vendorApi } from '../services/api';
 import type { Vendor, PageInfo } from '../types';
+import { useToast } from '../hooks/useToast';
 import DataTable from '../components/DataTable';
 import Modal from '../components/Modal';
 import CustomSelect from '../components/CustomSelect';
 import { Eye, Search, CheckCircle, XCircle, Ban, ChevronLeft, ChevronRight, Building2, FileText, X } from 'lucide-react';
 
 const Vendors: React.FC = () => {
+  const { showToast } = useToast();
   const [vendors, setVendors] = useState<Vendor[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -60,9 +62,7 @@ const Vendors: React.FC = () => {
         country: countryFilter || undefined,
       };
       
-      console.log('📤 Sending API request with params:', apiParams);
       const response = await vendorApi.getAllVendors(apiParams);
-      console.log('📥 Vendors response:', response);
       
       // Apply client-side filtering as fallback (in case backend doesn't implement them)
       let filteredVendors = response.data || [];
@@ -72,7 +72,6 @@ const Vendors: React.FC = () => {
         filteredVendors = filteredVendors.filter(v => 
           v.approvalStatus?.toUpperCase() === approvalStatusFilter.toUpperCase()
         );
-        console.log(`✅ After approvalStatus filter (${approvalStatusFilter}): ${filteredVendors.length} vendors`);
       }
       
       // Client-side status filter (fallback)
@@ -80,7 +79,6 @@ const Vendors: React.FC = () => {
         filteredVendors = filteredVendors.filter(v => 
           v.status?.toUpperCase() === statusFilter.toUpperCase()
         );
-        console.log(`📊 After status filter (${statusFilter}): ${filteredVendors.length} vendors`);
       }
       
       // Client-side country filter (fallback)
@@ -88,7 +86,6 @@ const Vendors: React.FC = () => {
         filteredVendors = filteredVendors.filter(v => 
           v.country?.toUpperCase() === countryFilter.toUpperCase()
         );
-        console.log(`🌍 After country filter (${countryFilter}): ${filteredVendors.length} vendors`);
       }
       
       // Client-side search filter (fallback)
@@ -97,14 +94,13 @@ const Vendors: React.FC = () => {
           v.businessName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
           v.businessEmail?.toLowerCase().includes(searchQuery.toLowerCase())
         );
-        console.log(`🔍 After search filter ("${searchQuery}"): ${filteredVendors.length} vendors`);
       }
       
       setVendors(filteredVendors);
       setPageInfo(response.pageInfo);
     } catch (error: any) {
       const errorMsg = error?.response?.data?.message || error?.message || 'Failed to load vendors';
-      console.error('❌ Failed to load vendors:', errorMsg);
+
       setError(errorMsg);
       setVendors([]);
     } finally {
@@ -118,7 +114,6 @@ const Vendors: React.FC = () => {
     setCountryFilter('');
     setSearchQuery('');
     setCurrentPage(0);
-    console.log('🔄 All filters cleared');
   };
 
   const activeFilters = [
@@ -148,9 +143,9 @@ const Vendors: React.FC = () => {
       
       setShowActionModal(false);
       loadVendors();
-      alert(`Vendor ${actionType}d successfully!`);
+      showToast(`Vendor ${actionType}d successfully!`, 'success');
     } catch (error: any) { 
-      alert(error.response?.data?.message || `Failed to ${actionType} vendor`);
+      showToast(error.response?.data?.message || `Failed to ${actionType} vendor`, 'error');
     }
   };
 
@@ -380,17 +375,17 @@ const Vendors: React.FC = () => {
             <div>
               <h3 className="text-lg font-bold text-gray-900 mb-2">Owner Information</h3>
               <div className="grid grid-cols-2 gap-4 bg-gray-50 rounded-xl p-4">
-                <div><label className="text-sm font-semibold text-gray-700">Name</label><p className="mt-1">{selectedVendor.ownerInfo.firstName} {selectedVendor.ownerInfo.lastName}</p></div>
-                <div><label className="text-sm font-semibold text-gray-700">Email</label><p className="mt-1">{selectedVendor.ownerInfo.email}</p></div>
-                <div><label className="text-sm font-semibold text-gray-700">Phone</label><p className="mt-1">{selectedVendor.ownerInfo.phone}</p></div>
-                <div><label className="text-sm font-semibold text-gray-700">ID Proof</label><p className="mt-1">{selectedVendor.ownerInfo.idProofType}: {selectedVendor.ownerInfo.idProofNumber}</p></div>
+                <div><label className="text-sm font-semibold text-gray-700">Name</label><p className="mt-1">{selectedVendor.ownerInfo?.firstName || 'N/A'} {selectedVendor.ownerInfo?.lastName || ''}</p></div>
+                <div><label className="text-sm font-semibold text-gray-700">Email</label><p className="mt-1">{selectedVendor.ownerInfo?.email || 'N/A'}</p></div>
+                <div><label className="text-sm font-semibold text-gray-700">Phone</label><p className="mt-1">{selectedVendor.ownerInfo?.phone || 'N/A'}</p></div>
+                <div><label className="text-sm font-semibold text-gray-700">ID Proof</label><p className="mt-1">{selectedVendor.ownerInfo?.idProofType || 'N/A'}: {selectedVendor.ownerInfo?.idProofNumber || 'N/A'}</p></div>
               </div>
             </div>
 
             {/* Address */}
             <div>
               <h3 className="text-lg font-bold text-gray-900 mb-2">Business Address</h3>
-              <p className="text-gray-700">{selectedVendor.businessAddress.streetAddress}, {selectedVendor.businessAddress.city}, {selectedVendor.businessAddress.state} - {selectedVendor.businessAddress.postalCode}, {selectedVendor.businessAddress.country}</p>
+              <p className="text-gray-700">{selectedVendor.businessAddress?.streetAddress || 'N/A'}, {selectedVendor.businessAddress?.city || 'N/A'}, {selectedVendor.businessAddress?.state || 'N/A'} - {selectedVendor.businessAddress?.postalCode || 'N/A'}, {selectedVendor.businessAddress?.country || 'N/A'}</p>
             </div>
 
             {/* Capacity & Pricing */}
@@ -398,16 +393,16 @@ const Vendors: React.FC = () => {
               <div>
                 <h3 className="text-lg font-bold text-gray-900 mb-2">Capacity</h3>
                 <div className="bg-gray-50 rounded-xl p-4 space-y-1">
-                  <p><span className="text-sm text-gray-600">Min Guests:</span> {selectedVendor.capacity.minGuests}</p>
-                  <p><span className="text-sm text-gray-600">Max Guests:</span> {selectedVendor.capacity.maxGuests}</p>
-                  <p><span className="text-sm text-gray-600">Concurrent Events:</span> {selectedVendor.capacity.concurrentEvents}</p>
+                  <p><span className="text-sm text-gray-600">Min Guests:</span> {selectedVendor.capacity?.minGuests || 'N/A'}</p>
+                  <p><span className="text-sm text-gray-600">Max Guests:</span> {selectedVendor.capacity?.maxGuests || 'N/A'}</p>
+                  <p><span className="text-sm text-gray-600">Concurrent Events:</span> {selectedVendor.capacity?.concurrentEvents || 'N/A'}</p>
                 </div>
               </div>
               <div>
                 <h3 className="text-lg font-bold text-gray-900 mb-2">Pricing</h3>
                 <div className="bg-gray-50 rounded-xl p-4 space-y-1">
-                  <p><span className="text-sm text-gray-600">Starting:</span> {selectedVendor.pricing.currency} {selectedVendor.pricing.startingPricePerPlate}/plate</p>
-                  <p><span className="text-sm text-gray-600">Average:</span> {selectedVendor.pricing.currency} {selectedVendor.pricing.averagePricePerPlate}/plate</p>
+                  <p><span className="text-sm text-gray-600">Starting:</span> {selectedVendor.pricing?.currency || 'N/A'} {selectedVendor.pricing?.startingPricePerPlate || 'N/A'}/plate</p>
+                  <p><span className="text-sm text-gray-600">Average:</span> {selectedVendor.pricing?.currency || 'N/A'} {selectedVendor.pricing?.averagePricePerPlate || 'N/A'}/plate</p>
                 </div>
               </div>
             </div>
@@ -416,16 +411,16 @@ const Vendors: React.FC = () => {
             <div className="grid grid-cols-2 gap-6">
               <div>
                 <h3 className="text-lg font-bold text-gray-900 mb-2">Cuisines</h3>
-                <div className="flex flex-wrap gap-2">{selectedVendor.cuisinesOffered.map(c => <span key={c} className="px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-sm">{c}</span>)}</div>
+                <div className="flex flex-wrap gap-2">{selectedVendor.cuisinesOffered?.length ? selectedVendor.cuisinesOffered.map(c => <span key={c} className="px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-sm">{c}</span>) : <span className="text-gray-500">No cuisines listed</span>}</div>
               </div>
               <div>
                 <h3 className="text-lg font-bold text-gray-900 mb-2">Specialties</h3>
-                <div className="flex flex-wrap gap-2">{selectedVendor.specialties.map(s => <span key={s} className="px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-sm">{s}</span>)}</div>
+                <div className="flex flex-wrap gap-2">{selectedVendor.specialties?.length ? selectedVendor.specialties.map(s => <span key={s} className="px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-sm">{s}</span>) : <span className="text-gray-500">No specialties listed</span>}</div>
               </div>
             </div>
 
             {/* Documents */}
-            {selectedVendor.documents.length > 0 && (
+            {selectedVendor.documents?.length > 0 && (
               <div>
                 <h3 className="text-lg font-bold text-gray-900 mb-2 flex items-center gap-2"><FileText className="w-5 h-5" />Documents</h3>
                 <div className="space-y-2">

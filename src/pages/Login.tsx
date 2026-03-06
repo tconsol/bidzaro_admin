@@ -20,15 +20,12 @@ const Login: React.FC = () => {
     setLoading(true);
 
     try {
-      console.log('Form submission started');
       await login(formData);
-      console.log('Login successful, navigating to dashboard');
       // Small delay to ensure state is updated
       setTimeout(() => {
         navigate('/dashboard', { replace: true });
       }, 100);
     } catch (err: any) {
-      console.error('Login failed:', err);
       const errorMessage = err?.response?.data?.message || err?.message || 'Login failed. Please check your credentials.';
 
       // Check if account is locked/blocked

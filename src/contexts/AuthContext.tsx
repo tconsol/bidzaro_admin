@@ -58,7 +58,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       localStorage.setItem('adminUser', JSON.stringify(user));
       setAdmin(user);
     } catch (error: any) {
-      console.error('Login error:', error?.response?.data || error?.message);
       throw error;
     }
   };

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { paymentApi } from '../services/api';
+import { useToast } from '../hooks/useToast';
 import Modal from '../components/Modal';
 import { CreditCard, RefreshCw } from 'lucide-react';
 
@@ -7,6 +8,7 @@ const formatCurrency = (amount: number, currency = 'INR') =>
   new Intl.NumberFormat('en-IN', { style: 'currency', currency }).format(amount);
 
 const Payments: React.FC = () => {
+  const { showToast } = useToast();
   const [showRefundModal, setShowRefundModal] = useState(false);
   const [transactionId, setTransactionId] = useState('');
   const [refundAmount, setRefundAmount] = useState<number>(0);
@@ -27,7 +29,7 @@ const Payments: React.FC = () => {
       setRefundAmount(0);
       setRefundReason('');
     } catch (error: any) {
-      alert(error.response?.data?.message || 'Failed to initiate refund');
+      showToast(error.response?.data?.message || 'Failed to initiate refund', 'error');
     } finally {
       setSubmitting(false);
     }

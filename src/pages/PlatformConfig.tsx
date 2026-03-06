@@ -36,7 +36,7 @@ const PlatformConfigPage: React.FC = () => {
       setPaymentConfig(data.paymentConfig);
       setCancellationPolicy(data.cancellationPolicy);
       setCommissionConfig(data.commissionConfig);
-    } catch (error) { console.error('Failed to load platform config:', error); }
+    } catch (error) { }
     finally { setLoading(false); }
   };
 

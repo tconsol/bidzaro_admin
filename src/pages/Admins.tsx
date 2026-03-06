@@ -51,7 +51,7 @@ const Admins: React.FC = () => {
       const filtered = response.data.filter(u => ['ADMIN', 'SUPER_ADMIN'].includes(u.userType));
       setAdmins(filtered);
       setPageInfo(response.pageInfo);
-    } catch (error) { console.error('Failed to load admins:', error); }
+    } catch (error) { }
     finally { setLoading(false); }
   };
 

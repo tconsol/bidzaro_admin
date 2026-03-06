@@ -45,7 +45,7 @@ const MenuItems: React.FC = () => {
       ]);
       setCategories(cats);
       setMenuItems(items);
-    } catch (error) { console.error('Failed to load menu data:', error); }
+    } catch (error) { }
     finally { setLoading(false); }
   };
 
@@ -121,14 +121,11 @@ const MenuItems: React.FC = () => {
   const handleCreateItem = async () => {
     setSubmitting(true);
     try {
-      console.log('📤 Sending menu item payload:', itemForm);
       await menuApi.createMenuItem(itemForm);
-      console.log('✅ Menu item created successfully');
       setShowItemModal(false);
       setItemForm({ itemName: '', itemNameHindi: '', description: '', categoryId: '', cuisineType: '', foodType: 'VEG', spiceLevel: '', dietaryTags: [], allergens: [], isPopular: false });
       loadData();
     } catch (error: any) { 
-      console.error('❌ Failed to create menu item:', error.response?.data);
       alert(error.response?.data?.message || 'Failed to create menu item');
     }
     finally { setSubmitting(false); }
@@ -156,13 +153,10 @@ const MenuItems: React.FC = () => {
     if (!selectedItem) return;
     setSubmitting(true);
     try {
-      console.log('📤 Sending update payload:', editForm);
       await menuApi.updateMenuItem(selectedItem.masterItemId, editForm);
-      console.log('✅ Menu item updated successfully');
       setShowEditModal(false);
       loadData();
     } catch (error: any) {
-      console.error('❌ Failed to update menu item:', error.response?.data);
       alert(error.response?.data?.message || 'Failed to update menu item');
     } finally { setSubmitting(false); }
   };

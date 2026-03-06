@@ -35,7 +35,6 @@ export default function SupportManagement({ className = '' }: SupportManagementP
       setMyAssignedTickets(assignedRes.data || []);
       setResolvedTickets(resolvedRes.data || []);
     } catch (error) {
-      console.error('Failed to load tickets:', error);
     } finally {
       setLoading(false);
     }
@@ -48,7 +47,6 @@ export default function SupportManagement({ className = '' }: SupportManagementP
       setResolutionNotes(response.data.resolutionNotes || '');
       setIsModalOpen(true);
     } catch (error) {
-      console.error('Failed to load ticket details:', error);
     }
   };
 
@@ -66,7 +64,6 @@ export default function SupportManagement({ className = '' }: SupportManagementP
       setSelectedTicket(null);
       await loadTickets();
     } catch (error) {
-      console.error('Failed to resolve ticket:', error);
       alert('Failed to resolve ticket');
     } finally {
       setActionLoading(false);
@@ -84,7 +81,6 @@ export default function SupportManagement({ className = '' }: SupportManagementP
       const updated = await supportAdminApi.getTicketDetails(selectedTicket.ticketId);
       setSelectedTicket(updated.data);
     } catch (error) {
-      console.error('Failed to update ticket:', error);
       alert('Failed to update ticket');
     } finally {
       setActionLoading(false);

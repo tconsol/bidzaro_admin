@@ -59,25 +59,21 @@ const Users: React.FC = () => {
         userType: 'USER', // Only fetch USER type
         search: searchQuery || undefined,
       });
-      console.log('📥 Users response:', response);
       
       // Apply client-side filtering to ensure filters work
       let filteredUsers = response.data || [];
       
       // Client-side userType filter - ENSURE we only get USER type
       filteredUsers = filteredUsers.filter(u => u.userType?.toUpperCase() === 'USER');
-      console.log(`👤 After userType filter (USER): ${filteredUsers.length} users`);
       
       // Client-side status filter
       if (statusFilter) {
         filteredUsers = filteredUsers.filter(u => u.status?.toUpperCase() === statusFilter.toUpperCase());
-        console.log(`📊 After status filter (${statusFilter}): ${filteredUsers.length} users`);
       }
       
       setUsers(filteredUsers);
       setPageInfo(response.pageInfo);
     } catch (error) {
-      console.error('❌ Failed to load users:', error);
     } finally {
       setLoading(false);
     }
@@ -92,7 +88,6 @@ const Users: React.FC = () => {
     setStatusFilter('');
     setSearchQuery('');
     setCurrentPage(0);
-    console.log('🔄 All filters cleared');
   };
 
   const activeFilters = [
@@ -133,7 +128,6 @@ const Users: React.FC = () => {
       loadUsers();
       alert(`User ${actionType}ed successfully!`);
     } catch (error: any) {
-      console.error(`Failed to ${actionType} user:`, error);
       alert(error.response?.data?.message || `Failed to ${actionType} user`);
     }
   };

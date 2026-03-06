@@ -80,7 +80,6 @@ const Dashboard: React.FC = () => {
       // Deep merge received data with defaults to handle missing fields
       setStats(mergeStats(defaultStats, data));
     } catch (error) {
-      console.error('Failed to load dashboard stats:', error);
       setStats(defaultStats);
     } finally {
       setLoading(false);

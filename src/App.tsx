@@ -1,6 +1,8 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
+import { ToastProvider } from './contexts/ToastContext';
+import ToastDisplay from './components/ToastDisplay';
 import ProtectedRoute from './components/ProtectedRoute';
 import Layout from './components/Layout';
 import Login from './pages/Login';
@@ -31,9 +33,11 @@ function AutoLogout() {
 const App: React.FC = () => {
   return (
     <AuthProvider>
-      <BrowserRouter>
-        <AutoLogout />
-        <Routes>
+      <ToastProvider>
+        <BrowserRouter>
+          <AutoLogout />
+          <ToastDisplay />
+          <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
@@ -67,6 +71,7 @@ const App: React.FC = () => {
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
       </BrowserRouter>
+      </ToastProvider>
     </AuthProvider>
   );
 };

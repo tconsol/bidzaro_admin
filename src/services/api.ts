@@ -245,6 +245,10 @@ export const vendorApi = {
 // ==================== Agent Management ====================
 
 export const agentApi = {
+  // Get all support agents with pagination
+  getAllAgents: (params?: { page?: number; size?: number; status?: string; sortBy?: string; sortDir?: string }): Promise<{ data: User[]; pageInfo: PageInfo }> =>
+    api.get('/api/v1/admin/agents', { params: cleanParams(params) }).then(res => unwrapPaginated<User>(res)),
+
   // Create a support agent
   createAgent: (data: AdminRegistrationDto): Promise<User> =>
     api.post('/api/v1/admin/agents', data).then(res => unwrap<User>(res)),
@@ -252,6 +256,18 @@ export const agentApi = {
   // Legacy wrapper for backward compatibility
   createAgentLegacy: (data: AdminRegistrationDto): Promise<User> =>
     api.post('/api/v1/admin/users/create-agent', data).then(res => unwrap<User>(res)),
+
+  // Get support agent details
+  getAgent: (agentId: string): Promise<User> =>
+    api.get(`/api/v1/admin/agents/${agentId}`).then(res => unwrap<User>(res)),
+
+  // Update support agent
+  updateAgent: (agentId: string, data: Partial<User>): Promise<User> =>
+    api.put(`/api/v1/admin/agents/${agentId}`, data).then(res => unwrap<User>(res)),
+
+  // Get agent workload statistics
+  getAgentWorkload: (agentId: string): Promise<any> =>
+    api.get(`/api/v1/admin/agents/${agentId}/workload`).then(res => unwrap(res)),
 
   // Generic actions using 'agents' entity type
   suspendAgent: (agentId: string, reason: string): Promise<any> =>
@@ -317,9 +333,7 @@ export const menuApi = {
     api.delete(`/api/v1/admin/categories/${categoryId}`).then(() => {}),
 
   createMenuItem: (data: CreateMenuItemRequest): Promise<MenuItem> => {
-    console.log('📩 API sending createMenuItem payload:', data);
     return api.post('/api/v1/admin/menu/items', data).then(res => {
-      console.log('✅ API createMenuItem response:', res.data);
       return unwrap<MenuItem>(res);
     });
   },

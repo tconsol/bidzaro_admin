@@ -50,11 +50,9 @@ const Orders: React.FC = () => {
       const response = await orderApi.getAllOrders({ page: currentPage, size: pageSize, status: statusFilter || undefined });
       // Filter out orders with missing critical data
       const validOrders = (response.data || []).filter(order => order && order.orderId);
-      console.log(`📦 Loaded ${validOrders.length} valid orders from ${response.data?.length || 0} total`);
       setOrders(validOrders);
       setPageInfo(response.pageInfo);
     } catch (error: any) { 
-      console.error('❌ Failed to load orders:', error?.message);
       setOrders([]);
     }
     finally { setLoading(false); }

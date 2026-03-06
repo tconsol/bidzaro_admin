@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { announcementApi } from '../services/api';
 import type { Announcement, CreateAnnouncementRequest, UpdateAnnouncementRequest, PageInfo } from '../types';
+import { useToast } from '../hooks/useToast';
 import DataTable from '../components/DataTable';
 import Modal from '../components/Modal';
 import CustomSelect from '../components/CustomSelect';
 import { Megaphone, Plus, ChevronLeft, ChevronRight, Edit2, Trash2, Eye, Power } from 'lucide-react';
 
 const Announcements: React.FC = () => {
+  const { showToast } = useToast();
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -44,7 +46,7 @@ const Announcements: React.FC = () => {
       const response = await announcementApi.getAll({ page: currentPage, size: pageSize });
       setAnnouncements(response.data);
       setPageInfo(response.pageInfo);
-    } catch (error) { console.error('Failed to load announcements:', error); }
+    } catch (error) { }
     finally { setLoading(false); }
   };
 
@@ -74,7 +76,7 @@ const Announcements: React.FC = () => {
         endDate: '',
       });
       loadAnnouncements();
-    } catch (error: any) { alert(error.response?.data?.message || 'Failed to create announcement'); }
+    } catch (error: any) { showToast(error.response?.data?.message || 'Failed to create announcement', 'error'); }
     finally { setSubmitting(false); }
   };
 
@@ -83,7 +85,7 @@ const Announcements: React.FC = () => {
       const fullAnnouncement = await announcementApi.getById(announcement.announcementId);
       setSelectedAnnouncement(fullAnnouncement);
       setShowViewModal(true);
-    } catch (error) { alert('Failed to load announcement details'); }
+    } catch (error) { showToast('Failed to load announcement details', 'error'); }
   };
 
   const handleOpenEdit = async (announcement: Announcement) => {
@@ -102,7 +104,7 @@ const Announcements: React.FC = () => {
         endDate,
       });
       setShowEditModal(true);
-    } catch (error) { alert('Failed to load announcement details'); }
+    } catch (error) { showToast('Failed to load announcement details', 'error'); }
   };
 
   const handleUpdate = async () => {
@@ -118,7 +120,7 @@ const Announcements: React.FC = () => {
       setShowEditModal(false);
       setSelectedAnnouncement(null);
       loadAnnouncements();
-    } catch (error: any) { alert(error.response?.data?.message || 'Failed to update announcement'); }
+    } catch (error: any) { showToast(error.response?.data?.message || 'Failed to update announcement', 'error'); }
     finally { setSubmitting(false); }
   };
 
@@ -127,13 +129,11 @@ const Announcements: React.FC = () => {
     setSubmitting(true);
     try {
       await announcementApi.delete(selectedAnnouncement.announcementId);
-      console.log('✅ Announcement deleted successfully');
       setShowDeleteConfirm(false);
       setSelectedAnnouncement(null);
       loadAnnouncements();
     } catch (error: any) {
-      console.error('❌ Delete error:', error);
-      alert(error.response?.data?.message || 'Failed to delete announcement');
+      showToast(error.response?.data?.message || 'Failed to delete announcement', 'error');
     }
     finally { setSubmitting(false); }
   };
@@ -143,11 +143,9 @@ const Announcements: React.FC = () => {
     try {
       const newStatus = !(announcement.isActive ?? true);
       await announcementApi.changeStatus(announcement.announcementId, newStatus);
-      console.log(`✅ Announcement status toggled to ${newStatus ? 'active' : 'inactive'}`);
       loadAnnouncements();
     } catch (error: any) {
-      console.error('❌ Toggle status error:', error);
-      alert(error.response?.data?.message || 'Failed to change announcement status');
+      showToast(error.response?.data?.message || 'Failed to change announcement status', 'error');
     }
     finally { setTogglingId(null); }
   };

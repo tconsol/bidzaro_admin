@@ -27,7 +27,7 @@ const AuditLogs: React.FC = () => {
       });
       setLogs(response.data);
       setPageInfo(response.pageInfo);
-    } catch (error) { console.error('Failed to load audit logs:', error); }
+    } catch (error) { }
     finally { setLoading(false); }
   };
 

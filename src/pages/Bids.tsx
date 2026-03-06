@@ -50,9 +50,7 @@ const Bids: React.FC = () => {
         status: statusFilter || undefined,
       };
       
-      console.log('📤 Sending API request with params:', apiParams);
       const response = await bidApi.getAllBids(apiParams);
-      console.log('📥 Bids response:', response);
       
       // Apply client-side filtering as fallback
       let filteredBids = (response.data || []).filter(bid => bid && bid.bidRequestId);
@@ -62,7 +60,6 @@ const Bids: React.FC = () => {
         filteredBids = filteredBids.filter(b => 
           b.status?.toUpperCase() === statusFilter.toUpperCase()
         );
-        console.log(`📊 After status filter (${statusFilter}): ${filteredBids.length} bids`);
       }
       
       // Client-side search filter (fallback)
@@ -71,13 +68,11 @@ const Bids: React.FC = () => {
           b.eventDetails?.eventName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
           b.bidRequestId?.toLowerCase().includes(searchQuery.toLowerCase())
         );
-        console.log(`🔍 After search filter ("${searchQuery}"): ${filteredBids.length} bids`);
       }
       
       setBids(filteredBids);
       setPageInfo(response.pageInfo);
     } catch (error: any) { 
-      console.error('❌ Failed to load bids:', error?.message);
       setBids([]);
     }
     finally { setLoading(false); }
@@ -87,7 +82,6 @@ const Bids: React.FC = () => {
     setStatusFilter('');
     setSearchQuery('');
     setCurrentPage(0);
-    console.log('🔄 All filters cleared');
   };
 
   const activeFilters = [

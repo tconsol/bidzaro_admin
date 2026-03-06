@@ -28,7 +28,6 @@ const supportAdminApi = {
       );
       return response.data;
     } catch (error) {
-      console.error('Failed to fetch open tickets:', error);
       throw error;
     }
   },
@@ -48,7 +47,6 @@ const supportAdminApi = {
       );
       return response.data;
     } catch (error) {
-      console.error('Failed to fetch my assigned tickets:', error);
       throw error;
     }
   },
@@ -69,7 +67,6 @@ const supportAdminApi = {
       );
       return response.data;
     } catch (error) {
-      console.error('Failed to fetch resolved tickets:', error);
       throw error;
     }
   },
@@ -89,7 +86,6 @@ const supportAdminApi = {
       );
       return response.data;
     } catch (error) {
-      console.error('Failed to fetch ticket details:', error);
       throw error;
     }
   },
@@ -111,7 +107,6 @@ const supportAdminApi = {
       );
       return response.data;
     } catch (error) {
-      console.error('Failed to assign ticket:', error);
       throw error;
     }
   },
@@ -133,7 +128,6 @@ const supportAdminApi = {
       );
       return response.data;
     } catch (error) {
-      console.error('Failed to update ticket status:', error);
       throw error;
     }
   },
@@ -155,7 +149,6 @@ const supportAdminApi = {
       );
       return response.data;
     } catch (error) {
-      console.error('Failed to resolve ticket:', error);
       throw error;
     }
   },

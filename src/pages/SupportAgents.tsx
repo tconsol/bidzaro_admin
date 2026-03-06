@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import { userApi, agentApi } from '../services/api';
+import { agentApi } from '../services/api';
 import type { User, PageInfo } from '../types';
+import { useToast } from '../hooks/useToast';
 import DataTable from '../components/DataTable';
 import Modal from '../components/Modal';
 import CustomSelect from '../components/CustomSelect';
 import { Eye, Search, Ban, CheckCircle, ChevronLeft, ChevronRight, UserPlus, X, Check } from 'lucide-react';
 
 const SupportAgents: React.FC = () => {
+  const { showToast } = useToast();
   const [agents, setAgents] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedAgent, setSelectedAgent] = useState<User | null>(null);
@@ -35,6 +37,10 @@ const SupportAgents: React.FC = () => {
 
   const getFilteredAgents = () => {
     let filtered = agents;
+    
+    // Double-check: Only show SUPPORT_AGENT role (safety filter)
+    filtered = filtered.filter(a => a.userType?.toUpperCase() === 'SUPPORT_AGENT');
+    
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(a =>
@@ -50,31 +56,26 @@ const SupportAgents: React.FC = () => {
   const loadAgents = async () => {
     try {
       setLoading(true);
-      const response = await userApi.getAllUsers({
+      const response = await agentApi.getAllAgents({
         page: currentPage,
         size: pageSize,
         status: statusFilter || undefined,
-        userType: 'SUPPORT_AGENT', // Only fetch SUPPORT_AGENT type
       });
-      console.log('📥 Support Agents response:', response);
       
-      // Apply client-side filtering to ensure filters work
       let filteredAgents = response.data || [];
       
-      // Client-side userType filter - ENSURE we only get SUPPORT_AGENT
+      // Filter ONLY SUPPORT_AGENT role (ensure we don't show other roles)
       filteredAgents = filteredAgents.filter(a => a.userType?.toUpperCase() === 'SUPPORT_AGENT');
-      console.log(`🤝 After userType filter (SUPPORT_AGENT): ${filteredAgents.length} agents`);
       
       // Client-side status filter
       if (statusFilter) {
         filteredAgents = filteredAgents.filter(a => a.status?.toUpperCase() === statusFilter.toUpperCase());
-        console.log(`📊 After status filter (${statusFilter}): ${filteredAgents.length} agents`);
       }
       
       setAgents(filteredAgents);
       setPageInfo(response.pageInfo);
     } catch (error) {
-      console.error('❌ Failed to load agents:', error);
+      showToast('Failed to load support agents', 'error');
     } finally {
       setLoading(false);
     }
@@ -89,7 +90,6 @@ const SupportAgents: React.FC = () => {
     setStatusFilter('');
     setSearchQuery('');
     setCurrentPage(0);
-    console.log('🔄 All filters cleared');
   };
 
   const activeFilters = [
@@ -99,10 +99,10 @@ const SupportAgents: React.FC = () => {
 
   const handleViewDetails = async (agent: User) => {
     try {
-      const fullAgent = await userApi.getUserById(agent.userId);
+      const fullAgent = await agentApi.getAgent(agent.userId);
       setSelectedAgent(fullAgent);
       setShowDetailModal(true);
-    } catch {
+    } catch (error) {
       setSelectedAgent(agent);
       setShowDetailModal(true);
     }
@@ -128,10 +128,9 @@ const SupportAgents: React.FC = () => {
       setShowActionModal(false);
       setActionReason('');
       loadAgents();
-      alert(`Agent ${actionType}ed successfully!`);
+      showToast(`Agent ${actionType}ed successfully!`, 'success');
     } catch (error: any) {
-      console.error(`Failed to ${actionType} agent:`, error);
-      alert(error.response?.data?.message || `Failed to ${actionType} agent`);
+      showToast(error.response?.data?.message || `Failed to ${actionType} agent`, 'error');
     }
   };
 
@@ -142,12 +141,12 @@ const SupportAgents: React.FC = () => {
         ...agentForm,
         userType: 'SUPPORT_AGENT',
       });
-      alert('Support agent created successfully!');
+      showToast('Support agent created successfully!', 'success');
       setShowCreateModal(false);
       setAgentForm({ email: '', phone: '', password: '', firstName: '', lastName: '', country: 'INDIA' });
       loadAgents();
     } catch (error: any) {
-      alert(error.response?.data?.message || 'Failed to create agent');
+      showToast(error.response?.data?.message || 'Failed to create agent', 'error');
     } finally {
       setAgentLoading(false);
     }
@@ -263,7 +262,7 @@ const SupportAgents: React.FC = () => {
         <div className="flex items-center justify-between relative z-10">
           <div>
             <h1 className="text-4xl font-bold">Support Agents Management</h1>
-            <p className="text-cyan-50 mt-2">Manage support agents — Total: {pageInfo.totalElements.toLocaleString()}</p>
+            <p className="text-cyan-50 mt-2">Manage support agents — Total: {pageInfo?.totalElements?.toLocaleString() || 0}</p>
           </div>
           <button
             onClick={() => setShowCreateModal(true)}
@@ -339,10 +338,10 @@ const SupportAgents: React.FC = () => {
       <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
         <DataTable data={getFilteredAgents()} columns={columns} />
 
-        {pageInfo.totalPages > 1 && (
+        {pageInfo?.totalPages && pageInfo.totalPages > 1 && (
           <div className="border-t border-gray-200 px-6 py-4 flex items-center justify-between">
             <div className="text-sm text-gray-600">
-              Page {pageInfo.pageNumber + 1} of {pageInfo.totalPages} — {pageInfo.totalElements} agents
+              Page {(pageInfo?.pageNumber || 0) + 1} of {pageInfo?.totalPages || 1} — {pageInfo?.totalElements || 0} agents
             </div>
             <div className="flex items-center gap-2">
               <button onClick={() => setCurrentPage(Math.max(0, currentPage - 1))} disabled={currentPage === 0}
@@ -350,7 +349,7 @@ const SupportAgents: React.FC = () => {
                 <ChevronLeft className="w-5 h-5" />
               </button>
               <span className="text-sm text-gray-600">Page {currentPage + 1}</span>
-              <button onClick={() => setCurrentPage(Math.min(pageInfo.totalPages - 1, currentPage + 1))} disabled={currentPage >= pageInfo.totalPages - 1}
+              <button onClick={() => setCurrentPage(Math.min((pageInfo?.totalPages || 1) - 1, currentPage + 1))} disabled={currentPage >= (pageInfo?.totalPages || 1) - 1}
                 className="p-2 rounded-lg border border-gray-300 hover:bg-gray-50 disabled:opacity-50">
                 <ChevronRight className="w-5 h-5" />
               </button>
