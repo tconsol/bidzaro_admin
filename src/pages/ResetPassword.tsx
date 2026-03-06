@@ -60,10 +60,10 @@ const ResetPassword: React.FC = () => {
 
   if (success) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700 px-4 relative overflow-hidden">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-500 via-orange-600 to-orange-700 px-4 relative overflow-hidden">
         <div className="absolute inset-0 overflow-hidden">
-          <div className="hidden sm:block absolute -top-1/2 -left-1/2 w-full h-full bg-blue-500 rounded-full opacity-20 blur-3xl animate-pulse"></div>
-          <div className="hidden sm:block absolute -bottom-1/2 -right-1/2 w-full h-full bg-purple-500 rounded-full opacity-20 blur-3xl animate-pulse" style={{animationDelay: '1s'}}></div>
+          <div className="hidden sm:block absolute -top-1/2 -left-1/2 w-full h-full bg-orange-400 rounded-full opacity-20 blur-3xl animate-pulse"></div>
+          <div className="hidden sm:block absolute -bottom-1/2 -right-1/2 w-full h-full bg-orange-500 rounded-full opacity-20 blur-3xl animate-pulse" style={{animationDelay: '1s'}}></div>
         </div>
 
         <div className="max-w-md w-full relative z-10">
@@ -75,8 +75,8 @@ const ResetPassword: React.FC = () => {
               </div>
               <Sparkles className="w-6 h-6 text-yellow-300 animate-pulse" />
             </div>
-            <h1 className="text-4xl font-bold text-white mb-2">WebID Admin</h1>
-            <p className="text-blue-100 text-sm">Professional Catering Management Platform</p>
+            <h1 className="text-4xl font-bold text-white mb-2">Bidzaro</h1>
+            <p className="text-orange-100 text-sm">Professional Catering Management Platform</p>
           </div>
 
           <div className="bg-white/95 backdrop-blur-lg rounded-3xl shadow-2xl p-8 border border-white/20">
@@ -95,14 +95,14 @@ const ResetPassword: React.FC = () => {
 
             <button
               onClick={() => navigate('/login')}
-              className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold py-3.5 px-4 rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200"
+              className="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3.5 px-4 rounded-xl transition-all duration-200"
             >
               Go to Login
             </button>
           </div>
 
           <p className="text-center text-sm text-white/80 mt-8">
-            © 2025 WebID Admin. All rights reserved.
+            © 2025 Bidzaro. All rights reserved.
           </p>
         </div>
       </div>
@@ -110,10 +110,10 @@ const ResetPassword: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700 px-4 py-12 relative overflow-hidden">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-500 via-orange-600 to-orange-700 px-4 py-12 relative overflow-hidden">
       <div className="absolute inset-0 overflow-hidden">
-        <div className="hidden sm:block absolute -top-1/2 -left-1/2 w-full h-full bg-blue-500 rounded-full opacity-20 blur-3xl animate-pulse"></div>
-        <div className="hidden sm:block absolute -bottom-1/2 -right-1/2 w-full h-full bg-purple-500 rounded-full opacity-20 blur-3xl animate-pulse" style={{animationDelay: '1s'}}></div>
+        <div className="hidden sm:block absolute -top-1/2 -left-1/2 w-full h-full bg-orange-400 rounded-full opacity-20 blur-3xl animate-pulse"></div>
+        <div className="hidden sm:block absolute -bottom-1/2 -right-1/2 w-full h-full bg-orange-500 rounded-full opacity-20 blur-3xl animate-pulse" style={{animationDelay: '1s'}}></div>
       </div>
 
       <div className="max-w-md w-full relative z-10">
@@ -125,13 +125,13 @@ const ResetPassword: React.FC = () => {
             </div>
             <Sparkles className="w-6 h-6 text-yellow-300 animate-pulse" />
           </div>
-          <h1 className="text-4xl font-bold text-white mb-2">WebID Admin</h1>
-          <p className="text-blue-100 text-sm">Professional Catering Management Platform</p>
+          <h1 className="text-4xl font-bold text-white mb-2">Bidzaro</h1>
+          <p className="text-orange-100 text-sm">Professional Catering Management Platform</p>
         </div>
 
         <div className="bg-white/95 backdrop-blur-lg rounded-3xl shadow-2xl p-8 border border-white/20">
           <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-14 h-14 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-2xl mb-4 shadow-lg">
+            <div className="inline-flex items-center justify-center w-14 h-14 bg-orange-500 rounded-2xl mb-4 shadow-lg">
               <Lock className="w-7 h-7 text-white" />
             </div>
             <h2 className="text-2xl font-bold text-gray-900">Reset Password</h2>
@@ -165,7 +165,7 @@ const ResetPassword: React.FC = () => {
                 required
                 value={formData.email}
                 onChange={handleChange}
-                className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:bg-white transition-all duration-200 placeholder:text-gray-400"
+                className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 focus:bg-white transition-all duration-200 placeholder:text-gray-400"
                 placeholder="Enter your email"
               />
             </div>
@@ -181,7 +181,7 @@ const ResetPassword: React.FC = () => {
                 required
                 value={formData.otp}
                 onChange={handleChange}
-                className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:bg-white transition-all duration-200 placeholder:text-gray-400 text-center text-lg tracking-widest font-mono"
+                className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 focus:bg-white transition-all duration-200 placeholder:text-gray-400 text-center text-lg tracking-widest font-mono"
                 placeholder="000000"
                 maxLength={6}
               />
@@ -199,7 +199,7 @@ const ResetPassword: React.FC = () => {
                   required
                   value={formData.newPassword}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:bg-white transition-all duration-200 placeholder:text-gray-400 pr-12"
+                  className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 focus:bg-white transition-all duration-200 placeholder:text-gray-400 pr-12"
                   placeholder="Create a strong password"
                 />
                 <button
@@ -225,7 +225,7 @@ const ResetPassword: React.FC = () => {
                   required
                   value={formData.confirmPassword}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:bg-white transition-all duration-200 placeholder:text-gray-400 pr-12"
+                  className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 focus:bg-white transition-all duration-200 placeholder:text-gray-400 pr-12"
                   placeholder="Re-enter your password"
                 />
                 <button
@@ -241,7 +241,7 @@ const ResetPassword: React.FC = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold py-3.5 px-4 rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center space-x-2 mt-6"
+              className="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3.5 px-4 rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2 mt-6"
             >
               {loading ? (
                 <>
@@ -267,7 +267,7 @@ const ResetPassword: React.FC = () => {
                 <span>Back to Login</span>
               </Link>
               <span className="text-gray-300">|</span>
-              <Link to="/forgot-password" className="text-blue-600 hover:text-blue-700 font-semibold">
+              <Link to="/forgot-password" className="text-orange-500 hover:text-orange-600 font-semibold">
                 Resend OTP
               </Link>
             </div>
@@ -275,7 +275,7 @@ const ResetPassword: React.FC = () => {
         </div>
 
         <p className="text-center text-sm text-white/80 mt-8">
-          © 2025 WebID Admin. All rights reserved.
+          © 2025 Bidzaro. All rights reserved.
         </p>
       </div>
     </div>
@@ -283,3 +283,4 @@ const ResetPassword: React.FC = () => {
 };
 
 export default ResetPassword;
+

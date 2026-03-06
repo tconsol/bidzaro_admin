@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { platformConfigApi } from '../services/api';
 import type { PlatformConfig, UpdatePlatformConfigRequest, BiddingConfig, PaymentConfig, CancellationPolicy, CommissionConfig, RefundTier } from '../types';
+import { useToast } from '../hooks/useToast';
 import CustomSelect from '../components/CustomSelect';
 import { Settings, Save, Globe } from 'lucide-react';
 
 const PlatformConfigPage: React.FC = () => {
+  const { showToast } = useToast();
   const [country, setCountry] = useState('INDIA');
   const [config, setConfig] = useState<PlatformConfig | null>(null);
   const [loading, setLoading] = useState(true);
@@ -36,7 +38,9 @@ const PlatformConfigPage: React.FC = () => {
       setPaymentConfig(data.paymentConfig);
       setCancellationPolicy(data.cancellationPolicy);
       setCommissionConfig(data.commissionConfig);
-    } catch (error) { }
+    } catch (error) {
+      showToast('Failed to load platform configuration', 'error');
+    }
     finally { setLoading(false); }
   };
 
@@ -46,8 +50,10 @@ const PlatformConfigPage: React.FC = () => {
       const updateData: UpdatePlatformConfigRequest = { biddingConfig, paymentConfig, cancellationPolicy, commissionConfig };
       const updated = await platformConfigApi.updateConfig(country, updateData);
       setConfig(updated);
-      alert('Configuration saved successfully!');
-    } catch (error: any) { alert(error.response?.data?.message || 'Failed to save configuration'); }
+      showToast('Configuration saved successfully!', 'success');
+    } catch (error: any) { 
+      showToast(error.response?.data?.message || 'Failed to save configuration', 'error');
+    }
     finally { setSaving(false); }
   };
 
@@ -72,7 +78,7 @@ const PlatformConfigPage: React.FC = () => {
   };
 
   if (loading) {
-    return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600" /></div>;
+    return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500" /></div>;
   }
 
   return (
@@ -121,7 +127,7 @@ const PlatformConfigPage: React.FC = () => {
               <label className="block text-sm font-semibold text-gray-700 mb-1">{label}</label>
               <input type="number" value={biddingConfig[key]}
                 onChange={(e) => setBiddingConfig({ ...biddingConfig, [key]: Number(e.target.value) })}
-                className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500" />
+                className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500" />
             </div>
           ))}
         </div>
@@ -159,7 +165,7 @@ const PlatformConfigPage: React.FC = () => {
             <label className="flex items-center gap-2 cursor-pointer">
               <input type="checkbox" checked={paymentConfig.autoRefundEnabled}
                 onChange={(e) => setPaymentConfig({ ...paymentConfig, autoRefundEnabled: e.target.checked })}
-                className="w-5 h-5 rounded border-gray-300 text-blue-600" />
+                className="w-5 h-5 rounded border-gray-300 text-orange-600" />
               <span className="text-sm font-semibold text-gray-700">Auto Refund Enabled</span>
             </label>
           </div>
@@ -203,7 +209,7 @@ const PlatformConfigPage: React.FC = () => {
         <div>
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-lg font-semibold text-gray-900">Refund Tiers</h3>
-            <button onClick={addRefundTier} className="px-4 py-2 bg-blue-100 text-blue-700 rounded-xl hover:bg-blue-200 text-sm font-semibold">+ Add Tier</button>
+            <button onClick={addRefundTier} className="px-4 py-2 bg-orange-100 text-orange-700 rounded-xl hover:bg-orange-200 text-sm font-semibold">+ Add Tier</button>
           </div>
           {cancellationPolicy.refundTiers.map((tier, index) => (
             <div key={index} className="flex items-center gap-4 mb-2">
@@ -229,3 +235,5 @@ const PlatformConfigPage: React.FC = () => {
 
 export default PlatformConfigPage;
 export { PlatformConfigPage as PlatformConfig };
+
+

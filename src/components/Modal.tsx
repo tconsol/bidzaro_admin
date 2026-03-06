@@ -53,8 +53,8 @@ const Modal: React.FC<ModalProps> = ({
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 sm:px-8 py-6 border-b border-gray-200 bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50">
-          <h2 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+        <div className="flex items-center justify-between px-6 sm:px-8 py-6 border-b border-gray-200 bg-orange-50">
+          <h2 className="text-2xl sm:text-3xl font-bold text-orange-600">
             {title}
           </h2>
           <button

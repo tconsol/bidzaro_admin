@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { userApi } from '../services/api';
 import type { User, PageInfo } from '../types';
+import { useToast } from '../hooks/useToast';
 import DataTable from '../components/DataTable';
 import Modal from '../components/Modal';
 import CustomSelect from '../components/CustomSelect';
 import { Eye, Search, Ban, CheckCircle, ChevronLeft, ChevronRight, X, Check } from 'lucide-react';
 
 const Users: React.FC = () => {
+  const { showToast } = useToast();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
@@ -74,6 +76,7 @@ const Users: React.FC = () => {
       setUsers(filteredUsers);
       setPageInfo(response.pageInfo);
     } catch (error) {
+      showToast('Failed to load users', 'error');
     } finally {
       setLoading(false);
     }
@@ -126,9 +129,9 @@ const Users: React.FC = () => {
       setShowActionModal(false);
       setActionReason('');
       loadUsers();
-      alert(`User ${actionType}ed successfully!`);
+      showToast(`User ${actionType}ed successfully!`, 'success');
     } catch (error: any) {
-      alert(error.response?.data?.message || `Failed to ${actionType} user`);
+      showToast(error.response?.data?.message || `Failed to ${actionType} user`, 'error');
     }
   };
 
@@ -150,7 +153,7 @@ const Users: React.FC = () => {
       render: (user: User) => (
         <span className={`px-3 py-1.5 rounded-full text-xs font-bold text-white ${
           user.userType === 'ADMIN' ? 'bg-gradient-to-r from-purple-500 to-purple-600'
-          : user.userType === 'SUPER_ADMIN' ? 'bg-gradient-to-r from-indigo-600 to-purple-700'
+          : user.userType === 'SUPER_ADMIN' ? 'bg-orange-600'
           : user.userType === 'SUPPORT_AGENT' ? 'bg-gradient-to-r from-cyan-500 to-blue-600'
           : 'bg-gradient-to-r from-slate-500 to-slate-600'
         }`}>
@@ -211,7 +214,7 @@ const Users: React.FC = () => {
         <div className="flex items-center gap-2 flex-wrap">
           <button
             onClick={(e) => { e.stopPropagation(); handleViewDetails(user); }}
-            className="p-2 bg-gradient-to-br from-blue-400 to-blue-600 text-white rounded-lg hover:shadow-lg hover:scale-105 transition-all duration-200"
+            className="p-2 bg-orange-500 text-white rounded-lg hover:shadow-lg hover:scale-105 transition-all duration-200"
             title="View Details"
           >
             <Eye className="w-4 h-4" />
@@ -251,7 +254,7 @@ const Users: React.FC = () => {
   if (loading && users.length === 0) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
       </div>
     );
   }
@@ -263,7 +266,7 @@ const Users: React.FC = () => {
         <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full -mr-20 -mt-20"></div>
         <div className="flex items-center justify-between relative z-10">
           <div>
-            <h1 className="text-4xl font-bold">Users Management</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold">Users Management</h1>
             <p className="text-green-50 mt-2">Manage all registered users — Total: {pageInfo.totalElements.toLocaleString()}</p>
           </div>
         </div>
@@ -396,7 +399,7 @@ const Users: React.FC = () => {
                 className={`flex-1 text-white px-4 py-2 rounded-xl disabled:opacity-50 ${
                   actionType === 'activate' ? 'bg-gradient-to-r from-green-600 to-emerald-600'
                   : actionType === 'suspend' ? 'bg-gradient-to-r from-orange-600 to-orange-500'
-                  : 'bg-gradient-to-r from-purple-600 to-purple-500'
+                  : 'bg-orange-500'
                 }`}>
                 Confirm
               </button>
@@ -415,3 +418,6 @@ const Users: React.FC = () => {
 };
 
 export default Users;
+
+
+

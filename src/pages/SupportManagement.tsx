@@ -197,7 +197,7 @@ export default function SupportManagement({ className = '' }: SupportManagementP
               onClick={() => setActiveTab(tab.id as any)}
               className={`px-4 py-2 font-medium border-b-2 transition flex items-center gap-2 ${
                 activeTab === tab.id
-                  ? 'border-blue-500 text-blue-600'
+                  ? 'border-orange-500 text-orange-600'
                   : 'border-transparent text-gray-600 hover:text-gray-900'
               }`}
             >
@@ -210,7 +210,7 @@ export default function SupportManagement({ className = '' }: SupportManagementP
         {/* Tickets List */}
         {loading ? (
           <div className="flex items-center justify-center h-96">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
           </div>
         ) : ticketList.length === 0 ? (
           <div className="bg-white rounded-lg border border-gray-200 p-8 text-center">
@@ -230,7 +230,7 @@ export default function SupportManagement({ className = '' }: SupportManagementP
               <div
                 key={ticket.ticketId}
                 onClick={() => handleTicketClick(ticket.ticketId)}
-                className="bg-white rounded-lg border border-gray-200 p-4 hover:border-blue-400 hover:shadow-md transition cursor-pointer"
+                className="bg-white rounded-lg border border-gray-200 p-4 hover:border-orange-400 hover:shadow-md transition cursor-pointer"
               >
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex items-start gap-3 flex-1 min-w-0">
@@ -332,7 +332,7 @@ export default function SupportManagement({ className = '' }: SupportManagementP
                       <button
                         onClick={() => handleStatusUpdate('IN_PROGRESS')}
                         disabled={actionLoading}
-                        className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50 text-sm font-medium"
+                        className="px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600 disabled:opacity-50 text-sm font-medium"
                       >
                         Start Progress
                       </button>
@@ -352,7 +352,7 @@ export default function SupportManagement({ className = '' }: SupportManagementP
                       value={resolutionNotes}
                       onChange={(e) => setResolutionNotes(e.target.value)}
                       placeholder="Enter resolution notes..."
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                       rows={4}
                     />
                     <button
@@ -372,3 +372,6 @@ export default function SupportManagement({ className = '' }: SupportManagementP
     </div>
   );
 }
+
+
+

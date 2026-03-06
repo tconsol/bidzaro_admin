@@ -56,9 +56,9 @@ function DataTable<T extends Record<string, any>>({
                 key={item.id ?? item.userId ?? item.vendorId ?? item.orderId ?? item.bidRequestId ?? item.ticketId ?? item.logId ?? item.announcementId ?? item.promoCodeId ?? item.masterItemId ?? item.categoryId ?? index}
                 onClick={() => onRowClick?.(item)}
                 className={`${
-                  onRowClick ? 'cursor-pointer hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50' : ''
-                } transition-all duration-200 ${
-                  index % 2 === 0 ? 'bg-white' : 'bg-gray-50/30'
+                  onRowClick ? 'cursor-pointer hover:bg-orange-50/60' : ''
+                } transition-all duration-150 ${
+                  index % 2 === 0 ? 'bg-white' : 'bg-gray-50/40'
                 }`}
               >
                 {columns.map((column) => (

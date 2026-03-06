@@ -164,6 +164,10 @@ export const adminApi = {
 export const dashboardApi = {
   getStats: (): Promise<DashboardStats> =>
     api.get('/api/v1/admin/dashboard').then(res => unwrap<DashboardStats>(res)),
+
+  // Platform analytics overview
+  getAnalyticsOverview: (): Promise<any> =>
+    api.get('/api/v1/admin/analytics/overview').then(res => unwrap<any>(res)),
 };
 
 // ==================== Generic Admin Entity Actions (3 Universal Endpoints) ====================
@@ -201,6 +205,18 @@ export const userApi = {
   getUserById: (userId: string): Promise<User> =>
     api.get(`/api/v1/admin/users/${userId}`).then(res => unwrap<User>(res)),
 
+  // Update user status - supports ACTIVE, SUSPENDED, DELETED
+  updateUserStatus: (userId: string, status: string, reason?: string): Promise<User> =>
+    api.put(`/api/v1/admin/users/${userId}/status`, { status, reason }).then(res => unwrap<User>(res)),
+
+  // Delete user (soft delete)
+  deleteUser: (userId: string): Promise<{ success: boolean; message: string }> =>
+    api.delete(`/api/v1/admin/users/${userId}`).then(res => unwrap<{ success: boolean; message: string }>(res)),
+
+  // Search users
+  searchUsers: (params?: { query?: string; page?: number; size?: number }): Promise<{ data: User[]; pageInfo: PageInfo }> =>
+    api.get('/api/v1/admin/users/search', { params: cleanParams(params) }).then(res => unwrapPaginated<User>(res)),
+
   // Legacy wrappers for backward compatibility - route to generic endpoints
   suspendUser: (userId: string, reason: string): Promise<User> =>
     adminEntityApi.suspend('users', userId, reason).then(res => res as User),
@@ -225,16 +241,30 @@ export const vendorApi = {
   }): Promise<{ data: Vendor[]; pageInfo: PageInfo }> =>
     api.get('/api/v1/admin/vendors', { params: cleanParams(params) }).then(res => unwrapPaginated<Vendor>(res)),
 
+  getVendorById: (vendorId: string): Promise<Vendor> =>
+    api.get(`/api/v1/admin/vendors/${vendorId}`).then(res => unwrap<Vendor>(res)),
+
   approveVendor: (vendorId: string, notes?: string): Promise<Vendor> =>
-    api.post(`/api/v1/admin/vendors/${vendorId}/approve`, { notes }).then(res => unwrap<Vendor>(res)),
+    api.put(`/api/v1/admin/vendors/${vendorId}/approve`, { notes }).then(res => unwrap<Vendor>(res)),
 
   rejectVendor: (vendorId: string, reason: string): Promise<Vendor> =>
-    api.post(`/api/v1/admin/vendors/${vendorId}/reject`, { reason }).then(res => unwrap<Vendor>(res)),
+    api.put(`/api/v1/admin/vendors/${vendorId}/reject`, { reason }).then(res => unwrap<Vendor>(res)),
+
+  suspendVendor: (vendorId: string, reason: string): Promise<Vendor> =>
+    api.put(`/api/v1/admin/vendors/${vendorId}/suspend`, { reason }).then(res => unwrap<Vendor>(res)),
+
+  reactivateVendor: (vendorId: string): Promise<Vendor> =>
+    api.put(`/api/v1/admin/vendors/${vendorId}/reactivate`, {}).then(res => unwrap<Vendor>(res)),
+
+  // Verify vendor document
+  verifyDocument: (vendorId: string, documentId: string, status: string, notes?: string): Promise<any> =>
+    api.put(`/api/v1/admin/vendors/${vendorId}/documents/${documentId}/verify`, { status, notes }).then(res => unwrap(res)),
+
+  // Toggle featured vendor
+  toggleFeatured: (vendorId: string, featured: boolean): Promise<Vendor> =>
+    api.put(`/api/v1/admin/vendors/${vendorId}/featured`, { featured }).then(res => unwrap<Vendor>(res)),
 
   // Legacy wrappers for backward compatibility - route to generic endpoints
-  suspendVendor: (vendorId: string, reason: string): Promise<Vendor> =>
-    adminEntityApi.suspend('vendors', vendorId, reason).then(res => res as Vendor),
-
   activateVendor: (vendorId: string): Promise<Vendor> =>
     adminEntityApi.activate('vendors', vendorId).then(res => res as Vendor),
 
@@ -245,29 +275,36 @@ export const vendorApi = {
 // ==================== Agent Management ====================
 
 export const agentApi = {
+  // Create a support agent
+  createAgent: (data: {
+    email: string;
+    phone: string;
+    password: string;
+    firstName: string;
+    lastName?: string;
+    country?: string;
+  }): Promise<User> =>
+    api.post('/api/v1/admin/support-agents', data).then(res => unwrap<User>(res)),
+
   // Get all support agents with pagination
   getAllAgents: (params?: { page?: number; size?: number; status?: string; sortBy?: string; sortDir?: string }): Promise<{ data: User[]; pageInfo: PageInfo }> =>
-    api.get('/api/v1/admin/agents', { params: cleanParams(params) }).then(res => unwrapPaginated<User>(res)),
-
-  // Create a support agent
-  createAgent: (data: AdminRegistrationDto): Promise<User> =>
-    api.post('/api/v1/admin/agents', data).then(res => unwrap<User>(res)),
-
-  // Legacy wrapper for backward compatibility
-  createAgentLegacy: (data: AdminRegistrationDto): Promise<User> =>
-    api.post('/api/v1/admin/users/create-agent', data).then(res => unwrap<User>(res)),
+    api.get('/api/v1/admin/support-agents', { params: cleanParams(params) }).then(res => unwrapPaginated<User>(res)),
 
   // Get support agent details
   getAgent: (agentId: string): Promise<User> =>
-    api.get(`/api/v1/admin/agents/${agentId}`).then(res => unwrap<User>(res)),
+    api.get(`/api/v1/admin/support-agents/${agentId}`).then(res => unwrap<User>(res)),
 
   // Update support agent
   updateAgent: (agentId: string, data: Partial<User>): Promise<User> =>
-    api.put(`/api/v1/admin/agents/${agentId}`, data).then(res => unwrap<User>(res)),
+    api.put(`/api/v1/admin/support-agents/${agentId}`, data).then(res => unwrap<User>(res)),
 
   // Get agent workload statistics
   getAgentWorkload: (agentId: string): Promise<any> =>
-    api.get(`/api/v1/admin/agents/${agentId}/workload`).then(res => unwrap(res)),
+    api.get(`/api/v1/admin/support-agents/${agentId}/workload`).then(res => unwrap(res)),
+
+  // Assign ticket to agent
+  assignTicket: (ticketId: string, agentId: string): Promise<any> =>
+    api.put(`/api/v1/admin/support/tickets/${ticketId}/assign`, { agentId }).then(res => unwrap(res)),
 
   // Generic actions using 'agents' entity type
   suspendAgent: (agentId: string, reason: string): Promise<any> =>
@@ -278,6 +315,10 @@ export const agentApi = {
 
   unlockAgent: (agentId: string): Promise<any> =>
     adminEntityApi.unlock('agents', agentId),
+
+  // Legacy wrapper for backward compatibility
+  createAgentLegacy: (data: AdminRegistrationDto): Promise<User> =>
+    api.post('/api/v1/admin/users/create-agent', data).then(res => unwrap<User>(res)),
 };
 
 // ==================== Order Management ====================
@@ -287,11 +328,20 @@ export const orderApi = {
     page?: number;
     size?: number;
     status?: string;
+    vendorId?: string;
+    userId?: string;
   }): Promise<{ data: Order[]; pageInfo: PageInfo }> =>
     api.get('/api/v1/admin/orders', { params: cleanParams(params) }).then(res => unwrapPaginated<Order>(res)),
 
+  getOrderById: (orderId: string): Promise<Order> =>
+    api.get(`/api/v1/admin/orders/${orderId}`).then(res => unwrap<Order>(res)),
+
+  updateOrderStatus: (orderId: string, status: string, reason?: string): Promise<Order> =>
+    api.put(`/api/v1/admin/orders/${orderId}/status`, { status, reason }).then(res => unwrap<Order>(res)),
+
+  // Legacy method name
   overrideOrderStatus: (orderId: string, status: string, reason: string): Promise<Order> =>
-    api.patch(`/api/v1/admin/orders/${orderId}/status`, { status, reason }).then(res => unwrap<Order>(res)),
+    orderApi.updateOrderStatus(orderId, status, reason),
 };
 
 // ==================== Bid Management ====================
@@ -308,53 +358,59 @@ export const bidApi = {
 // ==================== Menu Management ====================
 
 export const menuApi = {
-  getAllCategories: (status?: string): Promise<Category[]> =>
-    api.get('/api/v1/admin/categories', { params: status ? { status } : undefined }).then(res => {
+  // Category endpoints
+  getAllCategories: (): Promise<Category[]> =>
+    api.get('/api/v1/admin/menu/categories').then(res => {
       const payload = res.data;
       return payload.data ?? payload;
     }),
 
   getCategoryById: (categoryId: string): Promise<Category> =>
-    api.get(`/api/v1/admin/categories/${categoryId}`).then(res => unwrap<Category>(res)),
+    api.get(`/api/v1/admin/menu/categories/${categoryId}`).then(res => unwrap<Category>(res)),
 
   createCategory: (data: CreateCategoryRequest): Promise<Category> =>
-    api.post('/api/v1/admin/categories', data).then(res => unwrap<Category>(res)),
+    api.post('/api/v1/admin/menu/categories', data).then(res => unwrap<Category>(res)),
 
   updateCategory: (categoryId: string, data: UpdateCategoryRequest): Promise<Category> =>
-    api.put(`/api/v1/admin/categories/${categoryId}`, data).then(res => unwrap<Category>(res)),
+    api.put(`/api/v1/admin/menu/categories/${categoryId}`, data).then(res => unwrap<Category>(res)),
+
+  deleteCategory: (categoryId: string): Promise<{ success: boolean; message: string }> =>
+    api.delete(`/api/v1/admin/menu/categories/${categoryId}`).then(res => unwrap<{ success: boolean; message: string }>(res)),
 
   activateCategory: (categoryId: string): Promise<Category> =>
-    api.patch(`/api/v1/admin/categories/${categoryId}/activate`, {}).then(res => unwrap<Category>(res)),
+    api.patch(`/api/v1/admin/menu/categories/${categoryId}/activate`, {}).then(res => unwrap<Category>(res)),
 
   inactivateCategory: (categoryId: string): Promise<Category> =>
-    api.patch(`/api/v1/admin/categories/${categoryId}/inactivate`, {}).then(res => unwrap<Category>(res)),
+    api.patch(`/api/v1/admin/menu/categories/${categoryId}/inactivate`, {}).then(res => unwrap<Category>(res)),
 
-  deleteCategory: (categoryId: string): Promise<void> =>
-    api.delete(`/api/v1/admin/categories/${categoryId}`).then(() => {}),
-
-  createMenuItem: (data: CreateMenuItemRequest): Promise<MenuItem> => {
-    return api.post('/api/v1/admin/menu/items', data).then(res => {
-      return unwrap<MenuItem>(res);
-    });
-  },
-
-  updateMenuItem: (itemId: string, data: UpdateMenuItemRequest): Promise<MenuItem> =>
-    api.put(`/api/v1/admin/menu-items/${itemId}`, data).then(res => unwrap<MenuItem>(res)),
-
-  activateMenuItem: (itemId: string): Promise<MenuItem> =>
-    api.patch(`/api/v1/admin/menu-items/${itemId}/activate`, {}).then(res => unwrap<MenuItem>(res)),
-
-  inactivateMenuItem: (itemId: string): Promise<MenuItem> =>
-    api.patch(`/api/v1/admin/menu-items/${itemId}/inactivate`, {}).then(res => unwrap<MenuItem>(res)),
-
-  deleteMenuItem: (itemId: string): Promise<void> =>
-    api.delete(`/api/v1/admin/menu-items/${itemId}`).then(() => {}),
-
+  // Menu item endpoints
   getAllMenuItems: (): Promise<MenuItem[]> =>
-    api.get('/api/v1/menu/items').then(res => {
+    api.get('/api/v1/admin/menu/items').then(res => {
       const payload = res.data;
       return payload.data || payload;
     }),
+
+  getMenuItemById: (itemId: string): Promise<MenuItem> =>
+    api.get(`/api/v1/admin/menu/items/${itemId}`).then(res => unwrap<MenuItem>(res)),
+
+  createMenuItem: (data: CreateMenuItemRequest): Promise<MenuItem> =>
+    api.post('/api/v1/admin/menu/items', data).then(res => unwrap<MenuItem>(res)),
+
+  updateMenuItem: (itemId: string, data: UpdateMenuItemRequest): Promise<MenuItem> =>
+    api.put(`/api/v1/admin/menu/items/${itemId}`, data).then(res => unwrap<MenuItem>(res)),
+
+  deleteMenuItem: (itemId: string): Promise<{ success: boolean; message: string }> =>
+    api.delete(`/api/v1/admin/menu/items/${itemId}`).then(res => unwrap<{ success: boolean; message: string }>(res)),
+
+  activateMenuItem: (itemId: string): Promise<MenuItem> =>
+    api.patch(`/api/v1/admin/menu/items/${itemId}/activate`, {}).then(res => unwrap<MenuItem>(res)),
+
+  inactivateMenuItem: (itemId: string): Promise<MenuItem> =>
+    api.patch(`/api/v1/admin/menu/items/${itemId}/inactivate`, {}).then(res => unwrap<MenuItem>(res)),
+
+  // Review moderation
+  moderateReview: (reviewId: string, status: string, notes?: string): Promise<any> =>
+    api.put(`/api/v1/admin/reviews/${reviewId}/moderate`, { status, notes }).then(res => unwrap(res)),
 };
 
 // ==================== Promo Code Management ====================
@@ -367,11 +423,20 @@ export const promoApi = {
   }): Promise<{ data: PromoCode[]; pageInfo: PageInfo }> =>
     api.get('/api/v1/admin/promos', { params: cleanParams(params) }).then(res => unwrapPaginated<PromoCode>(res)),
 
+  getPromoById: (promoId: string): Promise<PromoCode> =>
+    api.get(`/api/v1/admin/promos/${promoId}`).then(res => unwrap<PromoCode>(res)),
+
   createPromo: (data: CreatePromoRequest): Promise<PromoCode> =>
     api.post('/api/v1/admin/promos', data).then(res => unwrap<PromoCode>(res)),
 
-  deactivatePromo: (promoCodeId: string): Promise<PromoCode> =>
-    api.patch(`/api/v1/admin/promos/${promoCodeId}/deactivate`).then(res => unwrap<PromoCode>(res)),
+  updatePromo: (promoId: string, data: Partial<CreatePromoRequest>): Promise<PromoCode> =>
+    api.put(`/api/v1/admin/promos/${promoId}`, data).then(res => unwrap<PromoCode>(res)),
+
+  deactivatePromo: (promoId: string): Promise<PromoCode> =>
+    api.put(`/api/v1/admin/promos/${promoId}/deactivate`, {}).then(res => unwrap<PromoCode>(res)),
+
+  deletePromo: (promoId: string): Promise<{ success: boolean; message: string }> =>
+    api.delete(`/api/v1/admin/promos/${promoId}`).then(res => unwrap<{ success: boolean; message: string }>(res)),
 };
 
 // ==================== Support Tickets ====================
@@ -386,9 +451,22 @@ export const supportApi = {
     api.get('/api/v1/admin/support/tickets', { params: cleanParams(params) }).then(res => unwrapPaginated<SupportTicket>(res)),
 };
 
-// ==================== Payments / Refunds ====================
+// ==================== Payments / Transactions ====================
 
 export const paymentApi = {
+  getAllTransactions: (params?: {
+    page?: number;
+    size?: number;
+    status?: string;
+    gateway?: string;
+    userId?: string;
+    orderId?: string;
+  }): Promise<{ data: any[]; pageInfo: PageInfo }> =>
+    api.get('/api/v1/admin/payments', { params: cleanParams(params) }).then(res => unwrapPaginated<any>(res)),
+
+  getRevenueStats: (): Promise<any> =>
+    api.get('/api/v1/admin/payments/stats').then(res => unwrap<any>(res)),
+
   initiateRefund: (transactionId: string, refundAmount: number, reason: string): Promise<RefundResponse> =>
     api.post(`/api/v1/admin/payments/${transactionId}/refund`, { refundAmount, reason }).then(res => unwrap<RefundResponse>(res)),
 };
@@ -428,6 +506,19 @@ export const announcementApi = {
     api.patch(`/api/v1/admin/announcements/${announcementId}/status`, { isActive }).then(res => unwrap<Announcement>(res)),
 };
 
+// ==================== Analytics ====================
+
+export const analyticsApi = {
+  getPlatformOverview: (): Promise<any> =>
+    api.get('/api/v1/admin/analytics/overview').then(res => unwrap<any>(res)),
+
+  getVendorAnalytics: (vendorId: string): Promise<any> =>
+    api.get(`/api/v1/analytics/vendor/${vendorId}`).then(res => unwrap<any>(res)),
+
+  getOverview: (period: string): Promise<AnalyticsOverview> =>
+    api.get('/api/v1/analytics/overview', { params: cleanParams({ period }) }).then(res => unwrap<AnalyticsOverview>(res)),
+};
+
 // ==================== Audit Logs ====================
 
 export const auditLogApi = {
@@ -436,15 +527,12 @@ export const auditLogApi = {
     size?: number;
     action?: string;
     entityType?: string;
+    entityId?: string;
+    performedBy?: string;
+    startDate?: string;
+    endDate?: string;
   }): Promise<{ data: AuditLog[]; pageInfo: PageInfo }> =>
     api.get('/api/v1/admin/audit-logs', { params: cleanParams(params) }).then(res => unwrapPaginated<AuditLog>(res)),
-};
-
-// ==================== Analytics ====================
-
-export const analyticsApi = {
-  getOverview: (period: string): Promise<AnalyticsOverview> =>
-    api.get('/api/v1/analytics/overview', { params: cleanParams({ period }) }).then(res => unwrap<AnalyticsOverview>(res)),
 };
 
 export default api;

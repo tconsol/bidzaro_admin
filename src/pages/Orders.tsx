@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { orderApi } from '../services/api';
 import type { Order, PageInfo } from '../types';
+import { useToast } from '../hooks/useToast';
 import DataTable from '../components/DataTable';
 import Modal from '../components/Modal';
 import CustomSelect from '../components/CustomSelect';
@@ -10,6 +11,7 @@ const formatCurrency = (amount: number, currency = 'INR') =>
   new Intl.NumberFormat('en-IN', { style: 'currency', currency }).format(amount);
 
 const Orders: React.FC = () => {
+  const { showToast } = useToast();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
@@ -66,7 +68,10 @@ const Orders: React.FC = () => {
       setOverrideStatus('');
       setOverrideReason('');
       loadOrders();
-    } catch (error: any) { alert(error.response?.data?.message || 'Failed to override order status'); }
+      showToast('Order status updated successfully!', 'success');
+    } catch (error: any) { 
+      showToast(error.response?.data?.message || 'Failed to override order status', 'error');
+    }
   };
 
   const columns = [
@@ -121,7 +126,7 @@ const Orders: React.FC = () => {
       render: (o: Order) => (
         <div className="flex items-center gap-2">
           <button onClick={(e) => { e.stopPropagation(); setSelectedOrder(o); setShowDetailModal(true); }}
-            className="p-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200" title="View"><Eye className="w-4 h-4" /></button>
+            className="p-2 bg-orange-100 text-orange-600 rounded-lg hover:bg-orange-200" title="View"><Eye className="w-4 h-4" /></button>
           <button onClick={(e) => { e.stopPropagation(); setSelectedOrder(o); setShowStatusModal(true); }}
             className="p-2 bg-orange-100 text-orange-600 rounded-lg hover:bg-orange-200" title="Override Status"><RefreshCw className="w-4 h-4" /></button>
         </div>
@@ -130,7 +135,7 @@ const Orders: React.FC = () => {
   ];
 
   if (loading && orders.length === 0) {
-    return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600" /></div>;
+    return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500" /></div>;
   }
 
   return (
@@ -311,3 +316,5 @@ const Orders: React.FC = () => {
 };
 
 export default Orders;
+
+

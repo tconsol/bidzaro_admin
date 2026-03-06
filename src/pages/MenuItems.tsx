@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { menuApi } from '../services/api';
 import type { Category, MenuItem, CreateCategoryRequest, CreateMenuItemRequest, UpdateMenuItemRequest, UpdateCategoryRequest } from '../types';
+import { useToast } from '../hooks/useToast';
 import Modal from '../components/Modal';
 import CustomSelect from '../components/CustomSelect';
 import { Plus, UtensilsCrossed, Tag, Search, Edit2, Trash2, CheckCircle, XCircle } from 'lucide-react';
 
 const MenuItems: React.FC = () => {
+  const { showToast } = useToast();
   const [categories, setCategories] = useState<Category[]>([]);
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -34,20 +36,27 @@ const MenuItems: React.FC = () => {
   const [submitting, setSubmitting] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
-  useEffect(() => { loadData(); }, [catStatusFilter]);
+  useEffect(() => { loadData(); }, []);
 
   const loadData = async () => {
     try {
       setLoading(true);
       const [cats, items] = await Promise.all([
-        menuApi.getAllCategories(catStatusFilter || undefined),
+        menuApi.getAllCategories(),
         menuApi.getAllMenuItems(),
       ]);
       setCategories(cats);
       setMenuItems(items);
-    } catch (error) { }
+    } catch (error) {
+      showToast('Failed to load menu data', 'error');
+    }
     finally { setLoading(false); }
   };
+
+  // Filter categories by status for display purposes (when filter is selected)
+  const filteredCategories = catStatusFilter
+    ? categories.filter(cat => cat.status === catStatusFilter)
+    : categories;
 
   const openCreateCategoryModal = () => {
     const maxOrder = categories.length > 0 ? Math.max(...categories.map(c => c.displayOrder)) : 0;
@@ -62,7 +71,10 @@ const MenuItems: React.FC = () => {
       setShowCategoryModal(false);
       setCategoryForm({ categoryName: '', categoryNameHindi: '', description: '', displayOrder: 0, iconUrl: '' });
       loadData();
-    } catch (error: any) { alert(error.response?.data?.message || 'Failed to create category'); }
+      showToast('Category created successfully!', 'success');
+    } catch (error: any) { 
+      showToast(error.response?.data?.message || 'Failed to create category', 'error');
+    }
     finally { setSubmitting(false); }
   };
 
@@ -85,18 +97,24 @@ const MenuItems: React.FC = () => {
       await menuApi.updateCategory(selectedCategory.categoryId, editCatForm);
       setShowEditCatModal(false);
       loadData();
+      showToast('Category updated successfully!', 'success');
     } catch (error: any) {
-      alert(error.response?.data?.message || 'Failed to update category');
+      showToast(error.response?.data?.message || 'Failed to update category', 'error');
     } finally { setSubmitting(false); }
   };
 
   const handleToggleCatStatus = async (cat: Category) => {
     try {
-      if (cat.status === 'ACTIVE') await menuApi.inactivateCategory(cat.categoryId);
-      else await menuApi.activateCategory(cat.categoryId);
+      if (cat.status === 'ACTIVE') {
+        await menuApi.inactivateCategory(cat.categoryId);
+        showToast('Category inactivated successfully!', 'success');
+      } else {
+        await menuApi.activateCategory(cat.categoryId);
+        showToast('Category activated successfully!', 'success');
+      }
       loadData();
     } catch (error: any) {
-      alert(error.response?.data?.message || 'Failed to update category status');
+      showToast(error.response?.data?.message || 'Failed to update category status', 'error');
     }
   };
 
@@ -113,8 +131,9 @@ const MenuItems: React.FC = () => {
       setShowDeleteCatModal(false);
       setSelectedCategory(null);
       loadData();
+      showToast('Category deleted successfully!', 'success');
     } catch (error: any) {
-      alert(error.response?.data?.message || 'Failed to delete category (may have items attached)');
+      showToast(error.response?.data?.message || 'Failed to delete category (may have items attached)', 'error');
     } finally { setSubmitting(false); }
   };
 
@@ -125,8 +144,9 @@ const MenuItems: React.FC = () => {
       setShowItemModal(false);
       setItemForm({ itemName: '', itemNameHindi: '', description: '', categoryId: '', cuisineType: '', foodType: 'VEG', spiceLevel: '', dietaryTags: [], allergens: [], isPopular: false });
       loadData();
+      showToast('Menu item created successfully!', 'success');
     } catch (error: any) { 
-      alert(error.response?.data?.message || 'Failed to create menu item');
+      showToast(error.response?.data?.message || 'Failed to create menu item', 'error');
     }
     finally { setSubmitting(false); }
   };
@@ -156,8 +176,9 @@ const MenuItems: React.FC = () => {
       await menuApi.updateMenuItem(selectedItem.masterItemId, editForm);
       setShowEditModal(false);
       loadData();
+      showToast('Menu item updated successfully!', 'success');
     } catch (error: any) {
-      alert(error.response?.data?.message || 'Failed to update menu item');
+      showToast(error.response?.data?.message || 'Failed to update menu item', 'error');
     } finally { setSubmitting(false); }
   };
 
@@ -166,12 +187,14 @@ const MenuItems: React.FC = () => {
     try {
       if (item.status === 'ACTIVE') {
         await menuApi.inactivateMenuItem(item.masterItemId);
+        showToast('Menu item inactivated successfully!', 'success');
       } else {
         await menuApi.activateMenuItem(item.masterItemId);
+        showToast('Menu item activated successfully!', 'success');
       }
       loadData();
     } catch (error: any) {
-      alert(error.response?.data?.message || 'Failed to update status');
+      showToast(error.response?.data?.message || 'Failed to update status', 'error');
     }
   };
 
@@ -189,8 +212,9 @@ const MenuItems: React.FC = () => {
       setShowDeleteModal(false);
       setSelectedItem(null);
       loadData();
+      showToast('Menu item deleted successfully!', 'success');
     } catch (error: any) {
-      alert(error.response?.data?.message || 'Failed to delete menu item');
+      showToast(error.response?.data?.message || 'Failed to delete menu item', 'error');
     } finally { setSubmitting(false); }
   };
 
@@ -199,7 +223,7 @@ const MenuItems: React.FC = () => {
   );
 
   if (loading) {
-    return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600" /></div>;
+    return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500" /></div>;
   }
 
   return (
@@ -240,7 +264,7 @@ const MenuItems: React.FC = () => {
             </button>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {categories.map(cat => (
+            {filteredCategories.map(cat => (
               <div key={cat.categoryId} className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-all relative">
                 <div className="flex items-start justify-between mb-3">
                   <h3 className="text-lg font-bold text-gray-900 pr-2">{cat.categoryName}</h3>
@@ -252,7 +276,7 @@ const MenuItems: React.FC = () => {
                 {/* Category Action Buttons */}
                 <div className="flex items-center gap-2 pt-3 border-t border-gray-100">
                   <button onClick={() => openEditCatModal(cat)}
-                    className="flex-1 flex items-center justify-center gap-1 py-1.5 bg-gradient-to-br from-blue-400 to-blue-600 text-white rounded-lg text-xs font-semibold hover:shadow-md hover:scale-105 transition-all duration-200">
+                    className="flex-1 flex items-center justify-center gap-1 py-1.5 bg-orange-500 text-white rounded-lg text-xs font-semibold hover:shadow-md hover:scale-105 transition-all duration-200">
                     <Edit2 className="w-3 h-3" />Edit
                   </button>
                   <button onClick={() => handleToggleCatStatus(cat)}
@@ -313,7 +337,7 @@ const MenuItems: React.FC = () => {
                 {item.itemNameHindi && <p className="text-sm text-gray-500 mb-1">{item.itemNameHindi}</p>}
                 <p className="text-gray-600 text-sm line-clamp-2 mb-2">{item.description}</p>
                 <div className="flex flex-wrap gap-1 mb-2">
-                  <span className="px-2 py-0.5 bg-blue-50 text-blue-700 rounded text-xs">{item.cuisineType}</span>
+                  <span className="px-2 py-0.5 bg-orange-50 text-orange-700 rounded text-xs">{item.cuisineType}</span>
                   <span className="px-2 py-0.5 bg-orange-50 text-orange-700 rounded text-xs">{item.spiceLevel}</span>
                   {item.isPopular && <span className="px-2 py-0.5 bg-yellow-50 text-yellow-700 rounded text-xs">⭐ Popular</span>}
                 </div>
@@ -321,7 +345,7 @@ const MenuItems: React.FC = () => {
                 {/* Action Buttons */}
                 <div className="flex items-center gap-2 pt-3 border-t border-gray-100" onClick={(e) => e.stopPropagation()}>
                   <button onClick={(e) => openEditModal(item, e)}
-                    className="flex-1 flex items-center justify-center gap-1 py-1.5 bg-gradient-to-br from-blue-400 to-blue-600 text-white rounded-lg text-xs font-semibold hover:shadow-md hover:scale-105 transition-all duration-200">
+                    className="flex-1 flex items-center justify-center gap-1 py-1.5 bg-orange-500 text-white rounded-lg text-xs font-semibold hover:shadow-md hover:scale-105 transition-all duration-200">
                     <Edit2 className="w-3 h-3" />Edit
                   </button>
                   <button onClick={(e) => handleToggleStatus(item, e)}
@@ -413,7 +437,7 @@ const MenuItems: React.FC = () => {
           </div>
           <div className="flex gap-3">
             <button onClick={handleUpdateCategory} disabled={submitting}
-              className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-xl disabled:opacity-50 hover:bg-blue-700">{submitting ? 'Saving...' : 'Save Changes'}</button>
+              className="flex-1 bg-orange-500 text-white px-4 py-2 rounded-xl disabled:opacity-50 hover:bg-orange-600">{submitting ? 'Saving...' : 'Save Changes'}</button>
             <button onClick={() => setShowEditCatModal(false)} className="flex-1 bg-gray-200 text-gray-700 px-4 py-2 rounded-xl">Cancel</button>
           </div>
         </div>
@@ -575,7 +599,7 @@ const MenuItems: React.FC = () => {
           {/* Detail modal action buttons */}
           <div className="flex gap-3 pt-2 border-t">
             <button onClick={(e) => { setShowDetailModal(false); openEditModal(selectedItem, e); }}
-              className="flex-1 flex items-center justify-center gap-2 bg-blue-600 text-white py-2 rounded-xl hover:bg-blue-700">
+              className="flex-1 flex items-center justify-center gap-2 bg-orange-500 text-white py-2 rounded-xl hover:bg-orange-600">
               <Edit2 className="w-4 h-4" />Edit
             </button>
             <button onClick={(e) => { setShowDetailModal(false); handleToggleStatus(selectedItem, e); }}
@@ -653,7 +677,7 @@ const MenuItems: React.FC = () => {
           </div>
           <div className="flex gap-3">
             <button onClick={handleUpdateItem} disabled={submitting}
-              className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-xl disabled:opacity-50 hover:bg-blue-700">{submitting ? 'Saving...' : 'Save Changes'}</button>
+              className="flex-1 bg-orange-500 text-white px-4 py-2 rounded-xl disabled:opacity-50 hover:bg-orange-600">{submitting ? 'Saving...' : 'Save Changes'}</button>
             <button onClick={() => setShowEditModal(false)} className="flex-1 bg-gray-200 text-gray-700 px-4 py-2 rounded-xl">Cancel</button>
           </div>
         </div>
@@ -681,3 +705,5 @@ const MenuItems: React.FC = () => {
 };
 
 export default MenuItems;
+
+

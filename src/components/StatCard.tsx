@@ -13,9 +13,8 @@ interface StatCardProps {
 
 const StatCard: React.FC<StatCardProps> = ({ title, value, icon: Icon, color, change, changeType }) => {
   return (
-    <div className="group relative bg-white rounded-2xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 overflow-hidden">
-      {/* Gradient Background Overlay */}
-      <div className="hidden sm:block absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 -mr-16 -mt-16"></div>
+    <div className="group relative bg-white rounded-2xl shadow-sm border border-gray-100 p-5 sm:p-6 hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5 overflow-hidden">
+      <div className="hidden sm:block absolute top-0 right-0 w-32 h-32 bg-orange-50 rounded-full blur-3xl opacity-0 group-hover:opacity-80 transition-opacity duration-500 -mr-16 -mt-16" />
       
       <div className="relative">
         <div className="flex items-center justify-between mb-4">
@@ -39,8 +38,8 @@ const StatCard: React.FC<StatCardProps> = ({ title, value, icon: Icon, color, ch
             </div>
           )}
         </div>
-        <h3 className="text-gray-500 text-sm font-semibold mb-2 uppercase tracking-wide">{title}</h3>
-        <p className="text-4xl font-bold text-gray-900 tracking-tight">{value}</p>
+        <h3 className="text-gray-500 text-xs font-semibold mb-1.5 uppercase tracking-wide">{title}</h3>
+        <p className="text-2xl sm:text-3xl font-bold text-gray-900 tracking-tight">{value}</p>
       </div>
     </div>
   );

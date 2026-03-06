@@ -106,7 +106,7 @@ const AuditLogs: React.FC = () => {
   ];
 
   if (loading && logs.length === 0) {
-    return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600" /></div>;
+    return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500" /></div>;
   }
 
   return (
@@ -121,7 +121,7 @@ const AuditLogs: React.FC = () => {
           <Filter className="w-5 h-5 text-gray-600" />
           <h3 className="text-sm font-semibold text-gray-900">Filters</h3>
           {(actionFilter || entityTypeFilter) && (
-            <button onClick={clearFilters} className="ml-auto text-sm text-blue-600 hover:text-blue-700 font-medium">Clear Filters</button>
+            <button onClick={clearFilters} className="ml-auto text-sm text-orange-500 hover:text-orange-600 font-medium">Clear Filters</button>
           )}
         </div>
 
@@ -177,9 +177,9 @@ const AuditLogs: React.FC = () => {
             <button onClick={() => applyQuickFilter('SUSPEND', 'USER')}
               className="px-3 py-1 bg-red-100 text-red-700 rounded-lg text-xs font-medium hover:bg-red-200">User Suspensions</button>
             <button onClick={() => applyQuickFilter('', 'VENDOR')}
-              className="px-3 py-1 bg-blue-100 text-blue-700 rounded-lg text-xs font-medium hover:bg-blue-200">All Vendor Actions</button>
+              className="px-3 py-1 bg-orange-100 text-orange-700 rounded-lg text-xs font-medium hover:bg-orange-200">All Vendor Actions</button>
             <button onClick={() => applyQuickFilter('', 'PLATFORM_CONFIG')}
-              className="px-3 py-1 bg-purple-100 text-purple-700 rounded-lg text-xs font-medium hover:bg-purple-200">Platform Changes</button>
+              className="px-3 py-1 bg-gray-100 text-gray-700 rounded-lg text-xs font-medium hover:bg-gray-200">Platform Changes</button>
             <button onClick={() => applyQuickFilter('REJECT', '')}
               className="px-3 py-1 bg-orange-100 text-orange-700 rounded-lg text-xs font-medium hover:bg-orange-200">All Rejections</button>
           </div>
@@ -205,3 +205,5 @@ const AuditLogs: React.FC = () => {
 };
 
 export default AuditLogs;
+
+

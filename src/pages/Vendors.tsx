@@ -100,9 +100,9 @@ const Vendors: React.FC = () => {
       setPageInfo(response.pageInfo);
     } catch (error: any) {
       const errorMsg = error?.response?.data?.message || error?.message || 'Failed to load vendors';
-
       setError(errorMsg);
       setVendors([]);
+      showToast(errorMsg, 'error');
     } finally {
       setLoading(false);
     }
@@ -159,7 +159,7 @@ const Vendors: React.FC = () => {
         </div>
       ),
     },
-    { key: 'businessType', header: 'Type', render: (v: Vendor) => <span className="px-3 py-1 bg-gradient-to-r from-blue-400 to-blue-600 text-white rounded-full text-xs font-semibold">{v.businessType}</span> },
+    { key: 'businessType', header: 'Type', render: (v: Vendor) => <span className="px-3 py-1 bg-orange-500 text-white rounded-full text-xs font-semibold">{v.businessType}</span> },
     { key: 'country', header: 'Country', render: (v: Vendor) => v.country },
     {
       key: 'approvalStatus', header: 'Approval',
@@ -203,7 +203,7 @@ const Vendors: React.FC = () => {
       render: (v: Vendor) => (
         <div className="flex items-center gap-2 flex-wrap">
           <button onClick={(e) => { e.stopPropagation(); setSelectedVendor(v); setShowDetailModal(true); }}
-            className="p-2 bg-gradient-to-br from-blue-400 to-blue-600 text-white rounded-lg hover:shadow-lg hover:scale-105 transition-all duration-200" title="View Details"><Eye className="w-4 h-4" /></button>
+            className="p-2 bg-orange-500 text-white rounded-lg hover:shadow-lg hover:scale-105 transition-all duration-200" title="View Details"><Eye className="w-4 h-4" /></button>
           {v.approvalStatus === 'PENDING' && (
             <>
               <button onClick={(e) => { e.stopPropagation(); openAction(v, 'approve'); }}
@@ -233,7 +233,7 @@ const Vendors: React.FC = () => {
     return (
       <div className="flex items-center justify-center h-96">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto"></div>
           <p className="text-gray-600 mt-4">Loading vendors...</p>
         </div>
       </div>
@@ -261,7 +261,7 @@ const Vendors: React.FC = () => {
         <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full -mr-20 -mt-20"></div>
         <div className="flex items-center justify-between relative z-10">
           <div>
-            <h1 className="text-4xl font-bold flex items-center gap-3"><Building2 className="w-8 h-8" />Vendor Management</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold flex items-center gap-3"><Building2 className="w-8 h-8" />Vendor Management</h1>
             <p className="text-purple-100 mt-2">Manage all vendors — Total: {pageInfo.totalElements.toLocaleString()}</p>
           </div>
         </div>
@@ -468,7 +468,7 @@ const Vendors: React.FC = () => {
                   : actionType === 'reject' ? 'bg-red-600 hover:bg-red-700'
                   : actionType === 'suspend' ? 'bg-orange-600 hover:bg-orange-700'
                   : actionType === 'activate' ? 'bg-green-600 hover:bg-green-700'
-                  : 'bg-purple-600 hover:bg-purple-700'
+                  : 'bg-orange-500 hover:bg-orange-600'
                 }`}>
                 Confirm {actionType.charAt(0).toUpperCase() + actionType.slice(1)}
               </button>
@@ -482,3 +482,6 @@ const Vendors: React.FC = () => {
 };
 
 export default Vendors;
+
+
+

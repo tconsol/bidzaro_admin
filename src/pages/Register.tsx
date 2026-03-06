@@ -67,11 +67,11 @@ const Register: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700 px-4 py-12 relative overflow-hidden">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-500 via-orange-600 to-orange-700 px-4 py-12 relative overflow-hidden">
       {/* Animated background */}
       <div className="absolute inset-0 overflow-hidden">
-        <div className="hidden sm:block absolute -top-1/2 -left-1/2 w-full h-full bg-blue-500 rounded-full opacity-20 blur-3xl animate-pulse"></div>
-        <div className="hidden sm:block absolute -bottom-1/2 -right-1/2 w-full h-full bg-purple-500 rounded-full opacity-20 blur-3xl animate-pulse" style={{animationDelay: '1s'}}></div>
+        <div className="hidden sm:block absolute -top-1/2 -left-1/2 w-full h-full bg-orange-400 rounded-full opacity-20 blur-3xl animate-pulse"></div>
+        <div className="hidden sm:block absolute -bottom-1/2 -right-1/2 w-full h-full bg-orange-500 rounded-full opacity-20 blur-3xl animate-pulse" style={{animationDelay: '1s'}}></div>
       </div>
 
       <div className="max-w-lg w-full relative z-10">
@@ -84,14 +84,14 @@ const Register: React.FC = () => {
             </div>
             <Sparkles className="w-6 h-6 text-yellow-300 animate-pulse" />
           </div>
-          <h1 className="text-4xl font-bold text-white mb-2">Join WebID Admin</h1>
-          <p className="text-blue-100 text-sm">Create your administrator account</p>
+          <h1 className="text-4xl font-bold text-white mb-2">Join Bidzaro</h1>
+          <p className="text-orange-100 text-sm">Create your administrator account</p>
         </div>
 
         {/* Register Card */}
         <div className="bg-white/95 backdrop-blur-lg rounded-3xl shadow-2xl p-8 border border-white/20">
           <div className="text-center mb-6">
-            <div className="inline-flex items-center justify-center w-14 h-14 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-2xl mb-4 shadow-lg">
+            <div className="inline-flex items-center justify-center w-14 h-14 bg-orange-500 rounded-2xl mb-4 shadow-lg">
               <UserPlus className="w-7 h-7 text-white" />
             </div>
             <h2 className="text-2xl font-bold text-gray-900">Create Account</h2>
@@ -124,7 +124,7 @@ const Register: React.FC = () => {
                   required
                   value={formData.firstName}
                   onChange={handleChange}
-                  className="w-full px-4 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:bg-white transition-all duration-200"
+                  className="w-full px-4 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 focus:bg-white transition-all duration-200"
                   placeholder="John"
                 />
               </div>
@@ -140,7 +140,7 @@ const Register: React.FC = () => {
                   required
                   value={formData.lastName}
                   onChange={handleChange}
-                  className="w-full px-4 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:bg-white transition-all duration-200"
+                  className="w-full px-4 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 focus:bg-white transition-all duration-200"
                   placeholder="Doe"
                 />
               </div>
@@ -157,7 +157,7 @@ const Register: React.FC = () => {
                 required
                 value={formData.email}
                 onChange={handleChange}
-                className="w-full px-4 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:bg-white transition-all duration-200"
+                className="w-full px-4 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 focus:bg-white transition-all duration-200"
                 placeholder="john@example.com"
               />
             </div>
@@ -173,7 +173,7 @@ const Register: React.FC = () => {
                 required
                 value={formData.phone}
                 onChange={handleChange}
-                className="w-full px-4 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:bg-white transition-all duration-200"
+                className="w-full px-4 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 focus:bg-white transition-all duration-200"
                 placeholder="+1 (555) 123-4567"
               />
             </div>
@@ -189,7 +189,7 @@ const Register: React.FC = () => {
                 required
                 value={formData.password}
                 onChange={handleChange}
-                className="w-full px-4 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:bg-white transition-all duration-200"
+                className="w-full px-4 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 focus:bg-white transition-all duration-200"
                 placeholder="Create a strong password"
               />
               <p className="text-xs text-gray-500 mt-1">Must be at least 8 characters</p>
@@ -204,7 +204,7 @@ const Register: React.FC = () => {
                 name="userType"
                 value={formData.userType}
                 onChange={handleChange}
-                className="w-full px-4 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:bg-white transition-all duration-200"
+                className="w-full px-4 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 focus:bg-white transition-all duration-200"
               >
                 <option value="ADMIN">Admin - Standard Access</option>
                 <option value="MODERATOR">Moderator - Limited Access</option>
@@ -221,7 +221,7 @@ const Register: React.FC = () => {
                 name="country"
                 value={formData.country}
                 onChange={handleChange}
-                className="w-full px-4 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:bg-white transition-all duration-200"
+                className="w-full px-4 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 focus:bg-white transition-all duration-200"
               >
                 <option value="USA">United States</option>
                 <option value="India">India</option>
@@ -231,7 +231,7 @@ const Register: React.FC = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold py-3.5 px-4 rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center space-x-2 mt-6"
+              className="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3.5 px-4 rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2 mt-6"
             >
               {loading ? (
                 <>
@@ -253,7 +253,7 @@ const Register: React.FC = () => {
           <div className="mt-8 pt-6 border-t border-gray-200">
             <p className="text-center text-sm text-gray-600">
               Already have an account?{' '}
-              <Link to="/login" className="text-blue-600 hover:text-blue-700 font-semibold hover:underline">
+              <Link to="/login" className="text-orange-500 hover:text-orange-600 font-semibold hover:underline">
                 Sign in instead
               </Link>
             </p>
@@ -261,7 +261,7 @@ const Register: React.FC = () => {
         </div>
 
         <p className="text-center text-sm text-white/80 mt-8">
-          © 2025 WebID Admin. All rights reserved.
+          © 2025 Bidzaro. All rights reserved.
         </p>
       </div>
     </div>
@@ -269,3 +269,4 @@ const Register: React.FC = () => {
 };
 
 export default Register;
+

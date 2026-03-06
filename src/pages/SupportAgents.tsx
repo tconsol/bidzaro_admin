@@ -137,10 +137,7 @@ const SupportAgents: React.FC = () => {
   const handleCreateAgent = async () => {
     setAgentLoading(true);
     try {
-      await agentApi.createAgent({
-        ...agentForm,
-        userType: 'SUPPORT_AGENT',
-      });
+      await agentApi.createAgent(agentForm);
       showToast('Support agent created successfully!', 'success');
       setShowCreateModal(false);
       setAgentForm({ email: '', phone: '', password: '', firstName: '', lastName: '', country: 'INDIA' });
@@ -209,7 +206,7 @@ const SupportAgents: React.FC = () => {
         <div className="flex items-center gap-2 flex-wrap">
           <button
             onClick={(e) => { e.stopPropagation(); handleViewDetails(agent); }}
-            className="p-2 bg-gradient-to-br from-blue-400 to-blue-600 text-white rounded-lg hover:shadow-lg hover:scale-105 transition-all duration-200"
+            className="p-2 bg-orange-500 text-white rounded-lg hover:shadow-lg hover:scale-105 transition-all duration-200"
             title="View Details"
           >
             <Eye className="w-4 h-4" />
@@ -249,7 +246,7 @@ const SupportAgents: React.FC = () => {
   if (loading && agents.length === 0) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
       </div>
     );
   }
@@ -261,7 +258,7 @@ const SupportAgents: React.FC = () => {
         <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full -mr-20 -mt-20"></div>
         <div className="flex items-center justify-between relative z-10">
           <div>
-            <h1 className="text-4xl font-bold">Support Agents Management</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold">Support Agents Management</h1>
             <p className="text-cyan-50 mt-2">Manage support agents — Total: {pageInfo?.totalElements?.toLocaleString() || 0}</p>
           </div>
           <button
@@ -398,7 +395,7 @@ const SupportAgents: React.FC = () => {
                 className={`flex-1 text-white px-4 py-2 rounded-xl disabled:opacity-50 ${
                   actionType === 'activate' ? 'bg-gradient-to-r from-green-600 to-emerald-600'
                   : actionType === 'suspend' ? 'bg-gradient-to-r from-orange-600 to-orange-500'
-                  : 'bg-gradient-to-r from-purple-600 to-purple-500'
+                  : 'bg-orange-500'
                 }`}>
                 Confirm
               </button>
@@ -467,3 +464,5 @@ const SupportAgents: React.FC = () => {
 };
 
 export default SupportAgents;
+
+

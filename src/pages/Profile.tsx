@@ -16,7 +16,7 @@ const Profile: React.FC = () => {
   return (
     <div className="space-y-6 animate-fadeIn max-w-4xl mx-auto">
       {/* Profile Header */}
-      <div className="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-2xl shadow-lg p-8 text-white">
+      <div className="bg-orange-500 rounded-2xl shadow-lg p-8 text-white">
         <div className="flex items-center gap-6">
           <div className="w-20 h-20 bg-white/20 rounded-2xl flex items-center justify-center">
             {admin.profilePictureUrl ? (
@@ -39,7 +39,7 @@ const Profile: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Personal Info */}
         <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
-          <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2"><User className="w-5 h-5 text-blue-600" />Personal Information</h2>
+          <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2"><User className="w-5 h-5 text-orange-500" />Personal Information</h2>
           <div className="space-y-4">
             <div className="flex items-center justify-between py-2 border-b border-gray-100">
               <span className="text-sm text-gray-500">User ID</span>
@@ -66,7 +66,7 @@ const Profile: React.FC = () => {
 
         {/* Contact Info */}
         <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
-          <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2"><Mail className="w-5 h-5 text-blue-600" />Contact Information</h2>
+          <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2"><Mail className="w-5 h-5 text-orange-500" />Contact Information</h2>
           <div className="space-y-4">
             <div className="flex items-center justify-between py-2 border-b border-gray-100">
               <span className="text-sm text-gray-500 flex items-center gap-1"><Mail className="w-4 h-4" />Email</span>
@@ -99,7 +99,7 @@ const Profile: React.FC = () => {
 
         {/* Security */}
         <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
-          <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2"><Shield className="w-5 h-5 text-blue-600" />Security</h2>
+          <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2"><Shield className="w-5 h-5 text-orange-500" />Security</h2>
           <div className="space-y-4">
             <div className="flex items-center justify-between py-2 border-b border-gray-100">
               <span className="text-sm text-gray-500">Two-Factor Auth</span>
@@ -109,7 +109,7 @@ const Profile: React.FC = () => {
             </div>
             <div className="flex items-center justify-between py-2 border-b border-gray-100">
               <span className="text-sm text-gray-500">Role</span>
-              <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-semibold">{admin.userType}</span>
+              <span className="px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-xs font-semibold">{admin.userType}</span>
             </div>
             <div className="flex items-center justify-between py-2">
               <span className="text-sm text-gray-500">Account Status</span>
@@ -120,7 +120,7 @@ const Profile: React.FC = () => {
 
         {/* Activity */}
         <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
-          <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2"><Clock className="w-5 h-5 text-blue-600" />Activity</h2>
+          <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2"><Clock className="w-5 h-5 text-orange-500" />Activity</h2>
           <div className="space-y-4">
             <div className="flex items-center justify-between py-2 border-b border-gray-100">
               <span className="text-sm text-gray-500 flex items-center gap-1"><Calendar className="w-4 h-4" />Account Created</span>
@@ -138,3 +138,5 @@ const Profile: React.FC = () => {
 };
 
 export default Profile;
+
+

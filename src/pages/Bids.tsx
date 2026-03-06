@@ -114,7 +114,7 @@ const Bids: React.FC = () => {
       key: 'bids', header: 'Bids Received',
       render: (b: BidRequest) => (
         <div>
-          <p className="font-semibold text-blue-600">{b.totalBidsReceived || 0}</p>
+          <p className="font-semibold text-orange-500">{b.totalBidsReceived || 0}</p>
           {b.lowestBidAmount != null && <p className="text-xs text-green-600">Lowest: {formatCurrency(b.lowestBidAmount)}</p>}
         </div>
       ),
@@ -144,7 +144,7 @@ const Bids: React.FC = () => {
     {
       key: 'actions', header: 'View',
       render: () => (
-        <span className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-100 text-blue-700 rounded-lg text-sm font-semibold hover:bg-blue-200 transition-colors">
+        <span className="inline-flex items-center gap-2 px-3 py-1.5 bg-orange-100 text-orange-700 rounded-lg text-sm font-semibold hover:bg-orange-200 transition-colors">
           <Eye className="w-4 h-4" />
         </span>
       ),
@@ -152,7 +152,7 @@ const Bids: React.FC = () => {
   ];
 
   if (loading && bids.length === 0) {
-    return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600" /></div>;
+    return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500" /></div>;
   }
 
   return (
@@ -160,7 +160,7 @@ const Bids: React.FC = () => {
       <div className="bg-gradient-to-r from-amber-500 to-yellow-600 rounded-2xl shadow-lg p-6 text-white relative overflow-hidden">
         <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full -mr-20 -mt-20"></div>
         <div className="relative z-10">
-          <h1 className="text-4xl font-bold flex items-center gap-3"><Gavel className="w-8 h-8" />Bid Requests</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold flex items-center gap-3"><Gavel className="w-8 h-8" />Bid Requests</h1>
           <p className="text-amber-100 mt-2">Total: {pageInfo.totalElements.toLocaleString()} bid requests</p>
         </div>
       </div>
@@ -339,9 +339,9 @@ const Bids: React.FC = () => {
 
             {/* Bid Stats */}
             <div className="grid grid-cols-2 gap-4">
-              <div className="bg-blue-50 rounded-xl p-4 text-center">
-                <p className="text-3xl font-bold text-blue-600">{selectedBid.totalBidsReceived || 0}</p>
-                <p className="text-sm text-blue-800">Total Bids Received</p>
+              <div className="bg-orange-50 rounded-xl p-4 text-center">
+                <p className="text-3xl font-bold text-orange-500">{selectedBid.totalBidsReceived || 0}</p>
+                <p className="text-sm text-orange-700">Total Bids Received</p>
               </div>
               <div className="bg-green-50 rounded-xl p-4 text-center">
                 <p className="text-3xl font-bold text-green-600">{selectedBid.lowestBidAmount != null ? formatCurrency(selectedBid.lowestBidAmount) : 'N/A'}</p>
@@ -356,3 +356,5 @@ const Bids: React.FC = () => {
 };
 
 export default Bids;
+
+

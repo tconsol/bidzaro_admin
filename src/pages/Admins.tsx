@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { userApi, agentApi } from '../services/api';
 import type { User, PageInfo, AdminRegistrationDto } from '../types';
+import { useToast } from '../hooks/useToast';
 import DataTable from '../components/DataTable';
 import Modal from '../components/Modal';
 import CustomSelect from '../components/CustomSelect';
 import { Shield, UserPlus, Eye, Ban, CheckCircle, ChevronLeft, ChevronRight, Search, X } from 'lucide-react';
 
 const Admins: React.FC = () => {
+  const { showToast } = useToast();
   const [admins, setAdmins] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedAdmin, setSelectedAdmin] = useState<User | null>(null);
@@ -51,7 +53,9 @@ const Admins: React.FC = () => {
       const filtered = response.data.filter(u => ['ADMIN', 'SUPER_ADMIN'].includes(u.userType));
       setAdmins(filtered);
       setPageInfo(response.pageInfo);
-    } catch (error) { }
+    } catch (error) {
+      showToast('Failed to load administrators', 'error');
+    }
     finally { setLoading(false); }
   };
 
@@ -75,11 +79,13 @@ const Admins: React.FC = () => {
     setSubmitting(true);
     try {
       await agentApi.createAgent(agentForm);
-      alert('Support agent created successfully!');
+      showToast('Support agent created successfully!', 'success');
       setShowCreateModal(false);
       setAgentForm({ email: '', phone: '', password: '', firstName: '', lastName: '', userType: 'SUPPORT_AGENT', country: 'INDIA' });
       loadAdmins();
-    } catch (error: any) { alert(error.response?.data?.message || 'Failed to create agent'); }
+    } catch (error: any) { 
+      showToast(error.response?.data?.message || 'Failed to create agent', 'error');
+    }
     finally { setSubmitting(false); }
   };
 
@@ -96,7 +102,10 @@ const Admins: React.FC = () => {
       setShowStatusModal(false);
       setStatusReason('');
       loadAdmins();
-    } catch (error: any) { alert(error.response?.data?.message || 'Failed to update status'); }
+      showToast(`Admin ${statusAction}ed successfully!`, 'success');
+    } catch (error: any) { 
+      showToast(error.response?.data?.message || 'Failed to update status', 'error');
+    }
   };
 
   const columns = [
@@ -114,8 +123,8 @@ const Admins: React.FC = () => {
       key: 'userType', header: 'Role',
       render: (a: User) => (
         <span className={`px-3 py-1.5 rounded-full text-xs font-bold text-white ${
-          a.userType === 'SUPER_ADMIN' ? 'bg-gradient-to-r from-indigo-600 to-purple-700'
-          : 'bg-gradient-to-r from-blue-600 to-cyan-600'
+          a.userType === 'SUPER_ADMIN' ? 'bg-orange-600'
+          : 'bg-orange-500'
         }`}>{a.userType}</span>
       ),
     },
@@ -137,7 +146,7 @@ const Admins: React.FC = () => {
       render: (a: User) => (
         <div className="flex items-center gap-2">
           <button onClick={(e) => { e.stopPropagation(); setSelectedAdmin(a); setShowDetailModal(true); }}
-            className="p-2 bg-gradient-to-br from-blue-400 to-blue-600 text-white rounded-lg hover:shadow-lg hover:scale-105 transition-all duration-200" title="View Details"><Eye className="w-4 h-4" /></button>
+            className="p-2 bg-orange-500 text-white rounded-lg hover:shadow-lg hover:scale-105 transition-all duration-200" title="View Details"><Eye className="w-4 h-4" /></button>
           <button onClick={(e) => {
             e.stopPropagation();
             setSelectedAdmin(a);
@@ -152,21 +161,21 @@ const Admins: React.FC = () => {
   ];
 
   if (loading && admins.length === 0) {
-    return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600" /></div>;
+    return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500" /></div>;
   }
 
   return (
     <div className="space-y-6 animate-fadeIn">
       {/* Header */}
-      <div className="bg-gradient-to-r from-violet-500 to-purple-600 rounded-2xl shadow-lg p-6 text-white relative overflow-hidden">
+      <div className="bg-orange-500 rounded-2xl shadow-lg p-6 text-white relative overflow-hidden">
         <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full -mr-20 -mt-20"></div>
         <div className="flex items-center justify-between relative z-10">
           <div>
-            <h1 className="text-4xl font-bold flex items-center gap-3"><Shield className="w-8 h-8" />Admin Management</h1>
-            <p className="text-violet-50 mt-2">Manage admins — Total: {pageInfo.totalElements.toLocaleString()}</p>
+            <h1 className="text-2xl sm:text-3xl font-bold flex items-center gap-3"><Shield className="w-8 h-8" />Admin Management</h1>
+            <p className="text-white mt-2">Manage admins — Total: {pageInfo.totalElements.toLocaleString()}</p>
           </div>
           <button onClick={() => setShowCreateModal(true)}
-            className="flex items-center gap-2 bg-white text-violet-600 px-4 py-2 rounded-xl font-semibold hover:shadow-lg hover:scale-105 transition-all duration-200">
+            className="flex items-center gap-2 bg-white text-orange-600 px-4 py-2 rounded-xl font-semibold hover:shadow-lg hover:scale-105 transition-all duration-200">
             <UserPlus className="w-5 h-5" />Create Admin
           </button>
         </div>
@@ -184,7 +193,7 @@ const Admins: React.FC = () => {
                 value={searchQuery}
                 onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(0); }}
                 onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-violet-500 focus:border-violet-500"
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
               />
             </div>
           </div>
@@ -215,7 +224,7 @@ const Admins: React.FC = () => {
           <div className="flex flex-wrap gap-2 items-center">
             <span className="text-sm font-semibold text-gray-700">Filters:</span>
             {activeFilters.map((filter, idx) => (
-              <span key={idx} className="inline-flex items-center gap-2 bg-violet-100 text-violet-800 px-3 py-1 rounded-full text-sm">
+              <span key={idx} className="inline-flex items-center gap-2 bg-orange-100 text-orange-800 px-3 py-1 rounded-full text-sm">
                 {filter}
               </span>
             ))}
@@ -279,7 +288,7 @@ const Admins: React.FC = () => {
             )}
             <div className="flex gap-3">
               <button onClick={handleStatusAction} disabled={statusAction === 'suspend' && !statusReason.trim()}
-                className="flex-1 bg-purple-600 text-white px-4 py-2 rounded-xl disabled:opacity-50">Confirm</button>
+                className="flex-1 bg-orange-500 text-white px-4 py-2 rounded-xl disabled:opacity-50">Confirm</button>
               <button onClick={() => setShowStatusModal(false)} className="flex-1 bg-gray-200 text-gray-700 px-4 py-2 rounded-xl">Cancel</button>
             </div>
           </div>
@@ -330,7 +339,7 @@ const Admins: React.FC = () => {
           </div>
           <div className="flex gap-3 pt-2">
             <button onClick={handleCreateAgent} disabled={submitting || !agentForm.email || !agentForm.password || !agentForm.firstName || !agentForm.lastName}
-              className="flex-1 bg-purple-600 text-white px-4 py-2 rounded-xl disabled:opacity-50">{submitting ? 'Creating...' : 'Create Agent'}</button>
+              className="flex-1 bg-orange-500 text-white px-4 py-2 rounded-xl disabled:opacity-50">{submitting ? 'Creating...' : 'Create Agent'}</button>
             <button onClick={() => setShowCreateModal(false)} className="flex-1 bg-gray-200 text-gray-700 px-4 py-2 rounded-xl">Cancel</button>
           </div>
         </div>
@@ -340,3 +349,5 @@ const Admins: React.FC = () => {
 };
 
 export default Admins;
+
+

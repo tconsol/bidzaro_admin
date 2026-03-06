@@ -178,7 +178,7 @@ const Announcements: React.FC = () => {
     },
     {
       key: 'audience', header: 'Audience',
-      render: (a: Announcement) => <span className="px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-xs font-semibold">{a.targetAudience}</span>,
+      render: (a: Announcement) => <span className="px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-xs font-semibold">{a.targetAudience}</span>,
     },
     {
       key: 'isActive', header: 'Status',
@@ -222,7 +222,7 @@ const Announcements: React.FC = () => {
             <button onClick={() => handleOpenView(a)} className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition" title="View details">
               <Eye className="w-4 h-4" />
             </button>
-            <button onClick={() => handleOpenEdit(a)} className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition" title="Edit">
+            <button onClick={() => handleOpenEdit(a)} className="p-2 text-orange-500 hover:bg-orange-50 rounded-lg transition" title="Edit">
               <Edit2 className="w-4 h-4" />
             </button>
             <button onClick={() => { setSelectedAnnouncement(a); setShowDeleteConfirm(true); }} className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition" title="Delete">
@@ -235,16 +235,16 @@ const Announcements: React.FC = () => {
   ];
 
   if (loading && announcements.length === 0) {
-    return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600" /></div>;
+    return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500" /></div>;
   }
 
   return (
     <div className="space-y-6 animate-fadeIn">
-      <div className="bg-gradient-to-r from-indigo-500 to-violet-600 rounded-2xl shadow-lg p-6 text-white">
+      <div className="bg-orange-500 rounded-2xl shadow-lg p-6 text-white">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold flex items-center gap-3"><Megaphone className="w-8 h-8" />Announcements</h1>
-            <p className="text-indigo-100 mt-1">Total: {pageInfo.totalElements} announcements</p>
+            <p className="text-orange-100 mt-1">Total: {pageInfo.totalElements} announcements</p>
           </div>
           <button onClick={() => setShowCreateModal(true)}
             className="flex items-center gap-2 bg-white/20 backdrop-blur-sm px-4 py-2 rounded-xl border border-white/30 hover:bg-white/30">
@@ -333,7 +333,7 @@ const Announcements: React.FC = () => {
           </div>
           <div className="flex gap-3">
             <button onClick={handleCreate} disabled={submitting || form.title.length < 5 || form.message.length < 10}
-              className="flex-1 bg-indigo-600 text-white px-4 py-2 rounded-xl hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed">
+              className="flex-1 bg-orange-500 text-white px-4 py-2 rounded-xl hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed">
               {submitting ? 'Creating...' : 'Create Announcement'}
             </button>
             <button onClick={() => setShowCreateModal(false)} className="flex-1 bg-gray-200 text-gray-700 px-4 py-2 rounded-xl">Cancel</button>
@@ -345,7 +345,7 @@ const Announcements: React.FC = () => {
       <Modal isOpen={showViewModal} onClose={() => setShowViewModal(false)} title="Announcement Details">
         {selectedAnnouncement && (
           <div className="space-y-4">
-            <div className="bg-gradient-to-r from-indigo-50 to-blue-50 rounded-lg p-4 border border-indigo-200">
+            <div className="bg-orange-50 rounded-lg p-4 border border-orange-200">
               <div className="flex items-start justify-between">
                 <div>
                   <h3 className="text-lg font-bold text-gray-900">{selectedAnnouncement.title}</h3>
@@ -370,7 +370,7 @@ const Announcements: React.FC = () => {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <p className="text-xs font-semibold text-gray-500 uppercase">Target Audience</p>
-                <span className="inline-block mt-1 px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-xs font-semibold">
+                <span className="inline-block mt-1 px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-xs font-semibold">
                   {selectedAnnouncement.targetAudience}
                 </span>
               </div>
@@ -391,7 +391,7 @@ const Announcements: React.FC = () => {
             </div>
             <div className="flex gap-3">
               <button onClick={() => { setShowViewModal(false); handleOpenEdit(selectedAnnouncement); }} 
-                className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-xl hover:bg-blue-700">
+                className="flex-1 bg-orange-500 text-white px-4 py-2 rounded-xl hover:bg-orange-600">
                 Edit
               </button>
               <button onClick={() => setShowViewModal(false)} className="flex-1 bg-gray-200 text-gray-700 px-4 py-2 rounded-xl">Close</button>
@@ -465,7 +465,7 @@ const Announcements: React.FC = () => {
           </div>
           <div className="flex gap-3">
             <button onClick={handleUpdate} disabled={submitting || (editForm.title?.length || 0) < 5 || (editForm.message?.length || 0) < 10}
-              className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-xl hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed">
+              className="flex-1 bg-orange-500 text-white px-4 py-2 rounded-xl hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed">
               {submitting ? 'Updating...' : 'Update Announcement'}
             </button>
             <button onClick={() => setShowEditModal(false)} className="flex-1 bg-gray-200 text-gray-700 px-4 py-2 rounded-xl">Cancel</button>
@@ -497,3 +497,5 @@ const Announcements: React.FC = () => {
 };
 
 export default Announcements;
+
+

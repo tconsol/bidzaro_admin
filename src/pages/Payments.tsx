@@ -28,6 +28,7 @@ const Payments: React.FC = () => {
       setTransactionId('');
       setRefundAmount(0);
       setRefundReason('');
+      showToast('Refund initiated successfully!', 'success');
     } catch (error: any) {
       showToast(error.response?.data?.message || 'Failed to initiate refund', 'error');
     } finally {
@@ -58,9 +59,9 @@ const Payments: React.FC = () => {
       </div>
 
       {/* Info Box */}
-      <div className="bg-blue-50 border border-blue-200 rounded-2xl p-6">
-        <h3 className="text-lg font-bold text-blue-900 mb-2">Payment Information</h3>
-        <div className="text-sm text-blue-800 space-y-1">
+      <div className="bg-orange-50 border border-orange-200 rounded-2xl p-6">
+        <h3 className="text-lg font-bold text-orange-900 mb-2">Payment Information</h3>
+        <div className="text-sm text-orange-800 space-y-1">
           <p>• Payment details are available in each Order's detail view (Order Management page).</p>
           <p>• To initiate a refund, you need the <strong>Transaction ID</strong> from the payment system.</p>
           <p>• Refund amounts cannot exceed the original transaction amount.</p>
@@ -123,3 +124,5 @@ const Payments: React.FC = () => {
 };
 
 export default Payments;
+
+
