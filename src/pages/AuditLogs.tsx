@@ -85,8 +85,9 @@ const AuditLogs: React.FC = () => {
       key: 'performedBy', header: 'Performed By',
       render: (log: AuditLog) => (
         <div>
-          <p className="font-semibold text-gray-900">{log.performedByType || 'Unknown'}</p>
-          <p className="text-xs text-gray-500 font-mono">{log.performedBy?.substring(0, 8) || 'N/A'}...</p>
+          <p className="font-semibold text-gray-900">{log.performedByName || log.performedByType || 'Unknown'}</p>
+          <p className="text-xs text-gray-500">{log.performedByType || ''}</p>
+          {log.ipAddress && <p className="text-xs text-gray-400 font-mono">{log.ipAddress}</p>}
         </div>
       ),
     },

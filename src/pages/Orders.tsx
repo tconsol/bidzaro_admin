@@ -116,7 +116,11 @@ const Orders: React.FC = () => {
           o.status === 'COMPLETED' ? 'bg-green-100 text-green-800'
           : o.status === 'CONFIRMED' ? 'bg-orange-100 text-orange-800'
           : o.status === 'CANCELLED' ? 'bg-red-100 text-red-800'
-          : o.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800'
+          : o.status === 'PENDING_TOKEN_PAYMENT' ? 'bg-yellow-100 text-yellow-800'
+          : o.status === 'IN_PREPARATION' ? 'bg-purple-100 text-purple-800'
+          : o.status === 'READY_FOR_DELIVERY' ? 'bg-cyan-100 text-cyan-800'
+          : o.status === 'DELIVERING' ? 'bg-blue-100 text-blue-800'
+          : o.status === 'DELIVERED' ? 'bg-indigo-100 text-indigo-800'
           : 'bg-gray-100 text-gray-800'
         }`}>{o.status || 'N/A'}</span>
       ),
@@ -163,9 +167,11 @@ const Orders: React.FC = () => {
               onChange={(val) => { setStatusFilter(val); setCurrentPage(0); }}
               options={[
                 { value: '', label: 'All Status' },
-                { value: 'PENDING', label: 'Pending' },
+                { value: 'PENDING_TOKEN_PAYMENT', label: 'Pending Token Payment' },
                 { value: 'CONFIRMED', label: 'Confirmed' },
-                { value: 'IN_PROGRESS', label: 'In Progress' },
+                { value: 'IN_PREPARATION', label: 'In Preparation' },
+                { value: 'READY_FOR_DELIVERY', label: 'Ready for Delivery' },
+                { value: 'DELIVERING', label: 'Delivering' },
                 { value: 'DELIVERED', label: 'Delivered' },
                 { value: 'COMPLETED', label: 'Completed' },
                 { value: 'CANCELLED', label: 'Cancelled' },
@@ -291,7 +297,9 @@ const Orders: React.FC = () => {
               options={[
                 { value: '', label: 'Select status...' },
                 { value: 'CONFIRMED', label: 'Confirmed' },
-                { value: 'IN_PROGRESS', label: 'In Progress' },
+                { value: 'IN_PREPARATION', label: 'In Preparation' },
+                { value: 'READY_FOR_DELIVERY', label: 'Ready for Delivery' },
+                { value: 'DELIVERING', label: 'Delivering' },
                 { value: 'DELIVERED', label: 'Delivered' },
                 { value: 'COMPLETED', label: 'Completed' },
                 { value: 'CANCELLED', label: 'Cancelled' },

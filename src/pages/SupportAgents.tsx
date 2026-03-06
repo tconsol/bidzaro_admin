@@ -359,15 +359,60 @@ const SupportAgents: React.FC = () => {
       <Modal isOpen={showDetailModal} onClose={() => setShowDetailModal(false)} title="Agent Details">
         {selectedAgent && (
           <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div><label className="text-sm font-semibold text-gray-700">Full Name</label><p className="mt-1 text-gray-900">{selectedAgent.fullName}</p></div>
-              <div><label className="text-sm font-semibold text-gray-700">Email</label><p className="mt-1 text-gray-900">{selectedAgent.email} {selectedAgent.emailVerified ? '✅' : '❌'}</p></div>
-              <div><label className="text-sm font-semibold text-gray-700">Phone</label><p className="mt-1 text-gray-900">{selectedAgent.phone} {selectedAgent.phoneVerified ? '✅' : '❌'}</p></div>
-              <div><label className="text-sm font-semibold text-gray-700">Status</label><p className="mt-1 text-gray-900">{selectedAgent.status}</p></div>
-              <div><label className="text-sm font-semibold text-gray-700">Country</label><p className="mt-1 text-gray-900">{selectedAgent.country}</p></div>
-              <div><label className="text-sm font-semibold text-gray-700">2FA Enabled</label><p className="mt-1 text-gray-900">{selectedAgent.twoFactorEnabled ? 'Yes' : 'No'}</p></div>
-              <div><label className="text-sm font-semibold text-gray-700">Last Login</label><p className="mt-1 text-gray-900">{selectedAgent.lastLoginAt ? new Date(selectedAgent.lastLoginAt).toLocaleString() : 'Never'}</p></div>
-              <div><label className="text-sm font-semibold text-gray-700">Created At</label><p className="mt-1 text-gray-900">{new Date(selectedAgent.createdAt).toLocaleString()}</p></div>
+            {/* Header Banner */}
+            <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl p-5 text-white">
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center text-xl font-bold ring-2 ring-white/30 flex-shrink-0">
+                  {selectedAgent.firstName?.[0]?.toUpperCase()}{selectedAgent.lastName?.[0]?.toUpperCase()}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h2 className="text-lg font-bold">{selectedAgent.fullName}</h2>
+                  <p className="text-orange-100 text-sm truncate">{selectedAgent.email}</p>
+                  <p className="text-orange-100 text-sm">{selectedAgent.phone || 'No phone'}</p>
+                </div>
+                <div className="flex-shrink-0">
+                  <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                    selectedAgent.status === 'ACTIVE' ? 'bg-green-400/30 ring-1 ring-green-300'
+                    : selectedAgent.status === 'SUSPENDED' ? 'bg-red-400/30 ring-1 ring-red-300'
+                    : selectedAgent.status === 'LOCKED' ? 'bg-yellow-400/30 ring-1 ring-yellow-300'
+                    : 'bg-white/20 ring-1 ring-white/30'}`}>
+                    {selectedAgent.status}
+                  </span>
+                </div>
+              </div>
+            </div>
+            {/* Verification Status */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className={`flex items-center gap-3 p-3 rounded-xl ${selectedAgent.emailVerified ? 'bg-green-50 border border-green-100' : 'bg-red-50 border border-red-100'}`}>
+                {selectedAgent.emailVerified ? <Check className="w-5 h-5 text-green-600" /> : <X className="w-5 h-5 text-red-500" />}
+                <div>
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Email</p>
+                  <p className="text-sm font-semibold text-gray-900">{selectedAgent.emailVerified ? 'Verified' : 'Not Verified'}</p>
+                </div>
+              </div>
+              <div className={`flex items-center gap-3 p-3 rounded-xl ${selectedAgent.phoneVerified ? 'bg-green-50 border border-green-100' : 'bg-red-50 border border-red-100'}`}>
+                {selectedAgent.phoneVerified ? <Check className="w-5 h-5 text-green-600" /> : <X className="w-5 h-5 text-red-500" />}
+                <div>
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Phone</p>
+                  <p className="text-sm font-semibold text-gray-900">{selectedAgent.phoneVerified ? 'Verified' : 'Not Verified'}</p>
+                </div>
+              </div>
+            </div>
+            {/* Info Cards */}
+            <div className="grid grid-cols-2 gap-3">
+              {[
+                { label: 'Country', value: selectedAgent.country || '—' },
+                { label: '2FA', value: selectedAgent.twoFactorEnabled ? 'Enabled' : 'Disabled' },
+                { label: 'Language', value: selectedAgent.preferredLanguage || '—' },
+                { label: 'Currency', value: selectedAgent.preferredCurrency || '—' },
+                { label: 'Last Login', value: selectedAgent.lastLoginAt ? new Date(selectedAgent.lastLoginAt).toLocaleString() : 'Never' },
+                { label: 'Member Since', value: new Date(selectedAgent.createdAt).toLocaleString() },
+              ].map(({ label, value }) => (
+                <div key={label} className="bg-gray-50 rounded-xl p-3">
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">{label}</p>
+                  <p className="text-sm font-semibold text-gray-900 mt-0.5 break-words">{value}</p>
+                </div>
+              ))}
             </div>
           </div>
         )}

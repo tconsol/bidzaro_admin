@@ -644,10 +644,14 @@ export interface AuditLog {
   entityId: string;
   action: string;
   performedBy: string;
+  performedByName?: string;
   performedByType: string;
+  ipAddress?: string;
   changes: Record<string, any> | null;
+  details?: Record<string, any> | null;
   metadata: any | null;
   timestamp: string;
+  createdAt?: string;
 }
 
 export interface AuditLogFilters {
@@ -664,7 +668,7 @@ export interface Announcement {
   title: string;
   message: string;
   priority: 'LOW' | 'NORMAL' | 'HIGH' | 'URGENT';
-  targetAudience: 'ALL' | 'USERS' | 'VENDORS' | 'ADMINS';
+  targetAudience: 'ALL' | 'USERS' | 'VENDORS' | 'SUPPORT_AGENTS' | 'ADMINS';
   startDate?: string | null;
   endDate?: string | null;
   isActive?: boolean;
@@ -677,16 +681,17 @@ export interface CreateAnnouncementRequest {
   title: string;
   message: string;
   priority?: 'LOW' | 'NORMAL' | 'HIGH' | 'URGENT';
-  targetAudience?: 'ALL' | 'USERS' | 'VENDORS' | 'ADMINS';
+  targetAudience?: 'ALL' | 'USERS' | 'VENDORS' | 'SUPPORT_AGENTS' | 'ADMINS';
   startDate?: string;
   endDate?: string;
+  isActive?: boolean;
 }
 
 export interface UpdateAnnouncementRequest {
   title?: string;
   message?: string;
   priority?: 'LOW' | 'NORMAL' | 'HIGH' | 'URGENT';
-  targetAudience?: 'ALL' | 'USERS' | 'VENDORS' | 'ADMINS';
+  targetAudience?: 'ALL' | 'USERS' | 'VENDORS' | 'SUPPORT_AGENTS' | 'ADMINS';
   startDate?: string;
   endDate?: string;
   isActive?: boolean;

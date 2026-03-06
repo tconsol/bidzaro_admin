@@ -359,39 +359,119 @@ const Vendors: React.FC = () => {
       {/* Detail Modal */}
       <Modal isOpen={showDetailModal} onClose={() => setShowDetailModal(false)} title="Vendor Details" size="lg">
         {selectedVendor && (
-          <div className="space-y-6">
-            <div className="grid grid-cols-2 gap-4">
-              <div><label className="text-sm font-semibold text-gray-700">Business Name</label><p className="mt-1">{selectedVendor.businessName}</p></div>
-              <div><label className="text-sm font-semibold text-gray-700">Business Type</label><p className="mt-1">{selectedVendor.businessType}</p></div>
-              <div><label className="text-sm font-semibold text-gray-700">Business Email</label><p className="mt-1">{selectedVendor.businessEmail} {selectedVendor.businessEmailVerified ? '✅' : '❌'}</p></div>
-              <div><label className="text-sm font-semibold text-gray-700">Business Phone</label><p className="mt-1">{selectedVendor.businessPhone} {selectedVendor.businessPhoneVerified ? '✅' : '❌'}</p></div>
-              <div><label className="text-sm font-semibold text-gray-700">Registration Number</label><p className="mt-1">{selectedVendor.businessRegistrationNumber}</p></div>
-              <div><label className="text-sm font-semibold text-gray-700">Tax ID</label><p className="mt-1">{selectedVendor.taxId}</p></div>
-              <div><label className="text-sm font-semibold text-gray-700">Established Year</label><p className="mt-1">{selectedVendor.establishedYear}</p></div>
-              <div><label className="text-sm font-semibold text-gray-700">Country</label><p className="mt-1">{selectedVendor.country}</p></div>
+          <div className="space-y-5">
+            {/* Header Banner */}
+            <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl p-5 text-white">
+              <div className="flex items-start gap-4">
+                <div className="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center text-xl font-bold ring-2 ring-white/30 flex-shrink-0">
+                  {selectedVendor.businessName?.[0]?.toUpperCase()}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h2 className="text-lg font-bold">{selectedVendor.businessName}</h2>
+                  <p className="text-orange-100 text-sm">{selectedVendor.businessType}</p>
+                  <p className="text-orange-100 text-sm truncate">{selectedVendor.businessEmail}</p>
+                </div>
+                <div className="flex flex-col items-end gap-2 flex-shrink-0">
+                  <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                    selectedVendor.approvalStatus === 'APPROVED' ? 'bg-green-400/30 ring-1 ring-green-300'
+                    : selectedVendor.approvalStatus === 'REJECTED' ? 'bg-red-400/30 ring-1 ring-red-300'
+                    : 'bg-yellow-400/30 ring-1 ring-yellow-300'}`}>
+                    {selectedVendor.approvalStatus}
+                  </span>
+                  <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                    selectedVendor.status === 'ACTIVE' ? 'bg-green-400/30 ring-1 ring-green-300'
+                    : 'bg-red-400/30 ring-1 ring-red-300'}`}>
+                    {selectedVendor.status}
+                  </span>
+                  <div className="flex gap-1.5">
+                    {selectedVendor.verified && <span className="px-2 py-0.5 bg-blue-400/30 ring-1 ring-blue-300 text-white rounded-full text-xs font-bold">✓ Verified</span>}
+                    {selectedVendor.featured && <span className="px-2 py-0.5 bg-yellow-400/30 ring-1 ring-yellow-300 text-white rounded-full text-xs font-bold">⭐ Featured</span>}
+                  </div>
+                </div>
+              </div>
+              {/* Ratings */}
+              {selectedVendor.ratings && (
+                <div className="mt-3 pt-3 border-t border-white/20 flex items-center gap-6">
+                  <div>
+                    <span className="text-2xl font-bold">{selectedVendor.ratings.averageRating?.toFixed(1) ?? '—'}</span>
+                    <span className="text-orange-200 text-sm ml-1">/ 5.0</span>
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold">{selectedVendor.ratings.totalReviews ?? 0} reviews</p>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Description */}
+            {selectedVendor.description && (
+              <div className="bg-gray-50 rounded-xl p-4">
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Description</p>
+                <p className="text-sm text-gray-700">{selectedVendor.description}</p>
+              </div>
+            )}
+
+            <div className="grid grid-cols-2 gap-3">
+              {[
+                { label: 'Business Email', value: `${selectedVendor.businessEmail || '—'} ${selectedVendor.businessEmailVerified ? '✓' : '✗'}` },
+                { label: 'Business Phone', value: `${selectedVendor.businessPhone || '—'} ${selectedVendor.businessPhoneVerified ? '✓' : '✗'}` },
+                { label: 'Registration No.', value: selectedVendor.businessRegistrationNumber || '—' },
+                { label: 'Tax ID', value: selectedVendor.taxId || '—' },
+                { label: 'Established Year', value: String(selectedVendor.establishedYear || '—') },
+                { label: 'Country', value: selectedVendor.country || '—' },
+              ].map(({ label, value }) => (
+                <div key={label} className="bg-gray-50 rounded-xl p-3">
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">{label}</p>
+                  <p className="text-sm font-semibold text-gray-900 mt-0.5 break-words">{value}</p>
+                </div>
+              ))}
             </div>
 
             {/* Owner Info */}
             <div>
-              <h3 className="text-lg font-bold text-gray-900 mb-2">Owner Information</h3>
-              <div className="grid grid-cols-2 gap-4 bg-gray-50 rounded-xl p-4">
-                <div><label className="text-sm font-semibold text-gray-700">Name</label><p className="mt-1">{selectedVendor.ownerInfo?.firstName || 'N/A'} {selectedVendor.ownerInfo?.lastName || ''}</p></div>
-                <div><label className="text-sm font-semibold text-gray-700">Email</label><p className="mt-1">{selectedVendor.ownerInfo?.email || 'N/A'}</p></div>
-                <div><label className="text-sm font-semibold text-gray-700">Phone</label><p className="mt-1">{selectedVendor.ownerInfo?.phone || 'N/A'}</p></div>
-                <div><label className="text-sm font-semibold text-gray-700">ID Proof</label><p className="mt-1">{selectedVendor.ownerInfo?.idProofType || 'N/A'}: {selectedVendor.ownerInfo?.idProofNumber || 'N/A'}</p></div>
+              <h3 className="text-sm font-bold text-gray-900 mb-2 uppercase tracking-wide">Owner Information</h3>
+              <div className="grid grid-cols-2 gap-3 bg-gray-50 rounded-xl p-4">
+                {[
+                  { label: 'Name', value: `${selectedVendor.ownerInfo?.firstName || ''} ${selectedVendor.ownerInfo?.lastName || ''}`.trim() || '—' },
+                  { label: 'Email', value: selectedVendor.ownerInfo?.email || '—' },
+                  { label: 'Phone', value: selectedVendor.ownerInfo?.phone || '—' },
+                  { label: 'ID Proof', value: selectedVendor.ownerInfo?.idProofType ? `${selectedVendor.ownerInfo.idProofType}: ${selectedVendor.ownerInfo.idProofNumber || '—'}` : '—' },
+                ].map(({ label, value }) => (
+                  <div key={label}>
+                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">{label}</p>
+                    <p className="text-sm font-semibold text-gray-900 mt-0.5">{value}</p>
+                  </div>
+                ))}
               </div>
             </div>
 
             {/* Address */}
             <div>
-              <h3 className="text-lg font-bold text-gray-900 mb-2">Business Address</h3>
-              <p className="text-gray-700">{selectedVendor.businessAddress?.streetAddress || 'N/A'}, {selectedVendor.businessAddress?.city || 'N/A'}, {selectedVendor.businessAddress?.state || 'N/A'} - {selectedVendor.businessAddress?.postalCode || 'N/A'}, {selectedVendor.businessAddress?.country || 'N/A'}</p>
+              <h3 className="text-sm font-bold text-gray-900 mb-2 uppercase tracking-wide">Business Address</h3>
+              <p className="text-sm text-gray-700 bg-gray-50 rounded-xl p-4">{selectedVendor.businessAddress?.streetAddress || 'N/A'}, {selectedVendor.businessAddress?.city || 'N/A'}, {selectedVendor.businessAddress?.state || 'N/A'} - {selectedVendor.businessAddress?.postalCode || 'N/A'}, {selectedVendor.businessAddress?.country || 'N/A'}</p>
             </div>
 
-            {/* Capacity & Pricing */}
-            <div className="grid grid-cols-2 gap-6">
+            {/* Service Areas */}
+            {selectedVendor.serviceAreas?.length > 0 && (
               <div>
-                <h3 className="text-lg font-bold text-gray-900 mb-2">Capacity</h3>
+                <h3 className="text-sm font-bold text-gray-900 mb-2 uppercase tracking-wide">Service Areas</h3>
+                <div className="space-y-2">
+                  {selectedVendor.serviceAreas.map((area, idx) => (
+                    <div key={idx} className="bg-gray-50 rounded-xl p-3 flex items-center gap-4">
+                      <div className="flex-1">
+                        <p className="text-sm font-semibold text-gray-900">{area.city}, {area.state}</p>
+                      </div>
+                      {area.radiusKm && <span className="px-2 py-0.5 bg-orange-100 text-orange-700 rounded-full text-xs font-semibold">{area.radiusKm} km radius</span>}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Capacity & Pricing */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <h3 className="text-sm font-bold text-gray-900 mb-2 uppercase tracking-wide">Capacity</h3>
                 <div className="bg-gray-50 rounded-xl p-4 space-y-1">
                   <p><span className="text-sm text-gray-600">Min Guests:</span> {selectedVendor.capacity?.minGuests || 'N/A'}</p>
                   <p><span className="text-sm text-gray-600">Max Guests:</span> {selectedVendor.capacity?.maxGuests || 'N/A'}</p>
@@ -399,7 +479,7 @@ const Vendors: React.FC = () => {
                 </div>
               </div>
               <div>
-                <h3 className="text-lg font-bold text-gray-900 mb-2">Pricing</h3>
+                <h3 className="text-sm font-bold text-gray-900 mb-2 uppercase tracking-wide">Pricing</h3>
                 <div className="bg-gray-50 rounded-xl p-4 space-y-1">
                   <p><span className="text-sm text-gray-600">Starting:</span> {selectedVendor.pricing?.currency || 'N/A'} {selectedVendor.pricing?.startingPricePerPlate || 'N/A'}/plate</p>
                   <p><span className="text-sm text-gray-600">Average:</span> {selectedVendor.pricing?.currency || 'N/A'} {selectedVendor.pricing?.averagePricePerPlate || 'N/A'}/plate</p>
@@ -408,21 +488,21 @@ const Vendors: React.FC = () => {
             </div>
 
             {/* Cuisines & Specialties */}
-            <div className="grid grid-cols-2 gap-6">
+            <div className="grid grid-cols-2 gap-4">
               <div>
-                <h3 className="text-lg font-bold text-gray-900 mb-2">Cuisines</h3>
-                <div className="flex flex-wrap gap-2">{selectedVendor.cuisinesOffered?.length ? selectedVendor.cuisinesOffered.map(c => <span key={c} className="px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-sm">{c}</span>) : <span className="text-gray-500">No cuisines listed</span>}</div>
+                <h3 className="text-sm font-bold text-gray-900 mb-2 uppercase tracking-wide">Cuisines</h3>
+                <div className="flex flex-wrap gap-2">{selectedVendor.cuisinesOffered?.length ? selectedVendor.cuisinesOffered.map(c => <span key={c} className="px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-sm">{c}</span>) : <span className="text-gray-500 text-sm">No cuisines listed</span>}</div>
               </div>
               <div>
-                <h3 className="text-lg font-bold text-gray-900 mb-2">Specialties</h3>
-                <div className="flex flex-wrap gap-2">{selectedVendor.specialties?.length ? selectedVendor.specialties.map(s => <span key={s} className="px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-sm">{s}</span>) : <span className="text-gray-500">No specialties listed</span>}</div>
+                <h3 className="text-sm font-bold text-gray-900 mb-2 uppercase tracking-wide">Specialties</h3>
+                <div className="flex flex-wrap gap-2">{selectedVendor.specialties?.length ? selectedVendor.specialties.map(s => <span key={s} className="px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-sm">{s}</span>) : <span className="text-gray-500 text-sm">No specialties listed</span>}</div>
               </div>
             </div>
 
             {/* Documents */}
             {selectedVendor.documents?.length > 0 && (
               <div>
-                <h3 className="text-lg font-bold text-gray-900 mb-2 flex items-center gap-2"><FileText className="w-5 h-5" />Documents</h3>
+                <h3 className="text-sm font-bold text-gray-900 mb-2 uppercase tracking-wide flex items-center gap-2"><FileText className="w-4 h-4" />Documents</h3>
                 <div className="space-y-2">
                   {selectedVendor.documents.map(doc => (
                     <div key={doc.documentId} className="flex items-center justify-between bg-gray-50 rounded-xl p-3">

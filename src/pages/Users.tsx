@@ -360,18 +360,64 @@ const Users: React.FC = () => {
       <Modal isOpen={showDetailModal} onClose={() => setShowDetailModal(false)} title="User Details">
         {selectedUser && (
           <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div><label className="text-sm font-semibold text-gray-700">Full Name</label><p className="mt-1 text-gray-900">{selectedUser.fullName}</p></div>
-              <div><label className="text-sm font-semibold text-gray-700">User Type</label><p className="mt-1 text-gray-900">{selectedUser.userType}</p></div>
-              <div><label className="text-sm font-semibold text-gray-700">Email</label><p className="mt-1 text-gray-900">{selectedUser.email} {selectedUser.emailVerified ? '✅' : '❌'}</p></div>
-              <div><label className="text-sm font-semibold text-gray-700">Phone</label><p className="mt-1 text-gray-900">{selectedUser.phone} {selectedUser.phoneVerified ? '✅' : '❌'}</p></div>
-              <div><label className="text-sm font-semibold text-gray-700">Status</label><p className="mt-1 text-gray-900">{selectedUser.status}</p></div>
-              <div><label className="text-sm font-semibold text-gray-700">Country</label><p className="mt-1 text-gray-900">{selectedUser.country}</p></div>
-              <div><label className="text-sm font-semibold text-gray-700">Gender</label><p className="mt-1 text-gray-900">{selectedUser.gender || 'N/A'}</p></div>
-              <div><label className="text-sm font-semibold text-gray-700">Date of Birth</label><p className="mt-1 text-gray-900">{selectedUser.dateOfBirth || 'N/A'}</p></div>
-              <div><label className="text-sm font-semibold text-gray-700">2FA Enabled</label><p className="mt-1 text-gray-900">{selectedUser.twoFactorEnabled ? 'Yes' : 'No'}</p></div>
-              <div><label className="text-sm font-semibold text-gray-700">Last Login</label><p className="mt-1 text-gray-900">{selectedUser.lastLoginAt ? new Date(selectedUser.lastLoginAt).toLocaleString() : 'Never'}</p></div>
-              <div><label className="text-sm font-semibold text-gray-700">Created At</label><p className="mt-1 text-gray-900">{new Date(selectedUser.createdAt).toLocaleString()}</p></div>
+            {/* Header Banner */}
+            <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl p-5 text-white">
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center text-xl font-bold ring-2 ring-white/30 flex-shrink-0">
+                  {selectedUser.firstName?.[0]?.toUpperCase()}{selectedUser.lastName?.[0]?.toUpperCase()}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h2 className="text-lg font-bold">{selectedUser.fullName}</h2>
+                  <p className="text-orange-100 text-sm truncate">{selectedUser.email}</p>
+                  <p className="text-orange-100 text-sm">{selectedUser.phone || 'No phone'}</p>
+                </div>
+                <div className="flex flex-col items-end gap-2 flex-shrink-0">
+                  <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                    selectedUser.status === 'ACTIVE' ? 'bg-green-400/30 ring-1 ring-green-300'
+                    : selectedUser.status === 'SUSPENDED' ? 'bg-red-400/30 ring-1 ring-red-300'
+                    : 'bg-white/20 ring-1 ring-white/30'}`}>
+                    {selectedUser.status}
+                  </span>
+                  <span className="px-3 py-1 rounded-full text-xs font-bold bg-white/20 ring-1 ring-white/30">
+                    {selectedUser.userType}
+                  </span>
+                </div>
+              </div>
+            </div>
+            {/* Verification Status */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className={`flex items-center gap-3 p-3 rounded-xl ${selectedUser.emailVerified ? 'bg-green-50 border border-green-100' : 'bg-red-50 border border-red-100'}`}>
+                {selectedUser.emailVerified ? <Check className="w-5 h-5 text-green-600" /> : <X className="w-5 h-5 text-red-500" />}
+                <div>
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Email</p>
+                  <p className="text-sm font-semibold text-gray-900">{selectedUser.emailVerified ? 'Verified' : 'Not Verified'}</p>
+                </div>
+              </div>
+              <div className={`flex items-center gap-3 p-3 rounded-xl ${selectedUser.phoneVerified ? 'bg-green-50 border border-green-100' : 'bg-red-50 border border-red-100'}`}>
+                {selectedUser.phoneVerified ? <Check className="w-5 h-5 text-green-600" /> : <X className="w-5 h-5 text-red-500" />}
+                <div>
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Phone</p>
+                  <p className="text-sm font-semibold text-gray-900">{selectedUser.phoneVerified ? 'Verified' : 'Not Verified'}</p>
+                </div>
+              </div>
+            </div>
+            {/* Info Cards */}
+            <div className="grid grid-cols-2 gap-3">
+              {[
+                { label: 'Country', value: selectedUser.country || '—' },
+                { label: 'Gender', value: selectedUser.gender || '—' },
+                { label: 'Date of Birth', value: selectedUser.dateOfBirth || '—' },
+                { label: '2FA', value: selectedUser.twoFactorEnabled ? 'Enabled' : 'Disabled' },
+                { label: 'Language', value: selectedUser.preferredLanguage || '—' },
+                { label: 'Currency', value: selectedUser.preferredCurrency || '—' },
+                { label: 'Last Login', value: selectedUser.lastLoginAt ? new Date(selectedUser.lastLoginAt).toLocaleString() : 'Never' },
+                { label: 'Member Since', value: new Date(selectedUser.createdAt).toLocaleDateString() },
+              ].map(({ label, value }) => (
+                <div key={label} className="bg-gray-50 rounded-xl p-3">
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">{label}</p>
+                  <p className="text-sm font-semibold text-gray-900 mt-0.5 break-words">{value}</p>
+                </div>
+              ))}
             </div>
           </div>
         )}

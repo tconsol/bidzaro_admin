@@ -33,6 +33,10 @@ const MenuItems: React.FC = () => {
     itemName: '', itemNameHindi: '', description: '', categoryId: '', cuisineType: '',
     foodType: 'VEG', spiceLevel: '', dietaryTags: [], allergens: [], isPopular: false,
   });
+  const [createDietaryTagsInput, setCreateDietaryTagsInput] = useState('');
+  const [createAllergensInput, setCreateAllergensInput] = useState('');
+  const [editDietaryTagsInput, setEditDietaryTagsInput] = useState('');
+  const [editAllergensInput, setEditAllergensInput] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -140,9 +144,16 @@ const MenuItems: React.FC = () => {
   const handleCreateItem = async () => {
     setSubmitting(true);
     try {
-      await menuApi.createMenuItem(itemForm);
+      const payload = {
+        ...itemForm,
+        dietaryTags: createDietaryTagsInput.split(',').map(s => s.trim()).filter(Boolean),
+        allergens: createAllergensInput.split(',').map(s => s.trim()).filter(Boolean),
+      };
+      await menuApi.createMenuItem(payload);
       setShowItemModal(false);
       setItemForm({ itemName: '', itemNameHindi: '', description: '', categoryId: '', cuisineType: '', foodType: 'VEG', spiceLevel: '', dietaryTags: [], allergens: [], isPopular: false });
+      setCreateDietaryTagsInput('');
+      setCreateAllergensInput('');
       loadData();
       showToast('Menu item created successfully!', 'success');
     } catch (error: any) { 
@@ -165,7 +176,10 @@ const MenuItems: React.FC = () => {
       dietaryTags: item.dietaryTags || [],
       allergens: item.allergens || [],
       isPopular: item.isPopular,
+      nutritionalInfo: item.nutritionalInfo || undefined,
     });
+    setEditDietaryTagsInput((item.dietaryTags || []).join(', '));
+    setEditAllergensInput((item.allergens || []).join(', '));
     setShowEditModal(true);
   };
 
@@ -173,7 +187,12 @@ const MenuItems: React.FC = () => {
     if (!selectedItem) return;
     setSubmitting(true);
     try {
-      await menuApi.updateMenuItem(selectedItem.masterItemId, editForm);
+      const payload = {
+        ...editForm,
+        dietaryTags: editDietaryTagsInput.split(',').map(s => s.trim()).filter(Boolean),
+        allergens: editAllergensInput.split(',').map(s => s.trim()).filter(Boolean),
+      };
+      await menuApi.updateMenuItem(selectedItem.masterItemId, payload);
       setShowEditModal(false);
       loadData();
       showToast('Menu item updated successfully!', 'success');
@@ -547,6 +566,44 @@ const MenuItems: React.FC = () => {
               </label>
             </div>
           </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">Dietary Tags</label>
+              <input type="text" placeholder="e.g., GLUTEN_FREE, DAIRY_FREE"
+                value={createDietaryTagsInput}
+                onChange={(e) => setCreateDietaryTagsInput(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-xl text-sm" />
+              <p className="text-xs text-gray-400 mt-1">Comma-separated</p>
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">Allergens</label>
+              <input type="text" placeholder="e.g., NUTS, DAIRY, GLUTEN"
+                value={createAllergensInput}
+                onChange={(e) => setCreateAllergensInput(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-xl text-sm" />
+              <p className="text-xs text-gray-400 mt-1">Comma-separated</p>
+            </div>
+          </div>
+          <div className="border border-gray-200 rounded-xl p-4 space-y-3">
+            <p className="text-sm font-semibold text-gray-700">Nutritional Info <span className="text-gray-400 font-normal">(optional)</span></p>
+            <div className="grid grid-cols-5 gap-3">
+              {[
+                { label: 'Calories', key: 'calories' },
+                { label: 'Protein (g)', key: 'proteinGrams' },
+                { label: 'Carbs (g)', key: 'carbsGrams' },
+                { label: 'Fat (g)', key: 'fatGrams' },
+                { label: 'Serving (g)', key: 'servingSizeGrams' },
+              ].map(({ label, key }) => (
+                <div key={key}>
+                  <label className="block text-xs font-semibold text-gray-500 mb-1">{label}</label>
+                  <input type="number" min="0"
+                    value={(itemForm.nutritionalInfo as any)?.[key] || ''}
+                    onChange={(e) => setItemForm({ ...itemForm, nutritionalInfo: { ...(itemForm.nutritionalInfo || {}), [key]: Number(e.target.value) } as any })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm" placeholder="0" />
+                </div>
+              ))}
+            </div>
+          </div>
           <div className="flex gap-3">
             <button onClick={handleCreateItem} disabled={submitting || !itemForm.itemName || !itemForm.description || !itemForm.categoryId || !itemForm.cuisineType}
               className="flex-1 bg-orange-500 text-white px-4 py-2 rounded-xl disabled:opacity-50">{submitting ? 'Creating...' : 'Create Item'}</button>
@@ -560,46 +617,92 @@ const MenuItems: React.FC = () => {
         {selectedItem && (
           <>
           <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div><label className="text-sm font-semibold text-gray-700">Name</label><p className="mt-1">{selectedItem.itemName}</p></div>
-              <div><label className="text-sm font-semibold text-gray-700">Hindi Name</label><p className="mt-1">{selectedItem.itemNameHindi || 'N/A'}</p></div>
-              <div><label className="text-sm font-semibold text-gray-700">Category</label><p className="mt-1">{selectedItem.categoryName}</p></div>
-              <div><label className="text-sm font-semibold text-gray-700">Cuisine</label><p className="mt-1">{selectedItem.cuisineType}</p></div>
-              <div><label className="text-sm font-semibold text-gray-700">Food Type</label><p className="mt-1">{selectedItem.foodType}</p></div>
-              <div><label className="text-sm font-semibold text-gray-700">Spice Level</label><p className="mt-1">{selectedItem.spiceLevel}</p></div>
-              <div><label className="text-sm font-semibold text-gray-700">Status</label><p className="mt-1">{selectedItem.status}</p></div>
-              <div><label className="text-sm font-semibold text-gray-700">Popular</label><p className="mt-1">{selectedItem.isPopular ? 'Yes' : 'No'}</p></div>
+            {/* Header Banner */}
+            <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl p-5 text-white">
+              <div className="flex items-start gap-4">
+                <div className="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center text-2xl ring-2 ring-white/30 flex-shrink-0">
+                  {selectedItem.foodType === 'VEG' ? '🥗' : selectedItem.foodType === 'NON_VEG' ? '🍖' : selectedItem.foodType === 'VEGAN' ? '🌱' : selectedItem.foodType === 'BEVERAGES' ? '🥤' : selectedItem.foodType === 'DESSERTS' ? '🍰' : selectedItem.foodType === 'SWEETS' ? '🍬' : selectedItem.foodType === 'SNACKS' ? '🍿' : '🍽️'}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h2 className="text-lg font-bold leading-tight">{selectedItem.itemName}</h2>
+                  {selectedItem.itemNameHindi && <p className="text-orange-100 text-sm">{selectedItem.itemNameHindi}</p>}
+                  <p className="text-orange-200 text-sm mt-0.5">{selectedItem.categoryName} · {selectedItem.cuisineType}</p>
+                </div>
+                <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
+                  <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${
+                    selectedItem.status === 'ACTIVE' ? 'bg-green-400/30 ring-1 ring-green-300' : 'bg-gray-400/30 ring-1 ring-gray-300'
+                  }`}>{selectedItem.status}</span>
+                  <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${
+                    selectedItem.foodType === 'VEG' ? 'bg-green-400/30 ring-1 ring-green-300'
+                    : selectedItem.foodType === 'NON_VEG' ? 'bg-red-400/30 ring-1 ring-red-300'
+                    : selectedItem.foodType === 'VEGAN' ? 'bg-emerald-400/30 ring-1 ring-emerald-300'
+                    : 'bg-white/20 ring-1 ring-white/30'
+                  }`}>{selectedItem.foodType}</span>
+                  {selectedItem.isPopular && <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-yellow-400/30 ring-1 ring-yellow-300">⭐ Popular</span>}
+                </div>
+              </div>
             </div>
-            <div><label className="text-sm font-semibold text-gray-700">Description</label><p className="mt-1 text-gray-700">{selectedItem.description}</p></div>
+
+            {/* Description */}
+            <div className="bg-gray-50 rounded-xl p-4">
+              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Description</p>
+              <p className="text-sm text-gray-700">{selectedItem.description}</p>
+            </div>
+
+            {/* Info Cards */}
+            <div className="grid grid-cols-2 gap-3">
+              {[
+                { label: 'Spice Level', value: selectedItem.spiceLevel || '—' },
+                { label: 'Category', value: selectedItem.categoryName || '—' },
+              ].map(({ label, value }) => (
+                <div key={label} className="bg-gray-50 rounded-xl p-3">
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">{label}</p>
+                  <p className="text-sm font-semibold text-gray-900 mt-0.5">{value}</p>
+                </div>
+              ))}
+            </div>
+
+            {/* Dietary Tags */}
             {(selectedItem.dietaryTags?.length ?? 0) > 0 && (
               <div>
-                <label className="text-sm font-semibold text-gray-700">Dietary Tags</label>
-                <div className="flex flex-wrap gap-2 mt-1">{selectedItem.dietaryTags.map(t => <span key={t} className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">{t}</span>)}</div>
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Dietary Tags</p>
+                <div className="flex flex-wrap gap-2">{selectedItem.dietaryTags.map(t => <span key={t} className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs font-semibold">{t}</span>)}</div>
               </div>
             )}
+
+            {/* Allergens */}
             {(selectedItem.allergens?.length ?? 0) > 0 && (
               <div>
-                <label className="text-sm font-semibold text-gray-700">Allergens</label>
-                <div className="flex flex-wrap gap-2 mt-1">{selectedItem.allergens.map(a => <span key={a} className="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs">{a}</span>)}</div>
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Allergens</p>
+                <div className="flex flex-wrap gap-2">{selectedItem.allergens.map(a => <span key={a} className="px-3 py-1 bg-red-100 text-red-800 rounded-full text-xs font-semibold">{a}</span>)}</div>
               </div>
             )}
+
+            {/* Nutritional Info */}
             {selectedItem.nutritionalInfo && (
               <div>
-                <label className="text-sm font-semibold text-gray-700">Nutritional Info</label>
-                <div className="grid grid-cols-5 gap-2 mt-2">
-                  <div className="bg-gray-50 rounded-lg p-2 text-center"><p className="text-lg font-bold">{selectedItem.nutritionalInfo.calories}</p><p className="text-xs text-gray-500">Calories</p></div>
-                  <div className="bg-gray-50 rounded-lg p-2 text-center"><p className="text-lg font-bold">{selectedItem.nutritionalInfo.proteinGrams}g</p><p className="text-xs text-gray-500">Protein</p></div>
-                  <div className="bg-gray-50 rounded-lg p-2 text-center"><p className="text-lg font-bold">{selectedItem.nutritionalInfo.carbsGrams}g</p><p className="text-xs text-gray-500">Carbs</p></div>
-                  <div className="bg-gray-50 rounded-lg p-2 text-center"><p className="text-lg font-bold">{selectedItem.nutritionalInfo.fatGrams}g</p><p className="text-xs text-gray-500">Fat</p></div>
-                  <div className="bg-gray-50 rounded-lg p-2 text-center"><p className="text-lg font-bold">{selectedItem.nutritionalInfo.servingSizeGrams}g</p><p className="text-xs text-gray-500">Serving</p></div>
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Nutritional Info</p>
+                <div className="grid grid-cols-5 gap-2">
+                  {[
+                    { val: selectedItem.nutritionalInfo.calories, unit: '', label: 'Calories' },
+                    { val: selectedItem.nutritionalInfo.proteinGrams, unit: 'g', label: 'Protein' },
+                    { val: selectedItem.nutritionalInfo.carbsGrams, unit: 'g', label: 'Carbs' },
+                    { val: selectedItem.nutritionalInfo.fatGrams, unit: 'g', label: 'Fat' },
+                    { val: selectedItem.nutritionalInfo.servingSizeGrams, unit: 'g', label: 'Serving' },
+                  ].map(({ val, unit, label }) => (
+                    <div key={label} className="bg-orange-50 rounded-xl p-3 text-center border border-orange-100">
+                      <p className="text-lg font-bold text-orange-700">{val}{unit}</p>
+                      <p className="text-xs text-gray-500 mt-0.5">{label}</p>
+                    </div>
+                  ))}
                 </div>
               </div>
             )}
           </div>
           {/* Detail modal action buttons */}
-          <div className="flex gap-3 pt-2 border-t">
+          <div className="flex gap-3 pt-4 border-t border-gray-100 mt-4">
             <button onClick={(e) => { setShowDetailModal(false); openEditModal(selectedItem, e); }}
-              className="flex-1 flex items-center justify-center gap-2 bg-orange-500 text-white py-2 rounded-xl hover:bg-orange-600">
+              className="flex-1 flex items-center justify-center gap-2 bg-orange-500 text-white py-2.5 rounded-xl hover:bg-orange-600 font-semibold">
               <Edit2 className="w-4 h-4" />Edit
             </button>
             <button onClick={(e) => { setShowDetailModal(false); handleToggleStatus(selectedItem, e); }}
@@ -673,6 +776,44 @@ const MenuItems: React.FC = () => {
                   className="w-5 h-5 rounded border-gray-300 text-orange-500 focus:ring-orange-500" />
                 <span className="text-sm font-semibold text-gray-700">Popular</span>
               </label>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">Dietary Tags</label>
+              <input type="text" placeholder="e.g., GLUTEN_FREE, DAIRY_FREE"
+                value={editDietaryTagsInput}
+                onChange={(e) => setEditDietaryTagsInput(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-xl text-sm" />
+              <p className="text-xs text-gray-400 mt-1">Comma-separated</p>
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">Allergens</label>
+              <input type="text" placeholder="e.g., NUTS, DAIRY, GLUTEN"
+                value={editAllergensInput}
+                onChange={(e) => setEditAllergensInput(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-xl text-sm" />
+              <p className="text-xs text-gray-400 mt-1">Comma-separated</p>
+            </div>
+          </div>
+          <div className="border border-gray-200 rounded-xl p-4 space-y-3">
+            <p className="text-sm font-semibold text-gray-700">Nutritional Info <span className="text-gray-400 font-normal">(optional)</span></p>
+            <div className="grid grid-cols-5 gap-3">
+              {[
+                { label: 'Calories', key: 'calories' },
+                { label: 'Protein (g)', key: 'proteinGrams' },
+                { label: 'Carbs (g)', key: 'carbsGrams' },
+                { label: 'Fat (g)', key: 'fatGrams' },
+                { label: 'Serving (g)', key: 'servingSizeGrams' },
+              ].map(({ label, key }) => (
+                <div key={key}>
+                  <label className="block text-xs font-semibold text-gray-500 mb-1">{label}</label>
+                  <input type="number" min="0"
+                    value={(editForm.nutritionalInfo as any)?.[key] || ''}
+                    onChange={(e) => setEditForm({ ...editForm, nutritionalInfo: { ...(editForm.nutritionalInfo || {}), [key]: Number(e.target.value) } as any })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm" placeholder="0" />
+                </div>
+              ))}
             </div>
           </div>
           <div className="flex gap-3">

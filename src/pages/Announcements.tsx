@@ -28,6 +28,7 @@ const Announcements: React.FC = () => {
     targetAudience: 'ALL',
     startDate: '',
     endDate: '',
+    isActive: true,
   });
   const [editForm, setEditForm] = useState<UpdateAnnouncementRequest>({
     title: '',
@@ -74,6 +75,7 @@ const Announcements: React.FC = () => {
         targetAudience: 'ALL',
         startDate: '',
         endDate: '',
+        isActive: true,
       });
       loadAnnouncements();
     } catch (error: any) { showToast(error.response?.data?.message || 'Failed to create announcement', 'error'); }
@@ -309,6 +311,7 @@ const Announcements: React.FC = () => {
                   { value: 'ALL', label: 'All' },
                   { value: 'USERS', label: 'Users Only' },
                   { value: 'VENDORS', label: 'Vendors Only' },
+                  { value: 'SUPPORT_AGENTS', label: 'Support Agents' },
                   { value: 'ADMINS', label: 'Admins Only' },
                 ]}
                 placeholder="Select audience"
@@ -441,6 +444,7 @@ const Announcements: React.FC = () => {
                   { value: 'ALL', label: 'All' },
                   { value: 'USERS', label: 'Users Only' },
                   { value: 'VENDORS', label: 'Vendors Only' },
+                  { value: 'SUPPORT_AGENTS', label: 'Support Agents' },
                   { value: 'ADMINS', label: 'Admins Only' },
                 ]}
                 placeholder="Select audience"
@@ -462,6 +466,14 @@ const Announcements: React.FC = () => {
                 className="w-full px-4 py-2 border border-gray-300 rounded-xl" />
               <p className="text-xs text-gray-500 mt-1">Sent as ISO-8601 UTC (YYYY-MM-DDTHH:mm:ssZ)</p>
             </div>
+          </div>
+          <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
+            <input type="checkbox" id="edit-isActive" checked={editForm.isActive !== false}
+              onChange={(e) => setEditForm({ ...editForm, isActive: e.target.checked })}
+              className="w-5 h-5 rounded border-gray-300 text-orange-600 focus:ring-orange-500" />
+            <label htmlFor="edit-isActive" className="text-sm font-semibold text-gray-700 cursor-pointer">
+              Active — announcement is currently published
+            </label>
           </div>
           <div className="flex gap-3">
             <button onClick={handleUpdate} disabled={submitting || (editForm.title?.length || 0) < 5 || (editForm.message?.length || 0) < 10}

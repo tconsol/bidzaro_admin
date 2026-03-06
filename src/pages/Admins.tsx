@@ -258,16 +258,62 @@ const Admins: React.FC = () => {
       <Modal isOpen={showDetailModal} onClose={() => setShowDetailModal(false)} title="Admin Details">
         {selectedAdmin && (
           <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div><label className="text-sm font-semibold text-gray-700">Full Name</label><p className="mt-1">{selectedAdmin.fullName}</p></div>
-              <div><label className="text-sm font-semibold text-gray-700">Role</label><p className="mt-1">{selectedAdmin.userType}</p></div>
-              <div><label className="text-sm font-semibold text-gray-700">Email</label><p className="mt-1">{selectedAdmin.email} {selectedAdmin.emailVerified ? '✅' : '❌'}</p></div>
-              <div><label className="text-sm font-semibold text-gray-700">Phone</label><p className="mt-1">{selectedAdmin.phone} {selectedAdmin.phoneVerified ? '✅' : '❌'}</p></div>
-              <div><label className="text-sm font-semibold text-gray-700">Country</label><p className="mt-1">{selectedAdmin.country}</p></div>
-              <div><label className="text-sm font-semibold text-gray-700">Status</label><p className="mt-1">{selectedAdmin.status}</p></div>
-              <div><label className="text-sm font-semibold text-gray-700">2FA</label><p className="mt-1">{selectedAdmin.twoFactorEnabled ? 'Enabled' : 'Disabled'}</p></div>
-              <div><label className="text-sm font-semibold text-gray-700">Last Login</label><p className="mt-1">{selectedAdmin.lastLoginAt ? new Date(selectedAdmin.lastLoginAt).toLocaleString() : 'Never'}</p></div>
-              <div><label className="text-sm font-semibold text-gray-700">Created</label><p className="mt-1">{new Date(selectedAdmin.createdAt).toLocaleString()}</p></div>
+            {/* Header Banner */}
+            <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl p-5 text-white">
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center text-xl font-bold ring-2 ring-white/30 flex-shrink-0">
+                  {selectedAdmin.firstName?.[0]?.toUpperCase()}{selectedAdmin.lastName?.[0]?.toUpperCase()}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h2 className="text-lg font-bold">{selectedAdmin.fullName}</h2>
+                  <p className="text-orange-100 text-sm truncate">{selectedAdmin.email}</p>
+                  <p className="text-orange-100 text-sm">{selectedAdmin.phone || 'No phone'}</p>
+                </div>
+                <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
+                  <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                    selectedAdmin.status === 'ACTIVE' ? 'bg-green-400/30 ring-1 ring-green-300'
+                    : 'bg-red-400/30 ring-1 ring-red-300'
+                  }`}>{selectedAdmin.status}</span>
+                  <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                    selectedAdmin.userType === 'SUPER_ADMIN' ? 'bg-orange-300/30 ring-1 ring-orange-200' : 'bg-white/20 ring-1 ring-white/30'
+                  }`}>{selectedAdmin.userType}</span>
+                </div>
+              </div>
+            </div>
+            {/* Verification Status */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className={`flex items-center gap-3 p-3 rounded-xl ${
+                selectedAdmin.emailVerified ? 'bg-green-50 border border-green-100' : 'bg-red-50 border border-red-100'
+              }`}>
+                <Shield className={`w-5 h-5 ${selectedAdmin.emailVerified ? 'text-green-600' : 'text-red-500'}`} />
+                <div>
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Email</p>
+                  <p className="text-sm font-semibold text-gray-900">{selectedAdmin.emailVerified ? 'Verified' : 'Not Verified'}</p>
+                </div>
+              </div>
+              <div className={`flex items-center gap-3 p-3 rounded-xl ${
+                selectedAdmin.phoneVerified ? 'bg-green-50 border border-green-100' : 'bg-red-50 border border-red-100'
+              }`}>
+                <Shield className={`w-5 h-5 ${selectedAdmin.phoneVerified ? 'text-green-600' : 'text-red-500'}`} />
+                <div>
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Phone</p>
+                  <p className="text-sm font-semibold text-gray-900">{selectedAdmin.phoneVerified ? 'Verified' : 'Not Verified'}</p>
+                </div>
+              </div>
+            </div>
+            {/* Info Cards */}
+            <div className="grid grid-cols-2 gap-3">
+              {[
+                { label: 'Country', value: selectedAdmin.country || '—' },
+                { label: '2FA', value: selectedAdmin.twoFactorEnabled ? 'Enabled' : 'Disabled' },
+                { label: 'Last Login', value: selectedAdmin.lastLoginAt ? new Date(selectedAdmin.lastLoginAt).toLocaleString() : 'Never' },
+                { label: 'Member Since', value: new Date(selectedAdmin.createdAt).toLocaleDateString() },
+              ].map(({ label, value }) => (
+                <div key={label} className="bg-gray-50 rounded-xl p-3">
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">{label}</p>
+                  <p className="text-sm font-semibold text-gray-900 mt-0.5 break-words">{value}</p>
+                </div>
+              ))}
             </div>
           </div>
         )}
