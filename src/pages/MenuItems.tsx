@@ -6,6 +6,11 @@ import Modal from '../components/Modal';
 import CustomSelect from '../components/CustomSelect';
 import { Plus, UtensilsCrossed, Tag, Search, Edit2, Trash2, CheckCircle, XCircle } from 'lucide-react';
 
+// Master Data Constants
+const DIETARY_TAGS = ['GLUTEN_FREE', 'DAIRY_FREE', 'VEGAN', 'VEGETARIAN', 'LOW_CALORIE', 'HIGH_PROTEIN', 'ORGANIC', 'JAIN'];
+const ALLERGENS = ['NUTS', 'DAIRY', 'GLUTEN', 'EGGS', 'SHELLFISH', 'SOY', 'SESAME', 'PEANUTS'];
+const CUISINE_TYPES = ['NORTH_INDIAN', 'SOUTH_INDIAN', 'CHINESE', 'CONTINENTAL', 'ITALIAN', 'MEXICAN', 'THAI', 'MUGHLAI', 'FUSION'];
+
 const MenuItems: React.FC = () => {
   const { showToast } = useToast();
   const [categories, setCategories] = useState<Category[]>([]);
@@ -33,10 +38,6 @@ const MenuItems: React.FC = () => {
     itemName: '', itemNameHindi: '', description: '', categoryId: '', cuisineType: '',
     foodType: 'VEG', spiceLevel: '', dietaryTags: [], allergens: [], isPopular: false,
   });
-  const [createDietaryTagsInput, setCreateDietaryTagsInput] = useState('');
-  const [createAllergensInput, setCreateAllergensInput] = useState('');
-  const [editDietaryTagsInput, setEditDietaryTagsInput] = useState('');
-  const [editAllergensInput, setEditAllergensInput] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -146,14 +147,12 @@ const MenuItems: React.FC = () => {
     try {
       const payload = {
         ...itemForm,
-        dietaryTags: createDietaryTagsInput.split(',').map(s => s.trim()).filter(Boolean),
-        allergens: createAllergensInput.split(',').map(s => s.trim()).filter(Boolean),
+        dietaryTags: itemForm.dietaryTags || [],
+        allergens: itemForm.allergens || [],
       };
       await menuApi.createMenuItem(payload);
       setShowItemModal(false);
       setItemForm({ itemName: '', itemNameHindi: '', description: '', categoryId: '', cuisineType: '', foodType: 'VEG', spiceLevel: '', dietaryTags: [], allergens: [], isPopular: false });
-      setCreateDietaryTagsInput('');
-      setCreateAllergensInput('');
       loadData();
       showToast('Menu item created successfully!', 'success');
     } catch (error: any) { 
@@ -178,8 +177,6 @@ const MenuItems: React.FC = () => {
       isPopular: item.isPopular,
       nutritionalInfo: item.nutritionalInfo || undefined,
     });
-    setEditDietaryTagsInput((item.dietaryTags || []).join(', '));
-    setEditAllergensInput((item.allergens || []).join(', '));
     setShowEditModal(true);
   };
 
@@ -189,8 +186,8 @@ const MenuItems: React.FC = () => {
     try {
       const payload = {
         ...editForm,
-        dietaryTags: editDietaryTagsInput.split(',').map(s => s.trim()).filter(Boolean),
-        allergens: editAllergensInput.split(',').map(s => s.trim()).filter(Boolean),
+        dietaryTags: editForm.dietaryTags || [],
+        allergens: editForm.allergens || [],
       };
       await menuApi.updateMenuItem(selectedItem.masterItemId, payload);
       setShowEditModal(false);
@@ -516,8 +513,15 @@ const MenuItems: React.FC = () => {
             </div>
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-1">Cuisine Type <span className="text-red-500">*</span></label>
-              <input type="text" value={itemForm.cuisineType} onChange={(e) => setItemForm({ ...itemForm, cuisineType: e.target.value })}
-                className="w-full px-4 py-2 border border-gray-300 rounded-xl" placeholder="e.g., NORTH_INDIAN" />
+              <CustomSelect
+                value={itemForm.cuisineType}
+                onChange={(val) => setItemForm({ ...itemForm, cuisineType: val })}
+                options={[
+                  { value: '', label: 'Select cuisine type' },
+                  ...CUISINE_TYPES.map(c => ({ value: c, label: c })),
+                ]}
+                placeholder="Select cuisine type"
+              />
             </div>
           </div>
           <div className="grid grid-cols-3 gap-4">
@@ -568,20 +572,48 @@ const MenuItems: React.FC = () => {
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1">Dietary Tags</label>
-              <input type="text" placeholder="e.g., GLUTEN_FREE, DAIRY_FREE"
-                value={createDietaryTagsInput}
-                onChange={(e) => setCreateDietaryTagsInput(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-xl text-sm" />
-              <p className="text-xs text-gray-400 mt-1">Comma-separated</p>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Dietary Tags</label>
+              <div className="border border-gray-300 rounded-xl p-3 max-h-32 overflow-y-auto space-y-2">
+                {DIETARY_TAGS.length > 0 ? (
+                  DIETARY_TAGS.map(tag => (
+                    <label key={tag} className="flex items-center gap-2 cursor-pointer">
+                      <input type="checkbox" checked={(itemForm.dietaryTags || []).includes(tag)}
+                        onChange={(e) => {
+                          const updated = e.target.checked
+                            ? [...(itemForm.dietaryTags || []), tag]
+                            : (itemForm.dietaryTags || []).filter(t => t !== tag);
+                          setItemForm({ ...itemForm, dietaryTags: updated });
+                        }}
+                        className="w-4 h-4 rounded border-gray-300 text-orange-500 focus:ring-orange-500" />
+                      <span className="text-sm text-gray-700">{tag}</span>
+                    </label>
+                  ))
+                ) : (
+                  <p className="text-xs text-gray-400">No dietary tags available</p>
+                )}
+              </div>
             </div>
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1">Allergens</label>
-              <input type="text" placeholder="e.g., NUTS, DAIRY, GLUTEN"
-                value={createAllergensInput}
-                onChange={(e) => setCreateAllergensInput(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-xl text-sm" />
-              <p className="text-xs text-gray-400 mt-1">Comma-separated</p>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Allergens</label>
+              <div className="border border-gray-300 rounded-xl p-3 max-h-32 overflow-y-auto space-y-2">
+                {ALLERGENS.length > 0 ? (
+                  ALLERGENS.map(allergen => (
+                    <label key={allergen} className="flex items-center gap-2 cursor-pointer">
+                      <input type="checkbox" checked={(itemForm.allergens || []).includes(allergen)}
+                        onChange={(e) => {
+                          const updated = e.target.checked
+                            ? [...(itemForm.allergens || []), allergen]
+                            : (itemForm.allergens || []).filter(a => a !== allergen);
+                          setItemForm({ ...itemForm, allergens: updated });
+                        }}
+                        className="w-4 h-4 rounded border-gray-300 text-orange-500 focus:ring-orange-500" />
+                      <span className="text-sm text-gray-700">{allergen}</span>
+                    </label>
+                  ))
+                ) : (
+                  <p className="text-xs text-gray-400">No allergens available</p>
+                )}
+              </div>
             </div>
           </div>
           <div className="border border-gray-200 rounded-xl p-4 space-y-3">
@@ -753,8 +785,15 @@ const MenuItems: React.FC = () => {
             </div>
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-1">Cuisine Type</label>
-              <input type="text" value={editForm.cuisineType || ''} onChange={(e) => setEditForm({ ...editForm, cuisineType: e.target.value })}
-                className="w-full px-4 py-2 border border-gray-300 rounded-xl" />
+              <CustomSelect
+                value={editForm.cuisineType || ''}
+                onChange={(val) => setEditForm({ ...editForm, cuisineType: val })}
+                options={[
+                  { value: '', label: 'Select cuisine type' },
+                  ...CUISINE_TYPES.map(c => ({ value: c, label: c })),
+                ]}
+                placeholder="Select cuisine type"
+              />
             </div>
           </div>
           <div className="grid grid-cols-3 gap-4">
@@ -780,20 +819,48 @@ const MenuItems: React.FC = () => {
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1">Dietary Tags</label>
-              <input type="text" placeholder="e.g., GLUTEN_FREE, DAIRY_FREE"
-                value={editDietaryTagsInput}
-                onChange={(e) => setEditDietaryTagsInput(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-xl text-sm" />
-              <p className="text-xs text-gray-400 mt-1">Comma-separated</p>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Dietary Tags</label>
+              <div className="border border-gray-300 rounded-xl p-3 max-h-32 overflow-y-auto space-y-2">
+                {DIETARY_TAGS.length > 0 ? (
+                  DIETARY_TAGS.map(tag => (
+                    <label key={tag} className="flex items-center gap-2 cursor-pointer">
+                      <input type="checkbox" checked={(editForm.dietaryTags || []).includes(tag)}
+                        onChange={(e) => {
+                          const updated = e.target.checked
+                            ? [...(editForm.dietaryTags || []), tag]
+                            : (editForm.dietaryTags || []).filter(t => t !== tag);
+                          setEditForm({ ...editForm, dietaryTags: updated });
+                        }}
+                        className="w-4 h-4 rounded border-gray-300 text-orange-500 focus:ring-orange-500" />
+                      <span className="text-sm text-gray-700">{tag}</span>
+                    </label>
+                  ))
+                ) : (
+                  <p className="text-xs text-gray-400">No dietary tags available</p>
+                )}
+              </div>
             </div>
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1">Allergens</label>
-              <input type="text" placeholder="e.g., NUTS, DAIRY, GLUTEN"
-                value={editAllergensInput}
-                onChange={(e) => setEditAllergensInput(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-xl text-sm" />
-              <p className="text-xs text-gray-400 mt-1">Comma-separated</p>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Allergens</label>
+              <div className="border border-gray-300 rounded-xl p-3 max-h-32 overflow-y-auto space-y-2">
+                {ALLERGENS.length > 0 ? (
+                  ALLERGENS.map(allergen => (
+                    <label key={allergen} className="flex items-center gap-2 cursor-pointer">
+                      <input type="checkbox" checked={(editForm.allergens || []).includes(allergen)}
+                        onChange={(e) => {
+                          const updated = e.target.checked
+                            ? [...(editForm.allergens || []), allergen]
+                            : (editForm.allergens || []).filter(a => a !== allergen);
+                          setEditForm({ ...editForm, allergens: updated });
+                        }}
+                        className="w-4 h-4 rounded border-gray-300 text-orange-500 focus:ring-orange-500" />
+                      <span className="text-sm text-gray-700">{allergen}</span>
+                    </label>
+                  ))
+                ) : (
+                  <p className="text-xs text-gray-400">No allergens available</p>
+                )}
+              </div>
             </div>
           </div>
           <div className="border border-gray-200 rounded-xl p-4 space-y-3">
